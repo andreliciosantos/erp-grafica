@@ -1,0 +1,16 @@
+{
+  "extends": "@erp/tsconfig/nest.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ES2021",
+    "declaration": false,
+    "incremental": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./"
+  },
+  "include": ["src/**/*"]
+}

@@ -1,0 +1,290 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  COMMERCIAL
+  FINANCIAL
+  OPERATOR
+  BOT_SERVICE
+}
+
+enum ChannelSource {
+  WEB
+  DESKTOP
+  MOBILE
+  WHATSAPP
+  TELEGRAM
+  API_INTEGRATION
+}
+
+enum PartyType {
+  INDIVIDUAL // Pessoa Física
+  COMPANY    // Pessoa Jurídica
+}
+
+enum RawMaterialCategory {
+  PAPER       // Papéis (Couché, Offset, Duplex, etc.)
+  VINYL       // Lonas e Vinis adesivos
+  INK         // Tintas, toners
+  PLATE       // Chapas offset, matrizes
+  FINISHING   // Vernizes, ribbons, bobinas de laminação
+  CONSUMABLE  // Estopa, solventes, fita dupla face
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum WorkOrderStatus {
+  PENDING
+  PRE_PRESS
+  PRINTING
+  FINISHING
+  QUALITY_CONTROL
+  READY_FOR_PICKUP
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+enum StageStatus {
+  PENDING
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// -------------------------------------------------------------
+// USUÁRIOS E AUTENTICAÇÃO
+// -------------------------------------------------------------
+model User {
+  id            String       @id @default(uuid())
+  name          String
+  email         String       @unique
+  passwordHash  String
+  role          Role         @default(OPERATOR)
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  quotes        Quote[]
+  workOrders    WorkOrder[]
+  stageLogs     StageExecutionLog[]
+
+  @@map("users")
+}
+
+// -------------------------------------------------------------
+// CLIENTES E FORNECEDORES
+// -------------------------------------------------------------
+model Party {
+  id            String        @id @default(uuid())
+  type          PartyType     @default(INDIVIDUAL)
+  name          String        // Razão Social ou Nome Completo
+  tradeName     String?       // Nome Fantasia
+  document      String        @unique // CPF ou CNPJ (apenas dígitos)
+  email         String?
+  phone         String        // Obrigatório para identificação em chatbots
+  address       String?
+  city          String?
+  state         String?
+  isCustomer    Boolean       @default(true)
+  isSupplier    Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  quotes        Quote[]
+  workOrders    WorkOrder[]
+
+  @@map("parties")
+}
+
+// -------------------------------------------------------------
+// INSUMOS & MATÉRIAS-PRIMAS
+// -------------------------------------------------------------
+model RawMaterial {
+  id             String              @id @default(uuid())
+  name           String
+  category       RawMaterialCategory
+  unitOfMeasure  String              // UN, KG, M2, FL (Folha), ML (Metro linear)
+  costPerUnit    Decimal             @db.Decimal(12, 4)
+  currentStock   Decimal             @default(0) @db.Decimal(12, 4)
+  minStock       Decimal             @default(0) @db.Decimal(12, 4)
+  
+  // Propriedades físicas (especialmente para papel e substratos planos)
+  sheetWidthMm   Int?                // Ex: 660 mm
+  sheetHeightMm  Int?                // Ex: 960 mm
+  grammage       Int?                // Ex: 150 gsm
+
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  stockMovements StockMovement[]
+  quoteItems     QuoteItem[]
+
+  @@map("raw_materials")
+}
+
+model StockMovement {
+  id             String       @id @default(uuid())
+  rawMaterialId  String
+  workOrderId    String?
+  quantity       Decimal      @db.Decimal(12, 4) // Positivo (entrada), Negativo (saída)
+  reason         String       // "CONSUMO_PRODUCAO", "COMPRA", "PERDA_PRODUCAO", "AJUSTE"
+  createdAt      DateTime     @default(now())
+
+  rawMaterial    RawMaterial  @relation(fields: [rawMaterialId], references: [id])
+  workOrder      WorkOrder?   @relation(fields: [workOrderId], references: [id])
+
+  @@map("stock_movements")
+}
+
+// -------------------------------------------------------------
+// MÁQUINAS
+// -------------------------------------------------------------
+model Machine {
+  id            String       @id @default(uuid())
+  name          String       // Ex: Heidelberg Speedmaster, Konica Minolta C3070
+  hourlyRate    Decimal      @db.Decimal(10, 2) // Custo por hora de máquina
+  setupMinutes  Int          @default(15)       // Tempo médio de setup
+  maxSheetsHour Int?         // Velocidade nominal por hora
+  isActive      Boolean      @default(true)
+
+  stageLogs     StageExecutionLog[]
+
+  @@map("machines")
+}
+
+// -------------------------------------------------------------
+// ORÇAMENTOS (QUOTES)
+// -------------------------------------------------------------
+model Quote {
+  id              String         @id @default(uuid())
+  code            Int            @default(autoincrement()) // Ex: 1001
+  partyId         String
+  userId          String         // Vendedor ou BOT_SERVICE
+  status          QuoteStatus    @default(DRAFT)
+  origin          ChannelSource  @default(WEB)
+  totalCost       Decimal        @db.Decimal(12, 2)
+  markupApplied   Decimal        @db.Decimal(6, 3) // Ex: 0.40 para 40%
+  totalAmount     Decimal        @db.Decimal(12, 2) // Preço de venda ao cliente
+  validUntil      DateTime
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  party           Party          @relation(fields: [partyId], references: [id])
+  user            User           @relation(fields: [userId], references: [id])
+  items           QuoteItem[]
+  workOrder       WorkOrder?
+
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id                   String       @id @default(uuid())
+  quoteId              String
+  rawMaterialId        String?
+  productName          String       // Ex: Cartão de Visita, Folder A4 2 Dobras
+  quantity             Int
+  widthMm              Int          // Formato aberto (largura)
+  heightMm             Int          // Formato aberto (altura)
+  colorsFront          Int          // Ex: 4
+  colorsBack           Int          // Ex: 4 (4x4) ou 0 (4x0)
+  finishingOptions     Json         // Array de acabamentos: ["LAMINACAO_FOSCA", "CORTE_VINCO"]
+  
+  // Resultados do cálculo técnico
+  sheetsRequired       Int
+  itemsPerSheet        Int
+  paperCostCalculated  Decimal      @db.Decimal(10, 2)
+  finishingCostTotal   Decimal      @db.Decimal(10, 2)
+  machineCostTotal     Decimal      @db.Decimal(10, 2)
+  unitPrice            Decimal      @db.Decimal(10, 4)
+  itemTotalAmount      Decimal      @db.Decimal(12, 2)
+
+  quote                Quote        @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  rawMaterial          RawMaterial? @relation(fields: [rawMaterialId], references: [id])
+
+  @@map("quote_items")
+}
+
+// -------------------------------------------------------------
+// ORDENS DE SERVIÇO (CHÃO DE FÁBRICA)
+// -------------------------------------------------------------
+model WorkOrder {
+  id              String           @id @default(uuid())
+  orderNumber     String           @unique // Ex: "OS-2026-00042"
+  quoteId         String           @unique
+  partyId         String
+  userId          String           // Criador da OS
+  origin          ChannelSource    @default(WEB)
+  status          WorkOrderStatus  @default(PENDING)
+  priority        Int              @default(1) // 1: Baixa, 2: Normal, 3: Alta, 4: Urgente
+  deliveryDate    DateTime
+  fileUrl         String?          // Link do PDF/arte validada
+  barcode         String           @unique // Gerado para leitura rápida no chão de fábrica
+  totalAmount     Decimal          @db.Decimal(12, 2)
+  paymentStatus   PaymentStatus    @default(PENDING)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  quote           Quote            @relation(fields: [quoteId], references: [id])
+  party           Party            @relation(fields: [partyId], references: [id])
+  user            User             @relation(fields: [userId], references: [id])
+  stages          WorkOrderStage[]
+  stockMovements  StockMovement[]
+
+  @@map("work_orders")
+}
+
+model WorkOrderStage {
+  id              String              @id @default(uuid())
+  workOrderId     String
+  stepOrder       Int                 // 1: Pré-impressão, 2: Impressão, 3: Acabamento, etc.
+  name            String              // Nome da etapa
+  status          StageStatus         @default(PENDING)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  workOrder       WorkOrder           @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  logs            StageExecutionLog[]
+
+  @@unique([workOrderId, stepOrder])
+  @@map("work_order_stages")
+}
+
+model StageExecutionLog {
+  id              String          @id @default(uuid())
+  stageId         String
+  operatorId      String
+  machineId       String?
+  startedAt       DateTime        @default(now())
+  finishedAt      DateTime?
+  wasteQuantity   Int             @default(0) // Quantidade de folhas/peças perdidas
+  notes           String?
+
+  stage           WorkOrderStage  @relation(fields: [stageId], references: [id])
+  operator        User            @relation(fields: [operatorId], references: [id])
+  machine         Machine?        @relation(fields: [machineId], references: [id])
+
+  @@map("stage_execution_logs")
+}

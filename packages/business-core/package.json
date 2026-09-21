@@ -1,0 +1,22 @@
+{
+  "name": "@erp/business-core",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "decimal.js": "^10.5.0"
+  },
+  "devDependencies": {
+    "@erp/tsconfig": "workspace:*",
+    "@types/node": "^22.13.9",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  }
+}
