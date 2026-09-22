@@ -28,20 +28,54 @@ import { StageActionDto, StageActionEnum } from './dto/stage-action.dto';
 import { CreateDirectOrderDto } from './dto/create-direct-order.dto';
 
 const VALID_TRANSITIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
-  [WorkOrderStatus.PENDING]: [WorkOrderStatus.PRE_PRESS, WorkOrderStatus.CANCELLED],
-  [WorkOrderStatus.PRE_PRESS]: [WorkOrderStatus.PRINTING, WorkOrderStatus.CANCELLED],
-  [WorkOrderStatus.PRINTING]: [WorkOrderStatus.FINISHING, WorkOrderStatus.CANCELLED],
-  [WorkOrderStatus.FINISHING]: [WorkOrderStatus.QUALITY_CONTROL, WorkOrderStatus.CANCELLED],
-  [WorkOrderStatus.QUALITY_CONTROL]: [WorkOrderStatus.READY_FOR_PICKUP, WorkOrderStatus.CANCELLED],
+  [WorkOrderStatus.PENDING]: [
+    WorkOrderStatus.PRE_PRESS,
+    WorkOrderStatus.PRINTING,
+    WorkOrderStatus.CANCELLED,
+  ],
+  [WorkOrderStatus.PRE_PRESS]: [
+    WorkOrderStatus.PENDING,
+    WorkOrderStatus.PRINTING,
+    WorkOrderStatus.CANCELLED,
+  ],
+  [WorkOrderStatus.PRINTING]: [
+    WorkOrderStatus.PRE_PRESS,
+    WorkOrderStatus.FINISHING,
+    WorkOrderStatus.QUALITY_CONTROL,
+    WorkOrderStatus.CANCELLED,
+  ],
+  [WorkOrderStatus.FINISHING]: [
+    WorkOrderStatus.PRINTING,
+    WorkOrderStatus.QUALITY_CONTROL,
+    WorkOrderStatus.READY_FOR_PICKUP,
+    WorkOrderStatus.CANCELLED,
+  ],
+  [WorkOrderStatus.QUALITY_CONTROL]: [
+    WorkOrderStatus.FINISHING,
+    WorkOrderStatus.PRINTING,
+    WorkOrderStatus.READY_FOR_PICKUP,
+    WorkOrderStatus.CANCELLED,
+  ],
   [WorkOrderStatus.READY_FOR_PICKUP]: [
+    WorkOrderStatus.QUALITY_CONTROL,
     WorkOrderStatus.DISPATCHED,
     WorkOrderStatus.DELIVERED,
     WorkOrderStatus.CANCELLED,
   ],
-  [WorkOrderStatus.DISPATCHED]: [WorkOrderStatus.DELIVERED, WorkOrderStatus.CANCELLED],
-  [WorkOrderStatus.DELIVERED]: [],
-  [WorkOrderStatus.CANCELLED]: [],
+  [WorkOrderStatus.DISPATCHED]: [
+    WorkOrderStatus.READY_FOR_PICKUP,
+    WorkOrderStatus.DELIVERED,
+    WorkOrderStatus.CANCELLED,
+  ],
+  [WorkOrderStatus.DELIVERED]: [
+    WorkOrderStatus.READY_FOR_PICKUP,
+    WorkOrderStatus.CANCELLED,
+  ],
+  [WorkOrderStatus.CANCELLED]: [
+    WorkOrderStatus.PENDING,
+  ],
 };
+
 
 export type WorkOrderWithDetails = WorkOrder & {
   party?: { id: string; name: string; phone: string };
@@ -192,30 +226,39 @@ export class WorkOrdersService {
     return this.prisma.$transaction(async (tx) => {
       // 1. Regra PRE_PRESS -> PRINTING: Baixa prevista de estoque dos insumos do orçamento
       if (newStatus === WorkOrderStatus.PRINTING) {
-        for (const item of workOrder.quote.items) {
-          if (item.rawMaterialId && item.sheetsRequired > 0) {
-            const qtyToDeduct = new Decimal(item.sheetsRequired).negated();
+        const existingDeduction = await tx.stockMovement.findFirst({
+          where: {
+            workOrderId: workOrder.id,
+            reason: 'CONSUMO_PRODUCAO',
+          },
+        });
 
-            await tx.stockMovement.create({
-              data: {
-                rawMaterialId: item.rawMaterialId,
-                workOrderId: workOrder.id,
-                quantity: qtyToDeduct.toNumber(),
-                reason: 'CONSUMO_PRODUCAO',
-              },
-            });
+        if (!existingDeduction) {
+          for (const item of workOrder.quote.items) {
+            if (item.rawMaterialId && item.sheetsRequired > 0) {
+              const qtyToDeduct = new Decimal(item.sheetsRequired).negated();
 
-            await tx.rawMaterial.update({
-              where: { id: item.rawMaterialId },
-              data: {
-                currentStock: {
-                  decrement: item.sheetsRequired,
+              await tx.stockMovement.create({
+                data: {
+                  rawMaterialId: item.rawMaterialId,
+                  workOrderId: workOrder.id,
+                  quantity: qtyToDeduct.toNumber(),
+                  reason: 'CONSUMO_PRODUCAO',
                 },
-              },
-            });
-            this.logger.log(
-              `📦 Estoque baixado: ${item.sheetsRequired} folhas de ${item.rawMaterialId} para OS ${workOrder.orderNumber}`
-            );
+              });
+
+              await tx.rawMaterial.update({
+                where: { id: item.rawMaterialId },
+                data: {
+                  currentStock: {
+                    decrement: item.sheetsRequired,
+                  },
+                },
+              });
+              this.logger.log(
+                `📦 Estoque baixado: ${item.sheetsRequired} folhas de ${item.rawMaterialId} para OS ${workOrder.orderNumber}`
+              );
+            }
           }
         }
       }

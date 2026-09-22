@@ -288,3 +288,52 @@ model StageExecutionLog {
 
   @@map("stage_execution_logs")
 }
+
+// -------------------------------------------------------------
+// COLABORADORES & RH (CHÃO DE FÁBRICA E ADMINISTRAÇÃO)
+// -------------------------------------------------------------
+enum EmployeeDepartment {
+  PRE_PRESS        // Pré-impressão & CTP
+  PRINTING         // Impressão (Offset / Digital / Plotter)
+  FINISHING        // Acabamento, Corte e Dobra
+  QUALITY          // Controle de Qualidade
+  EXPEDITION       // Expedição e Logística
+  COMMERCIAL       // Comercial e Atendimento
+  ADMINISTRATIVE   // Administrativo e Financeiro
+  MAINTENANCE      // Manutenção Mecânica e Elétrica
+}
+
+enum EmployeeStatus {
+  ACTIVE           // Ativo
+  ON_LEAVE         // Férias / Licença
+  INACTIVE         // Inativo / Desligado
+}
+
+enum WorkShift {
+  MORNING          // Manhã (06h - 14h)
+  AFTERNOON        // Tarde (14h - 22h)
+  NIGHT            // Noite (22h - 06h)
+  COMMERCIAL_HOURS // Horário Comercial (08h - 18h)
+}
+
+model Employee {
+  id             String              @id @default(uuid())
+  name           String
+  document       String              @unique // CPF
+  registration   String?             @unique // Matrícula interna da gráfica (ex: "OP-012")
+  role           String              // Cargo (ex: "Operador Offset Plana", "Guilhotineiro", "Arte-Finalista CTP")
+  department     EmployeeDepartment  @default(PRINTING)
+  shift          WorkShift           @default(COMMERCIAL_HOURS)
+  status         EmployeeStatus      @default(ACTIVE)
+  email          String?
+  phone          String              // Contato direto / WhatsApp
+  hireDate       DateTime            @default(now())
+  hourlyRate     Decimal?            @db.Decimal(10, 2) // Custo/hora de mão de obra direta (R$/h)
+  monthlySalary  Decimal?            @db.Decimal(10, 2)
+  notes          String?             // Habilitações, treinamentos em máquinas, etc.
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@map("employees")
+}
+

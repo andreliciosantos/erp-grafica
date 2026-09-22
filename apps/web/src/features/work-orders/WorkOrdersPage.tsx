@@ -10,7 +10,22 @@ import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { formatCurrency, formatDate, getStatusConfig, getPriorityConfig } from '../../lib/utils';
-import { KanbanSquare, List, Search, Eye, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import {
+  KanbanSquare,
+  List,
+  Search,
+  Eye,
+  Plus,
+  Trash2,
+  AlertTriangle,
+  Clock,
+  Layers,
+  Printer,
+  Scissors,
+  ShieldCheck,
+  PackageCheck,
+  Award,
+} from 'lucide-react';
 import { WorkOrderItem, PaginatedResult } from '../../types';
 import { CreateOrderModal } from './CreateOrderModal';
 import { Modal } from '../../components/common/Modal';
@@ -129,6 +144,20 @@ export const WorkOrdersPage: React.FC = () => {
 
   const orders = data?.data || [];
 
+  const handleDropOrder = (orderId: string, targetStatus: string) => {
+    const currentOrder = orders.find((o) => o.id === orderId);
+    if (!currentOrder || currentOrder.status === targetStatus) return;
+
+    if (targetStatus === 'PRINTING' && currentOrder.status === 'PRE_PRESS') {
+      const confirmPrint = window.confirm(
+        `Mover a OS ${currentOrder.orderNumber} para IMPRESSÃO baixará automaticamente os insumos do estoque. Deseja prosseguir?`
+      );
+      if (!confirmPrint) return;
+    }
+
+    advanceMutation.mutate({ orderId, nextStatus: targetStatus });
+  };
+
   const filteredOrders = orders.filter((o) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
@@ -140,13 +169,62 @@ export const WorkOrdersPage: React.FC = () => {
   });
 
   const kanbanColumns = [
-    { id: 'PENDING', title: 'Aguardando Liberação', badgeBg: 'bg-amber-400' },
-    { id: 'PRE_PRESS', title: 'Pré-Impressão (CTP)', badgeBg: 'bg-blue-400' },
-    { id: 'PRINTING', title: 'Impressão', badgeBg: 'bg-indigo-400' },
-    { id: 'FINISHING', title: 'Acabamento', badgeBg: 'bg-purple-400' },
-    { id: 'QUALITY_CONTROL', title: 'Controle de Qualidade', badgeBg: 'bg-cyan-400' },
-    { id: 'READY_FOR_PICKUP', title: 'Pronto p/ Retirada', badgeBg: 'bg-emerald-400' },
-    { id: 'DELIVERED', title: 'Entregue / Concluído', badgeBg: 'bg-green-500' },
+    {
+      id: 'PENDING',
+      stepNumber: 1,
+      title: 'Aguardando Liberação',
+      badgeBg: 'bg-amber-400',
+      icon: <Clock className="w-3.5 h-3.5 text-amber-400" />,
+      description: 'Análise comercial, validação financeira e liberação técnica para fila do PCP.',
+    },
+    {
+      id: 'PRE_PRESS',
+      stepNumber: 2,
+      title: 'Pré-Impressão (CTP)',
+      badgeBg: 'bg-blue-400',
+      icon: <Layers className="w-3.5 h-3.5 text-blue-400" />,
+      description: 'Fechamento de arquivo, imposição, sangrias, trapping e gravação de chapas offset.',
+    },
+    {
+      id: 'PRINTING',
+      stepNumber: 3,
+      title: 'Impressão',
+      badgeBg: 'bg-indigo-400',
+      icon: <Printer className="w-3.5 h-3.5 text-indigo-400" />,
+      description: 'Tiragem em máquina offset/digital. Acerto de registro, carga de tinta e acerto de papel.',
+    },
+    {
+      id: 'FINISHING',
+      stepNumber: 4,
+      title: 'Acabamento Gráfico',
+      badgeBg: 'bg-purple-400',
+      icon: <Scissors className="w-3.5 h-3.5 text-purple-400" />,
+      description: 'Refile em guilhotina, laminação BOPP, verniz UV, dobra, vinco e encadernação.',
+    },
+    {
+      id: 'QUALITY_CONTROL',
+      stepNumber: 5,
+      title: 'Controle de Qualidade',
+      badgeBg: 'bg-cyan-400',
+      icon: <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />,
+      description: 'Inspeção dimensional, contagem, conferência densitométrica e aprovação de lote.',
+    },
+    {
+      id: 'READY_FOR_PICKUP',
+      stepNumber: 6,
+      title: 'Pronto p/ Retirada',
+      badgeBg: 'bg-emerald-400',
+      icon: <PackageCheck className="w-3.5 h-3.5 text-emerald-400" />,
+      description: 'Embalado e etiquetado com código de barras, aguardando expedição ou cliente.',
+    },
+    {
+      id: 'DELIVERED',
+      stepNumber: 7,
+      title: 'Entregue / Concluído',
+      badgeBg: 'bg-green-500',
+      icon: <Award className="w-3.5 h-3.5 text-green-400" />,
+      description: 'Material entregue ao cliente e processo de produção concluído com sucesso.',
+    },
   ];
 
   return (
@@ -224,9 +302,13 @@ export const WorkOrdersPage: React.FC = () => {
                 id={col.id}
                 title={col.title}
                 badgeBg={col.badgeBg}
+                stepNumber={col.stepNumber}
+                icon={col.icon}
+                description={col.description}
                 orders={colOrders}
                 onSelectOrder={(order) => setSelectedOrder(order)}
                 onAdvanceOrder={handleAdvance}
+                onDropOrder={handleDropOrder}
               />
             );
           })}

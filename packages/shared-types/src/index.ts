@@ -184,3 +184,82 @@ export interface WorkOrderStatusChangedPayload {
   newStatus: WorkOrderStatus;
   updatedAt: string;
 }
+
+// -------------------------------------------------------------
+// Employee Types & DTOs
+// -------------------------------------------------------------
+export enum EmployeeDepartment {
+  PRE_PRESS = 'PRE_PRESS',
+  PRINTING = 'PRINTING',
+  FINISHING = 'FINISHING',
+  QUALITY = 'QUALITY',
+  EXPEDITION = 'EXPEDITION',
+  COMMERCIAL = 'COMMERCIAL',
+  ADMINISTRATIVE = 'ADMINISTRATIVE',
+  MAINTENANCE = 'MAINTENANCE',
+}
+
+export enum EmployeeStatus {
+  ACTIVE = 'ACTIVE',
+  ON_LEAVE = 'ON_LEAVE',
+  INACTIVE = 'INACTIVE',
+}
+
+export enum WorkShift {
+  MORNING = 'MORNING',
+  AFTERNOON = 'AFTERNOON',
+  NIGHT = 'NIGHT',
+  COMMERCIAL_HOURS = 'COMMERCIAL_HOURS',
+}
+
+export interface EmployeeItem {
+  id: string;
+  name: string;
+  document: string;
+  registration?: string | null;
+  role: string;
+  department: EmployeeDepartment;
+  shift: WorkShift;
+  status: EmployeeStatus;
+  email?: string | null;
+  phone: string;
+  hireDate: string;
+  hourlyRate?: number | null;
+  monthlySalary?: number | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEmployeeDto {
+  name: string;
+  document: string;
+  registration?: string;
+  role: string;
+  department?: EmployeeDepartment;
+  shift?: WorkShift;
+  status?: EmployeeStatus;
+  email?: string;
+  phone: string;
+  hireDate?: string;
+  hourlyRate?: number;
+  monthlySalary?: number;
+  notes?: string;
+}
+
+export interface UpdateEmployeeDto {
+  name?: string;
+  document?: string;
+  registration?: string;
+  role?: string;
+  department?: EmployeeDepartment;
+  shift?: WorkShift;
+  status?: EmployeeStatus;
+  email?: string;
+  phone?: string;
+  hireDate?: string;
+  hourlyRate?: number;
+  monthlySalary?: number;
+  notes?: string;
+}
+

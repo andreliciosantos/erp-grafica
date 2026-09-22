@@ -9,6 +9,7 @@ import {
   Printer,
   ShieldCheck,
   PrinterIcon,
+  UserCheck,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../stores/authStore';
@@ -53,6 +54,12 @@ export const Sidebar: React.FC = () => {
       to: '/parties',
       label: 'Clientes & Fornec.',
       icon: <Users className="w-4 h-4" />,
+      roles: [Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR],
+    },
+    {
+      to: '/employees',
+      label: 'Equipe & RH',
+      icon: <UserCheck className="w-4 h-4" />,
       roles: [Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR],
     },
     {

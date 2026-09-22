@@ -244,8 +244,11 @@ export function createMockPrismaService() {
       }),
     },
     stockMovement: {
+      findFirst: vi.fn(async ({ where }: any) => {
+        return stockMovements.find((m) => m.workOrderId === where?.workOrderId) || null;
+      }),
       findMany: vi.fn(async ({ where }: any) => {
-        return stockMovements.filter((m) => m.workOrderId === where.workOrderId);
+        return stockMovements.filter((m) => m.workOrderId === where?.workOrderId);
       }),
       create: vi.fn(async ({ data }: any) => {
         const m = { id: `sm-${Date.now()}`, ...data };
