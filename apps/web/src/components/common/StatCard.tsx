@@ -6,7 +6,7 @@ export interface StatCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon: ReactNode;
+  icon?: ReactNode;
   trend?: {
     value: string;
     positive: boolean;
@@ -41,9 +41,11 @@ export const StatCard: React.FC<StatCardProps> = ({
           {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
         </div>
       </div>
-      <div className="rounded-xl bg-slate-800/80 p-3 text-slate-300 border border-slate-700/50 shadow-inner">
-        {icon}
-      </div>
+      {icon && (
+        <div className="rounded-xl bg-slate-800/80 p-3 text-slate-300 border border-slate-700/50 shadow-inner">
+          {icon}
+        </div>
+      )}
     </Card>
   );
 };
