@@ -79,11 +79,11 @@ export const UsersPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+          <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             Controle de Usuários & Acesso (RBAC)
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Gestão de operadores de fábrica, vendedores e administradores do ERP
           </p>
         </div>
@@ -99,14 +99,14 @@ export const UsersPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="py-12 text-center text-slate-400 text-xs">Carregando usuários...</div>
+            <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-xs">Carregando usuários...</div>
           ) : users.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-xs">Nenhum usuário cadastrado.</div>
+            <div className="py-12 text-center text-slate-400 dark:text-slate-500 text-xs">Nenhum usuário cadastrado.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-medium">
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
                     <th className="pb-3 font-medium">Nome do Usuário</th>
                     <th className="pb-3 font-medium">E-mail de Login</th>
                     <th className="pb-3 font-medium">Perfil / Função</th>
@@ -115,14 +115,14 @@ export const UsersPage: React.FC = () => {
                     <th className="pb-3 font-medium text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/60">
                   {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3.5 font-semibold text-slate-200 flex items-center gap-2">
-                        <UserCheck className="w-4 h-4 text-slate-500" />
+                    <tr key={user.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="py-3.5 font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <UserCheck className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                         {user.name}
                       </td>
-                      <td className="py-3.5 text-slate-300 font-mono">{user.email}</td>
+                      <td className="py-3.5 text-slate-700 dark:text-slate-300 font-mono">{user.email}</td>
                       <td className="py-3.5">
                         <Badge
                           variant={
@@ -144,13 +144,13 @@ export const UsersPage: React.FC = () => {
                           {user.isActive ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </td>
-                      <td className="py-3.5 text-slate-400">{formatDateTime(user.createdAt)}</td>
+                      <td className="py-3.5 text-slate-500 dark:text-slate-400">{formatDateTime(user.createdAt)}</td>
                       <td className="py-3.5 text-right">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => setUserToDelete(user)}
-                          className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border-rose-500/30"
+                          className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-500/30"
                           title="Excluir ou Desativar Usuário"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

@@ -109,35 +109,79 @@ Em vez de organizar o código apenas por tipo técnico (`components/`, `views/`,
 * **`features/auth/`:** Tela de login com preenchimento rápido em 1 clique para demonstração ágil.
 * **`features/dashboard/`:** Painel executivo com cards estatísticos de faturamento e visualização do funil das 6 etapas industriais.
 * **`features/quotes/`:** Orçamentação com o componente exclusivo `SheetCuttingCanvas` (SVG interativo) que desenha visualmente a folha de papel, a pinça vermelha pontilhada, a sangria e a disposição dos itens.
-* **`features/work-orders/`:** Chão de Fábrica Kanban dinâmico com 6 colunas, cartões de OS com códigos de barras, modal de histórico completo e modal de apontamento do operador (com registro de operador, máquina, horários e perda de papel).
-* **`features/raw-materials/`, `machines/`, `parties/`, `users/`:** Módulos de gestão de insumos, parque gráfico e usuários.
+* **`features/work-orders/`:** Chão de Fábrica Kanban dinâmico com 6 colunas, suporte completo a **Drag and Drop** (`@hello-pangea/dnd`), cartões de OS com códigos de barras, visualização em lista/tabela responsiva, modal de histórico completo e modal de apontamento do operador (com registro de operador, máquina, horários e perda de papel). Permite também a criação direta de novas ordens de serviço por operadores e administradores.
+* **`features/users/` (Módulo de Funcionários / Operadores):** Gestão completa da equipe gráfica (Administradores, Comerciais, Financeiros e Operadores de Chão de Fábrica), com listagem com badges de papéis, criação e exclusão segura de colaboradores.
+* **`features/raw-materials/`, `machines/`, `parties/`:** Módulos de gestão de insumos, parque de máquinas e clientes/fornecedores com ações completas de listagem, cadastro e **exclusão segura** com confirmação preventiva.
 
 ### Tecnologias do Frontend:
 * **React 18 com Vite 6:** Tempo de inicialização instantâneo e Hot Module Replacement (HMR) sub-milissegundo.
-* **Tailwind CSS:** Design System responsivo em Dark Mode industrial, garantindo conforto visual para operadores no chão de fábrica e diretores no escritório.
+* **Tailwind CSS com Dark Mode por Classe (`darkMode: 'class'`):** Design System flexível com controle determinístico de temas claro e escuro.
 * **TanStack Query (React Query v5):** Gerenciamento inteligente de estado remoto do servidor (caching, invalidação declarativa de mutações e prevenção de requisições redundantes).
-* **Zustand:** Gerenciamento de estado de autenticação global extremamente leve com sincronização automática com o `localStorage`.
+* **Zustand:** Gerenciamento de estado de autenticação e tema visual (`themeStore`) extremamente leve com sincronização automática com o `localStorage`.
+* **@hello-pangea/dnd:** Biblioteca moderna de arrastar e soltar (Drag and Drop) acessível, fluida e compatível com React 18 e dispositivos móveis.
 
 ---
 
-## 7. A Suíte de Testes Automatizados
+## 7. Arquitetura Mobile First e Ergonomia de Interface
+
+A interface foi inteiramente adaptada seguindo os princípios rígidos de **Mobile First**, garantindo que tanto um operador utilizando um smartphone ou tablet de chão de fábrica quanto um diretor em um monitor 4K tenham uma experiência impecável sem quebras de layout:
+
+1. **Navegação Adaptativa (Slide-Over Drawer):**
+   - Em telas móveis (`< 768px`), a barra lateral (`Sidebar`) transforma-se em um *drawer* deslizante suave com efeito de sobreposição (*backdrop blur*), acessível através do botão hamburguer no cabeçalho.
+   - Ao tocar em qualquer rota ou no botão de fechar (`X`), o menu se fecha automaticamente, liberando a área de trabalho para a produção.
+2. **Quadro Kanban Touch com Scroll Snap:**
+   - Em dispositivos móveis, colunas de Kanban rígidas costumam quebrar a largura da tela. A solução implementada utiliza contêiner com `snap-x snap-mandatory` e rolagem horizontal suave, onde cada coluna possui largura adaptada (`w-[280px] sm:w-[320px] shrink-0 snap-center`). O operador desliza o dedo entre as fases da produção como se estivesse em um aplicativo nativo.
+3. **Ergonomia de Toque (Touch Targets):**
+   - Todos os botões e áreas interativas respeitam a recomendação ergonômica mínima de 36px a 46px de altura (`min-h-[40px]`), prevenindo toques acidentais em telas sensíveis ao toque industriais.
+4. **Tabelas com Envelopamento Responsivo:**
+   - As tabelas de insumos, máquinas, clientes e colaboradores possuem contêineres com overflow horizontal controlado (`overflow-x-auto`) e quebra de palavras estratégica, permitindo leitura confortável sem desconfigurar a barra de rolagem da janela principal.
+
+---
+
+## 8. Sistema de Temas (Claro / Escuro) e Paleta Pastel Agradável
+
+Para atender tanto a ambientes industriais escuros quanto escritórios com iluminação solar direta, o sistema conta com uma alternância dinâmica de tema:
+
+### 8.1. Botão de Escolha de Tema
+* Posicionado permanentemente no **rodapé da barra lateral esquerda** (`Sidebar`), visível em todas as telas.
+* Alterna entre os modos com transição suave, exibindo o ícone do Sol (`Sun`) para o tema claro e da Lua (`Moon`) para o tema escuro.
+* O estado é persistido no `localStorage` sob a chave `erp_theme` e sincronizado com as preferências do sistema operacional (`prefers-color-scheme`).
+
+### 8.2. A Filosofia das Cores Pastel
+Ao invés de cores primárias ultra-saturadas que causam cansaço visual (*visual fatigue*) em operadores que passam 8 horas olhando para telas de acompanhamento, o ERP adota uma paleta em tons pastel:
+* **Verde Salvia & Menta Pastel (`pastel.sage`, `pastel.mint`):** Representam sucesso, etapas concluídas e botões de ação positiva de forma suave e relaxante.
+* **Lavanda Pastel (`pastel.lavender`):** Utilizado para status intermediários, pré-impressão e destaques informativos.
+* **Pêssego & Âmbar Suave (`pastel.peach`):** Indicam etapas em andamento e alertas preventivos sem gerar estresse visual.
+* **Rosa Blush Pastel (`pastel.blush`):** Ações de perigo e exclusão com suavidade cromática, mas mantendo a clareza de atenção.
+* **Gelo & Azul Suave (`pastel.ice`, `brand`):** Identidade visual principal para navegação e botões primários.
+
+### 8.3. Acessibilidade e Contraste WCAG 2.1 AA
+* No **Tema Claro**, os badges e botões combinam fundos pastel muito sutis (`bg-emerald-50`, `bg-amber-50`) com tipografia escura de alto contraste (`text-emerald-700`, `text-amber-700`), garantindo legibilidade absoluta.
+* No **Tema Escuro**, as superfícies utilizam fundos neutros profundos (`bg-slate-900`, `bg-slate-850`) com acentos pastel translúcidos (`bg-emerald-500/15 text-emerald-400`), eliminando o brilho excessivo e poupando energia em telas OLED.
+
+---
+
+## 9. A Suíte de Testes Automatizados
 
 O sistema conta com **100% de aprovação** nos testes automatizados em todos os pacotes:
 
 1. **`@erp/business-core`:** Testes de estresse para os cálculos geométricos de corte, permutações de 90° e fórmulas de precificação com precisão arbitrária.
-2. **`apps/api`:** Suíte de validação de endpoints e script automatizado `test-swagger.cjs` que testa todo o fluxo de ponta a ponta (login, cadastro de cliente, insumo, máquina, orçamento e geração de OS no Kanban).
-3. **`apps/web` (Vitest + Testing Library + JSDOM):** 10 arquivos de teste cobrindo 60 cenários críticos:
+2. **`apps/api` (Jest):** 19 testes automatizados cobrindo serviços e controladores, além do script de integração `test-swagger.cjs` que valida o fluxo de ponta a ponta (login, clientes, insumos, máquinas, orçamentos, OS e eventos).
+3. **`apps/web` (Vitest + Testing Library + JSDOM):** **72 testes** distribuídos em 13 arquivos cobrindo:
+   - Gerenciamento de Tema Zustand (`themeStore.test.ts`): alternância, persistência em localStorage e sincronização com a classe `.dark` do DOM.
+   - Barra lateral responsiva (`Sidebar.test.tsx`): renderização de rotas, drawer móvel e acionamento do botão de alternância de tema no rodapé.
+   - Layout mestre móvel (`MainLayout.test.tsx`): abertura e fechamento do menu hamburguer em dispositivos móveis.
    - Utilitários e formatadores monetários BRL.
    - Estado de autenticação Zustand (login, logout, hidratação de sessão).
-   - Componentes visuais do Design System (Button, Badge, Input, Modal, StatCard).
-   - Canvas SVG de imposição de folha pai.
+   - Componentes visuais do Design System (Button, Badge, Input, Select, Modal, StatCard).
+   - Canvas SVG de imposição de folha pai (`SheetCuttingCanvas`).
    - Formulário de login e cartão Kanban de OS.
 
 ---
 
-## 8. Infraestrutura de Tunelamento (Cloudflare Tunnel)
+## 10. Infraestrutura de Tunelamento (Cloudflare Tunnel)
 
 Para viabilizar a demonstração pública do sistema para testes de clientes ou parceiros externos sem a complexidade de alugar servidores de nuvem provisórios ou abrir portas inseguras no roteador:
 * **Binário Nativo `cloudflared`:** Cria uma conexão de saída (*outbound*) criptografada para a rede edge global da Cloudflare.
 * **Certificado SSL Automático (HTTPS):** Gera uma URL segura (ex: `https://...trycloudflare.com`) sem telas de aviso de segurança.
-* **Proxy Unificado no Vite:** O túnel aponta para a porta `5173`. O Vite, por sua vez, atua como *Reverse Proxy*, redirecionando chamadas `/api` e `/docs` para a porta `3000` e canais `/socket.io` para o WebSocket Gateway, garantindo que o amigo do usuário consiga interagir com o front, o back e os websockets em uma única URL.
+* **Proxy Unificado no Vite:** O túnel aponta para a porta `5173`. O Vite, por sua vez, atua como *Reverse Proxy*, redirecionando chamadas `/api` e `/docs` para a porta `3000` e canais `/socket.io` para o WebSocket Gateway, garantindo que qualquer usuário externo consiga interagir com o front, o back e os websockets em uma única URL.

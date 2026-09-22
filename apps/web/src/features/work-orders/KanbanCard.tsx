@@ -33,17 +33,17 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ order, onClick, onAdvanc
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={onClick}
-      className={`group relative rounded-xl border bg-slate-900/90 p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing space-y-2.5 ${
+      className={`group relative rounded-2xl border bg-white dark:bg-slate-900/90 p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing space-y-2.5 ${
         isDragging
-          ? 'opacity-40 scale-95 border-emerald-500/80 ring-2 ring-emerald-500/40 shadow-2xl bg-emerald-950/30'
-          : 'border-slate-800 hover:border-slate-700 hover:shadow-md'
+          ? 'opacity-40 scale-95 border-emerald-500 ring-2 ring-emerald-500/40 shadow-xl bg-emerald-50/50 dark:bg-emerald-950/30'
+          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md'
       }`}
     >
       {/* Header with Drag Handle, OS Number and Priority */}
       <div className="flex items-start justify-between gap-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
-          <GripVertical className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 flex-shrink-0 transition-colors" />
-          <span className="font-mono text-xs font-bold text-emerald-400 group-hover:text-emerald-300 transition-colors truncate">
+          <GripVertical className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 flex-shrink-0 transition-colors" />
+          <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400 group-hover:text-emerald-800 dark:group-hover:text-emerald-300 transition-colors truncate">
             {order.orderNumber}
           </span>
         </div>
@@ -53,32 +53,32 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ order, onClick, onAdvanc
       </div>
 
       {/* Customer */}
-      <div className="flex items-center gap-1.5 text-xs text-slate-300 font-medium truncate">
-        <User className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+      <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium truncate">
+        <User className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
         <span className="truncate">{order.party?.name || 'Cliente'}</span>
       </div>
 
       {/* Industrial Stage Progress Bar */}
       <div className="pt-1">
-        <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+        <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1">
           <span className="flex items-center gap-1">
-            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
+            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
             Progresso Fabril
           </span>
-          <span className="font-mono font-medium text-slate-300">
+          <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
             {completedStages}/{totalStages} etapas
           </span>
         </div>
-        <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden flex">
+        <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex">
           {Array.from({ length: totalStages }).map((_, idx) => (
             <div
               key={idx}
-              className={`flex-1 border-r border-slate-900 transition-colors ${
+              className={`flex-1 border-r border-white dark:border-slate-900 transition-colors ${
                 idx < completedStages
                   ? 'bg-emerald-500'
                   : idx === completedStages
                   ? 'bg-emerald-400/50 animate-pulse'
-                  : 'bg-slate-800'
+                  : 'bg-slate-200 dark:bg-slate-800'
               }`}
             />
           ))}
@@ -86,16 +86,16 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ order, onClick, onAdvanc
       </div>
 
       {/* Delivery Date & Total Amount */}
-      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-800/80">
+      <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
         <div className="flex items-center gap-1">
-          <Calendar className="w-3 h-3 text-slate-500" />
+          <Calendar className="w-3 h-3 text-slate-400 dark:text-slate-500" />
           <span>{formatDate(order.deliveryDate)}</span>
         </div>
-        <span className="font-semibold text-slate-200">{formatCurrency(order.totalAmount)}</span>
+        <span className="font-semibold text-slate-800 dark:text-slate-200">{formatCurrency(order.totalAmount)}</span>
       </div>
 
       {/* Barcode & Quick Advance */}
-      <div className="flex items-center justify-between pt-0.5 text-[10px] text-slate-500">
+      <div className="flex items-center justify-between pt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-1 font-mono">
           <Barcode className="w-3.5 h-3.5 text-slate-400" />
           <span className="truncate max-w-[85px]">{order.barcode || order.orderNumber}</span>
@@ -108,7 +108,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ order, onClick, onAdvanc
               e.stopPropagation();
               onAdvance(order);
             }}
-            className="flex items-center gap-0.5 text-emerald-400 hover:text-emerald-300 font-medium px-1.5 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
+            className="flex items-center gap-0.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-medium px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
             title="Avançar para próxima etapa"
           >
             <span>Avançar</span>
@@ -119,4 +119,3 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ order, onClick, onAdvanc
     </div>
   );
 };
-

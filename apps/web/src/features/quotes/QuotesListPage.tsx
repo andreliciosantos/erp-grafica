@@ -74,11 +74,11 @@ export const QuotesListPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
-            <Calculator className="w-5 h-5 text-emerald-400" />
+          <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Calculator className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             Orçamentos Gráficos
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Cálculos técnicos de aproveitamento de papel, margens e aprovação de produção
           </p>
         </div>
@@ -107,10 +107,10 @@ export const QuotesListPage: React.FC = () => {
                 key={status}
                 type="button"
                 onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
                   statusFilter === status
                     ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700/50'
                 }`}
               >
                 {status === 'ALL' ? 'Todos' : getStatusConfig(status).label}
@@ -127,18 +127,18 @@ export const QuotesListPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="py-12 text-center text-slate-400 text-xs">
+            <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-xs">
               Carregando orçamentos...
             </div>
           ) : filteredQuotes.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-xs">
+            <div className="py-12 text-center text-slate-400 dark:text-slate-500 text-xs">
               Nenhum orçamento encontrado para os critérios selecionados.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-medium">
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
                     <th className="pb-3 font-medium">Código</th>
                     <th className="pb-3 font-medium">Produto / Detalhes</th>
                     <th className="pb-3 font-medium">Tiragem</th>
@@ -149,39 +149,39 @@ export const QuotesListPage: React.FC = () => {
                     <th className="pb-3 font-medium text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/60">
                   {filteredQuotes.map((quote) => {
                     const statusConfig = getStatusConfig(quote.status);
                     const firstItem = quote.items?.[0];
                     return (
-                      <tr key={quote.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3.5 font-mono font-semibold text-emerald-400">
+                      <tr key={quote.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="py-3.5 font-mono font-semibold text-emerald-700 dark:text-emerald-400">
                           #{quote.code || quote.id.slice(0, 8)}
                         </td>
                         <td className="py-3.5">
-                          <p className="font-semibold text-slate-200">
+                          <p className="font-semibold text-slate-800 dark:text-slate-200">
                             {firstItem?.productName || 'Material Gráfico'}
                           </p>
                           {quote.notes && (
-                            <p className="text-[11px] text-slate-400 truncate max-w-xs">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs">
                               {quote.notes}
                             </p>
                           )}
                         </td>
-                        <td className="py-3.5 text-slate-300 font-medium">
+                        <td className="py-3.5 text-slate-700 dark:text-slate-300 font-medium">
                           {firstItem?.quantity?.toLocaleString('pt-BR') || '-'} un
                         </td>
-                        <td className="py-3.5 text-slate-300">
+                        <td className="py-3.5 text-slate-700 dark:text-slate-300">
                           {firstItem ? (
-                            <span className="text-[11px] text-slate-300">
-                              <strong className="text-emerald-400">{firstItem.itemsPerSheet}</strong>/fl ({firstItem.sheetsRequired} folhas)
+                            <span className="text-[11px] text-slate-700 dark:text-slate-300">
+                              <strong className="text-emerald-700 dark:text-emerald-400">{firstItem.itemsPerSheet}</strong>/fl ({firstItem.sheetsRequired} folhas)
                             </span>
                           ) : '-'}
                         </td>
-                        <td className="py-3.5 font-bold text-slate-100">
+                        <td className="py-3.5 font-bold text-slate-850 dark:text-slate-100">
                           {formatCurrency(quote.totalAmount)}
                         </td>
-                        <td className="py-3.5 text-slate-400">
+                        <td className="py-3.5 text-slate-500 dark:text-slate-400">
                           {formatDate(quote.validUntil)}
                         </td>
                         <td className="py-3.5">

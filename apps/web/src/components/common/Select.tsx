@@ -20,16 +20,16 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full space-y-1.5">
         {label && (
-          <label htmlFor={selectId} className="block text-xs font-medium text-slate-300">
+          <label htmlFor={selectId} className="block text-xs font-medium text-slate-700 dark:text-slate-300">
             {label}
-            {props.required && <span className="text-rose-400 ml-1">*</span>}
+            {props.required && <span className="text-rose-500 dark:text-rose-400 ml-1">*</span>}
           </label>
         )}
         <select
           id={selectId}
           ref={ref}
           className={cn(
-            'block w-full rounded-lg bg-slate-900 border border-slate-700/80 px-3 py-2 text-sm text-slate-100 transition-colors',
+            'block w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 px-3.5 py-2 text-sm text-slate-800 dark:text-slate-100 transition-colors',
             'focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500',
             error && 'border-rose-500 focus:border-rose-500 focus:ring-rose-500',
             className
@@ -37,17 +37,17 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           {...props}
         >
           {placeholder && (
-            <option value="" disabled className="text-slate-500 bg-slate-900">
+            <option value="" disabled className="text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900">
               {placeholder}
             </option>
           )}
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value} className="bg-slate-900 text-slate-100">
+            <option key={opt.value} value={opt.value} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">
               {opt.label}
             </option>
           ))}
         </select>
-        {error && <p className="text-xs text-rose-400">{error}</p>}
+        {error && <p className="text-xs text-rose-600 dark:text-rose-400">{error}</p>}
       </div>
     );
   }

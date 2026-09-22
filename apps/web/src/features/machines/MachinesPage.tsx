@@ -74,11 +74,11 @@ export const MachinesPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
-            <Printer className="w-5 h-5 text-emerald-400" />
+          <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Printer className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             Parque Gráfico & Máquinas de Impressão
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Configuração de velocidades nominais, taxas horárias e tempos médios de setup
           </p>
         </div>
@@ -94,31 +94,31 @@ export const MachinesPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="py-12 text-center text-slate-400 text-xs">Carregando máquinas...</div>
+            <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-xs">Carregando máquinas...</div>
           ) : machines.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-xs">Nenhuma máquina cadastrada.</div>
+            <div className="py-12 text-center text-slate-400 dark:text-slate-500 text-xs">Nenhuma máquina cadastrada.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {machines.map((machine) => (
                 <div
                   key={machine.id}
-                  className="rounded-xl bg-slate-950/70 border border-slate-800 p-4 space-y-3 hover:border-slate-700 transition-colors"
+                  className="rounded-2xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-4 space-y-3 hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-xs"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-sm font-bold text-slate-100">{machine.name}</h3>
+                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{machine.name}</h3>
                       <Badge variant="success" size="sm" className="mt-1">
                         Ativa
                       </Badge>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <div className="p-2 rounded-lg bg-slate-800 text-emerald-400">
+                      <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:text-emerald-400 border border-emerald-100 dark:border-slate-700/60">
                         <Printer className="w-4 h-4" />
                       </div>
                       <button
                         type="button"
                         onClick={() => setMachineToDelete(machine)}
-                        className="p-2 rounded-lg bg-slate-800/80 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 transition-colors cursor-pointer border border-slate-700/50"
+                        className="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-slate-800/80 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-500/20 transition-colors cursor-pointer border border-rose-200/60 dark:border-slate-700/50"
                         title="Excluir Máquina"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -126,28 +126,28 @@ export const MachinesPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5 pt-2 border-t border-slate-800/80 text-xs">
-                    <div className="flex justify-between text-slate-400">
+                  <div className="space-y-1.5 pt-2 border-t border-slate-200 dark:border-slate-800/80 text-xs">
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
                       <span className="flex items-center gap-1">
-                        <Gauge className="w-3.5 h-3.5 text-slate-500" />
+                        <Gauge className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                         Velocidade Nominal:
                       </span>
-                      <span className="font-semibold text-slate-200">
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">
                         {machine.maxSheetsHour?.toLocaleString('pt-BR') || '-'} fl/h
                       </span>
                     </div>
 
-                    <div className="flex justify-between text-slate-400">
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-slate-500" />
+                        <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                         Tempo de Setup:
                       </span>
-                      <span className="font-semibold text-slate-200">{machine.setupMinutes} min</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">{machine.setupMinutes} min</span>
                     </div>
 
-                    <div className="flex justify-between text-slate-400 pt-1 border-t border-slate-850">
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/80 dark:border-slate-850">
                       <span>Custo Hora-Máquina:</span>
-                      <span className="font-bold text-emerald-400 text-sm">
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400 text-sm">
                         {formatCurrency(machine.hourlyRate)} / hora
                       </span>
                     </div>

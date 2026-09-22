@@ -228,21 +228,21 @@ export const WorkOrdersPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 flex flex-col h-[calc(100vh-6.5rem)]">
+    <div className="space-y-4 sm:space-y-6 flex flex-col h-[calc(100vh-5.5rem)] sm:h-[calc(100vh-6.5rem)]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4 flex-shrink-0">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
-            <KanbanSquare className="w-5 h-5 text-emerald-400" />
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <KanbanSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             Chão de Fábrica & Gestão de Produção (PCP)
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Máquina de estados industrial e apontamento de produção com sincronização em tempo real
           </p>
         </div>
 
         {/* Action Button & View Switcher & Search */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Button
             variant="primary"
             size="sm"
@@ -253,27 +253,27 @@ export const WorkOrdersPage: React.FC = () => {
             <span>Novo Pedido / OS</span>
           </Button>
 
-          <div className="w-56 hidden sm:block">
+          <div className="w-44 sm:w-56">
             <Input
-              placeholder="Buscar OS, cliente, código..."
+              placeholder="Buscar OS, cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
             />
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 p-1 rounded-xl flex items-center gap-1">
+          <div className="bg-slate-200/80 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 p-1 rounded-xl flex items-center gap-1">
             <button
               type="button"
               onClick={() => setViewMode('KANBAN')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 viewMode === 'KANBAN'
                   ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <KanbanSquare className="w-3.5 h-3.5" />
-              Kanban
+              <span className="hidden sm:inline">Kanban</span>
             </button>
             <button
               type="button"
@@ -281,11 +281,11 @@ export const WorkOrdersPage: React.FC = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 viewMode === 'TABLE'
                   ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <List className="w-3.5 h-3.5" />
-              Tabela
+              <span className="hidden sm:inline">Tabela</span>
             </button>
           </div>
         </div>
@@ -293,7 +293,7 @@ export const WorkOrdersPage: React.FC = () => {
 
       {/* Main View Area */}
       {viewMode === 'KANBAN' ? (
-        <div className="flex-1 overflow-x-auto pb-2 flex gap-4 min-h-0">
+        <div className="flex-1 overflow-x-auto pb-4 flex gap-4 min-h-0 snap-x snap-mandatory">
           {kanbanColumns.map((col) => {
             const colOrders = filteredOrders.filter((o) => o.status === col.id);
             return (
@@ -320,18 +320,18 @@ export const WorkOrdersPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="py-12 text-center text-slate-400 text-xs">
+              <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-xs">
                 Carregando ordens de serviço...
               </div>
             ) : filteredOrders.length === 0 ? (
-              <div className="py-12 text-center text-slate-500 text-xs">
+              <div className="py-12 text-center text-slate-400 dark:text-slate-500 text-xs">
                 Nenhuma ordem de serviço cadastrada.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-slate-800 text-slate-400 font-medium">
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
                       <th className="pb-3 font-medium">Número OS</th>
                       <th className="pb-3 font-medium">Cliente</th>
                       <th className="pb-3 font-medium">Prioridade</th>
@@ -341,16 +341,16 @@ export const WorkOrdersPage: React.FC = () => {
                       <th className="pb-3 font-medium text-right">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/60">
                     {filteredOrders.map((order) => {
                       const statusConfig = getStatusConfig(order.status);
                       const priorityConfig = getPriorityConfig(order.priority);
                       return (
-                        <tr key={order.id} className="hover:bg-slate-800/30 transition-colors">
-                          <td className="py-3.5 font-mono font-bold text-emerald-400">
+                        <tr key={order.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                          <td className="py-3.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">
                             {order.orderNumber}
                           </td>
-                          <td className="py-3.5 text-slate-200 font-medium">
+                          <td className="py-3.5 text-slate-800 dark:text-slate-200 font-medium">
                             {order.party?.name || 'Cliente'}
                           </td>
                           <td className="py-3.5">
@@ -363,22 +363,22 @@ export const WorkOrdersPage: React.FC = () => {
                               {statusConfig.label}
                             </Badge>
                           </td>
-                          <td className="py-3.5 text-slate-400">
+                          <td className="py-3.5 text-slate-500 dark:text-slate-400">
                             {formatDate(order.deliveryDate)}
                           </td>
-                          <td className="py-3.5 font-bold text-slate-100">
+                          <td className="py-3.5 font-bold text-slate-800 dark:text-slate-100">
                             {formatCurrency(order.totalAmount)}
                           </td>
                           <td className="py-3.5 text-right space-x-1.5">
                             <Button size="sm" variant="outline" onClick={() => setSelectedOrder(order)}>
                               <Eye className="w-3.5 h-3.5" />
-                              Ver Detalhes
+                              <span className="hidden sm:inline">Ver Detalhes</span>
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => setOrderToDelete(order)}
-                              className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border-rose-500/30"
+                              className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-500/30"
                               title="Excluir Ordem de Serviço"
                             >
                               <Trash2 className="w-3.5 h-3.5" />

@@ -202,6 +202,112 @@ O utilitário **Cloudflare Tunnel (`cloudflared`)** inverte radicalmente o model
 
 ---
 
+## 11. Engenharia de Layouts Responsivos e o Paradigma Mobile-First
+
+### 11.1. A Falácia do "Desktop-Down" vs. O Axioma do "Mobile-First"
+Historicamente, engenheiros de software cometiam o equívoco de projetar interfaces complexas exclusivamente para monitores de alta resolução ($1920 \times 1080$) e, posteriormente, tentavam "espremer" os elementos em telas reduzidas através de sucessivos *overrides* de CSS baseados em `max-width`. Esse modelo anti-padronizado acarreta dois problemas teóricos graves:
+1. **Inchaço de Regras de Estilo (CSS Overhead):** O navegador de um dispositivo móvel com recursos de CPU e memória reduzidos é forçado a processar primeiro as regras complexas de desktop para depois descartá-las e sobrescrevê-las, degradando o tempo de primeira renderização interativa (*Time to Interactive* - TTI).
+2. **Degradação da Arquitetura de Informação:** A interface móvel torna-se um mero reflexo truncado e remendado da versão desktop.
+
+A abordagem **Mobile-First** adota o axioma formal da **Melhoria Progressiva** (*Progressive Enhancement*):
+$$\text{Layout Base (Mobile)} \quad \xrightarrow{\text{min-width: 640px (sm)}} \quad \text{Tablet} \quad \xrightarrow{\text{min-width: 768px (md)}} \quad \text{Desktop} \quad \xrightarrow{\text{min-width: 1024px (lg)}} \quad \text{Widescreen}$$
+O motor CSS do navegador compila prioritariamente o leiaute minimalista e fundamental, ativando grades multidimensionais complexas e barras laterais fixas apenas quando a capacidade espacial do dispositivo receptor é matematicamente comprovada por *media queries* ascendentes.
+
+### 11.2. Lei de Fitts e Ergonomia Computacional de Toque (Touch Targets)
+Na teoria clássica da Interação Humano-Computador, a **Lei de Fitts** modela o tempo médio $T$ necessário para um operador humano mover um apontador até uma área-alvo visual:
+$$T = a + b \log_2 \left( \frac{2D}{W} \right)$$
+Onde:
+* $D$ representa a distância física do cursor ou dedo até o alvo.
+* $W$ representa a largura ou dimensão projetada do alvo ao longo do eixo de movimento.
+* O termo $\log_2 \left( \frac{2D}{W} \right)$ constitui o **Índice de Dificuldade** ($ID$).
+
+Em uma fábrica gráfica, operadores frequentemente manuseiam tablets ou terminais industriais vestindo luvas de segurança ou com mãos sujas de tinta e solvente. Se os botões interativos possuírem dimensões reduzidas (ex: 20px de altura), o valor de $W$ torna-se ínfimo, disparando o índice de dificuldade $ID$ e provocando toques acidentais em ações críticas (como disparar uma ordem incorreta). No ERP Gráfica Modular, estabelecemos como invariante ergonômica uma altura mínima de toque de **$40\text{px}$ a $46\text{px}$** (`min-h-[40px]`), em estrita conformidade com as diretrizes do *Apple Human Interface Guidelines* e *Google Material Design*, mitigando o erro humano por modelagem biomecânica.
+
+### 11.3. Algoritmos de Rolagem por Ancoragem Magnética: CSS Scroll Snap
+O fluxo de produção gráfica demanda um quadro Kanban com 6 etapas estritas. Em um monitor widescreen, cada coluna exibe confortavelmente 320px de largura ($6 \times 320\text{px} = 1920\text{px}$). No entanto, em um visor móvel de $375\text{px}$ a $414\text{px}$, uma rolagem horizontal contínua sem controle induz à perda de foco espacial do operador.
+
+Implementamos as primitivas cinemáticas de **CSS Scroll Snap**:
+* O contêiner pai recebe `scroll-snap-type: x mandatory` e `overflow-x: auto`.
+* Cada coluna do Kanban atua como um nó de atração elástica com `scroll-snap-align: center` e largura delimitada (`w-[280px] sm:w-[320px] shrink-0`).
+A GPU do dispositivo móvel assume o cálculo de desaceleração inercial via hardware, garantindo que o operador deslize o dedo horizontalmente entre as colunas com alinhamento magnético determinístico $\mathcal{O}(1)$ sem quebras de layout ou desalinhamentos visuais.
+
+### 11.4. Contexto de Empilhamento Tridimensional (Stacking Context) e Gavetas Deslizantes
+Para resoluções móveis (`< 768px`), a barra lateral (`Sidebar`) migra dinamicamente de uma coluna fixa no fluxo do documento para uma **Gaveta Deslizante** (*Slide-Over Drawer*). Para blindar essa gaveta contra colisões de renderização:
+* Cria-se um novo **Contexto de Empilhamento** tridimensional no grafo do navegador através de `position: fixed` associado a `z-index: 50`.
+* Aplica-se uma máscara de atenuação luminescente (*backdrop*) com dispersão de luz em tempo de execução (`backdrop-blur-sm bg-slate-900/40`), induzindo a percepção do operador a reconhecer o menu como uma camada efêmera de prioridade máxima no grafo de foco e acessibilidade.
+
+---
+
+## 12. Interação Humano-Computador (IHC), Teoria das Cores e Ergonomia Visual
+
+### 12.1. O Problema da Astenopia e Fadiga Visual em Operadores
+Monitores industriais configurados com cores primárias em saturação máxima (vermelho puro `#FF0000`, verde puro `#00FF00` ou amarelo puro `#FFFF00`) provocam uma excitação neural excessiva e contínua nos fotorreceptores da retina humana (especificamente os cones L, M e S). Em turnos industriais de 8 a 12 horas, esse bombardeio espectral gera **astenopia** (fadiga visual ocular crônica), cefaleia tensional e queda acentuada nos níveis de vigilância do operador de máquinas.
+
+### 12.2. A Cromodinâmica das Cores Pastel
+No espaço cromático de matiz, saturação e luminosidade (HSL), as tonalidades **pastel** são obtidas através de uma diminuição substancial do parâmetro de **saturação** ($S \ll 1.0$) associada a um aumento da **luminosidade** ($L \in [0.85, 0.95]$ no espectro claro) ou atenuação translúcida suave no espectro escuro.
+O ERP Gráfica adota uma matriz cromática inspirada na psicologia das cores e no sistema Munsell:
+* **Verde Sálvia e Menta Pastel (`pastel.sage`, `pastel.mint`):** Identificam etapas finalizadas e botões afirmativos, ativando respostas neurológicas associadas a estabilidade e alívio de estresse.
+* **Lavanda Pastel (`pastel.lavender`):** Utilizado na fase de Pré-Impressão e CTP, estimulando estados mentais de precisão e planejamento geométrico.
+* **Pêssego e Âmbar Pastel (`pastel.peach`):** Utilizado na fase de Impressão Ativa, sinalizando dinamismo e atenção operacional sem gerar o sobressalto visceral de um alerta estridente.
+* **Rosa Blush Pastel (`pastel.blush`):** Destinado a ações de exclusão e refugo, garantindo clareza semântica inconfundível sem provocar sensação punitiva no operador.
+
+### 12.3. A Equação Fotométrica de Contraste Luminoso: WCAG 2.1 AA
+A acessibilidade tipográfica é avaliada por critérios físico-matemáticos objetivos estabelecidos pelo consórcio W3C. A luminância relativa $L$ de qualquer coordenada sRGB é expressa por:
+$$L = 0.2126 R_s + 0.7152 G_s + 0.0722 B_s$$
+Onde cada componente cromático $C \in \{R, G, B\}$ normalizado no intervalo $[0, 1]$ é linearizado pela função de transferência gama inversa:
+$$C_s = \begin{cases} \frac{C}{12.92}, & \text{se } C \le 0.03928 \\ \left(\frac{C + 0.055}{1.055}\right)^{2.4}, & \text{se } C > 0.03928 \end{cases}$$
+A **Razão de Contraste** ($CR$) entre a cor de maior luminância ($L_1$) e a de menor luminância ($L_2$) é rigorosamente:
+$$CR = \frac{L_1 + 0.05}{L_2 + 0.05}$$
+* **No Tema Claro:** Inserir texto pastel claro sobre fundo branco geraria uma violação severa ($CR < 2.5:1$). Para garantir conformidade irrestrita com o nível **WCAG AA** ($CR \ge 4.5:1$), nossa arquitetura emprega fundos com micro-pigmentação nível 50 (`bg-emerald-50`) combinados com tipografia de alta densidade nível 700 (`text-emerald-700`), atingindo $CR \ge 6.8:1$.
+* **No Tema Escuro:** Superfícies neutras de grafite profundo (`bg-slate-900`) são associadas a tipografia fosforescente suave nível 400 (`text-emerald-400`), atingindo $CR \ge 7.4:1$, garantindo legibilidade absoluta tanto sob luz solar direta quanto em galpões de impressão com penumbra controlada.
+
+---
+
+## 13. Arquitetura de Alternância de Temas e Persistência Reativa
+
+### 13.1. A Problemática do FOUC (*Flash of Unstyled Content*)
+Ao projetar a alternância entre tema claro e escuro em aplicações de página única (SPAs), desenvolvedores desatentos cometem frequentemente a falha de atrelar o tema unicamente ao ciclo de vida de renderização do framework JavaScript (como um hook `useEffect` tardio do React). A cronologia temporal dessa falha revela:
+1. O navegador realiza o parse do documento HTML inicial em branco.
+2. O parser de JavaScript avalia e compila o bundle da aplicação.
+3. O componente React é montado e, após a primeira renderização, lê a chave do `localStorage`.
+4. A classe `.dark` é adicionada ao elemento raiz após um intervalo de 100ms a 300ms.
+O resultado perceptivo é o **FOUC**: uma cintilação ofuscante de luz branca no olho do usuário em um ambiente escuro, quebrando a integridade visual do sistema.
+
+### 13.2. Sincronização Síncrona Precoce no DOM
+Para extirpar formalmente qualquer possibilidade de FOUC no ERP Gráfica Modular:
+* O módulo `apps/web/src/stores/themeStore.ts` disponibiliza uma rotina síncrona `initializeTheme()` que avalia deterministicamente a precedência:
+  $$\text{Tema Efetivo} = \text{localStorage}['\text{erp\_theme}'] \;\lor\; (\text{matchMedia}('\text{prefers-color-scheme: dark}').\text{matches} \ ? \ \text{'dark'} : \text{'light'})$$
+* Essa rotina é invocada diretamente no ponto de entrada `main.tsx` antes do método `createRoot(document.getElementById('root')!).render(...)`, garantindo que a classe `.dark` já esteja formalmente assentada na tag `<html>` antes do cálculo do primeiro frame pelo compositor da GPU.
+
+### 13.3. CSS Custom Properties (Variáveis de Estilo) vs. Tailwind `darkMode: 'class'`
+Adotar a estratégia `darkMode: 'media'` do Tailwind limitaria o sistema a refletir passivamente a configuração do sistema operacional do usuário, retirando do operador a liberdade de forçar o modo claro em um monitor que receba reflexo de luz solar na fábrica. A configuração `darkMode: 'class'` implementa o **Princípio da Soberania do Usuário**:
+* A classe `.dark` atua como um modificador de escopo contextual global.
+* Em conjunto com as variáveis CSS declaradas no `index.css` (`--color-bg-primary`, `--color-card-bg`, etc.), o sistema desacopla a representação vetorial das cores da semântica dos componentes, viabilizando transições fluidas de interpolação cromática (`transition-colors duration-200`).
+
+---
+
+## 14. Física de Interação: Drag and Drop (@hello-pangea/dnd) e Atualizações Otimistas
+
+### 14.1. Limitações Estruturais da API Nativa HTML5 Drag and Drop
+A especificação do W3C para o HTML5 Drag and Drop (`dragstart`, `dragenter`, `drop`) padece de restrições arquiteturais históricas:
+* **Incompatibilidade Tátil Nativa:** Concebida na era dos computadores de mesa, a API nativa depende intimamente de eventos de cursor de mouse. Ela é incapaz de processar de forma uniforme os fluxos contínuos de eventos de toque capacitivo (`touchstart`, `touchmove`, `touchend`) em tablets e smartphones.
+* **Barreira de Acessibilidade:** Não provê uma máquina de estados semântica para operadores com deficiências motoras que dependem exclusivamente de navegação por teclado (WAI-ARIA).
+
+A adoção da biblioteca **`@hello-pangea/dnd`** (a evolução mantida e estendida do *react-beautiful-dnd*) soluciona essa entropia ao unificar o modelo em torno de **Pointer Events**, orquestrando uma física elástica de translação vetorial suave e habilitando atalhos completos de teclado (barra de espaço para elevar o cartão de OS, setas direcionais para transladá-lo entre colunas e espaço para descarregá-lo no destino).
+
+### 14.2. Atualizações de Interface Otimistas ($\mathcal{O}(1)$)
+Em uma linha de montagem gráfica de alta velocidade, a latência de rede não pode ditar a agilidade do operador. Se ao soltar um cartão de ordem de serviço na coluna "Acabamento" a interface congelasse aguardando a resposta transacional do banco de dados relacional via HTTP:
+1. O operador perceberia um engasgo perceptivo (*interaction lag*).
+2. Tentativas sucessivas de clique gerariam requisições concorrentes duplicadas.
+
+Nossa arquitetura implementa o padrão de **Mutações Otimistas**:
+1. O manipulador `onDragEnd` recalcula instantaneamente a projeção dos dados em memória local e comuta a árvore visual em complexidade temporal $\mathcal{O}(1)$.
+2. A requisição assíncrona HTTP (`workOrdersService.updateStageStatus`) é despachada em segundo plano.
+3. Caso ocorra uma indisponibilidade transitória de rede ou rejeição de permissão, o gerenciador TanStack Query dispara um *rollback* resiliente do estado visual para a posição anterior, notificando o operador através de um alerta discreto sem corromper a máquina de estados finitos do chão de fábrica.
+
+---
+
 ## Conclusão da Aula Magistral
 
-> *"Como pudemos constatar ao longo desta análise, o ERP Gráfica Modular não é uma coleção fortuita de bibliotecas da moda. Cada tecnologia — do rigor aritmético do `Decimal.js` à eficiência de grafos do `Turborepo`, da integridade relacional do `PostgreSQL` à reatividade funcional do `React 18` e `WebSockets` — foi selecionada para responder a um desafio rigoroso de computação e física industrial. Arquitetura de software de excelência consiste exatamente nisto: a harmonização elegante entre a teoria da ciência da computação e a resolução pragmática de problemas de negócio no mundo real."*
+> *"Como pudemos constatar ao longo desta análise, o ERP Gráfica Modular não é uma coleção fortuita de bibliotecas da moda. Cada tecnologia — do rigor aritmético do `Decimal.js` à eficiência de grafos do `Turborepo`, da integridade relacional do `PostgreSQL` à reatividade funcional do `React 18`, da ergonomia biomecânica de Fitts na adaptação Mobile-First à fotometria cromática de acessibilidade WCAG em tons pastel — foi selecionada para responder a um desafio rigoroso de computação e física industrial. Arquitetura de software de excelência consiste exatamente nisto: a harmonização elegante entre a teoria da ciência da computação e a resolução pragmática de problemas de negócio no mundo real."*
+

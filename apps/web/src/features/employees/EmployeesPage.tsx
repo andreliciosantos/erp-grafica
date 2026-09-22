@@ -218,11 +218,11 @@ export const EmployeesPage: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
-            <Users className="w-5 h-5 text-emerald-400" />
+          <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             Equipe & Gestão de Colaboradores (RH / Chão de Fábrica)
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Cadastro de operadores gráficos, apontamento por turnos, departamentos e taxas horárias de produção
           </p>
         </div>
@@ -282,7 +282,7 @@ export const EmployeesPage: React.FC = () => {
                 value={selectedDept}
                 onChange={(e) => setSelectedDept(e.target.value)}
                 aria-label="Filtrar por Departamento"
-                className="h-9 rounded-lg bg-slate-900 border border-slate-700/80 px-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                className="h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 px-2.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500"
               >
                 <option value="">Todos os Departamentos</option>
                 {Object.values(EmployeeDepartment).map((dept) => (
@@ -297,7 +297,7 @@ export const EmployeesPage: React.FC = () => {
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 aria-label="Filtrar por Status"
-                className="h-9 rounded-lg bg-slate-900 border border-slate-700/80 px-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                className="h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 px-2.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500"
               >
                 <option value="">Todos os Status</option>
                 {Object.values(EmployeeStatus).map((st) => (
@@ -312,16 +312,16 @@ export const EmployeesPage: React.FC = () => {
 
         <CardContent>
           {isLoading ? (
-            <div className="py-12 text-center text-slate-400 text-xs">Carregando colaboradores...</div>
+            <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-xs">Carregando colaboradores...</div>
           ) : employees.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-xs">
+            <div className="py-12 text-center text-slate-400 dark:text-slate-500 text-xs">
               Nenhum colaborador encontrado com os filtros selecionados.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-medium">
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
                     <th className="pb-3 font-medium">Colaborador</th>
                     <th className="pb-3 font-medium">Cargo & Departamento</th>
                     <th className="pb-3 font-medium">Turno de Trabalho</th>
@@ -331,7 +331,7 @@ export const EmployeesPage: React.FC = () => {
                     <th className="pb-3 font-medium text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/60">
                   {employees.map((emp) => {
                     const deptInfo = DEPARTMENT_LABELS[emp.department] || {
                       label: emp.department,
@@ -343,12 +343,12 @@ export const EmployeesPage: React.FC = () => {
                     };
 
                     return (
-                      <tr key={emp.id} className="hover:bg-slate-800/30 transition-colors">
+                      <tr key={emp.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
                         <td className="py-3.5">
-                          <div className="font-semibold text-slate-100">{emp.name}</div>
-                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                          <div className="font-semibold text-slate-800 dark:text-slate-100">{emp.name}</div>
+                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                             {emp.registration && (
-                              <span className="font-mono bg-slate-800/80 px-1.5 py-0.5 rounded text-emerald-400">
+                              <span className="font-mono bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.5 rounded text-emerald-700 dark:text-emerald-400">
                                 Matrícula: {emp.registration}
                               </span>
                             )}
@@ -356,7 +356,7 @@ export const EmployeesPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="py-3.5">
-                          <div className="font-medium text-slate-200">{emp.role}</div>
+                          <div className="font-medium text-slate-700 dark:text-slate-200">{emp.role}</div>
                           <div className="mt-1">
                             <Badge variant={deptInfo.variant} size="sm">
                               {deptInfo.label}
@@ -364,35 +364,35 @@ export const EmployeesPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="py-3.5">
-                          <span className="inline-flex items-center gap-1.5 text-slate-300 font-medium">
+                          <span className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-medium">
                             <Clock className="w-3.5 h-3.5 text-slate-400" />
                             {SHIFT_LABELS[emp.shift] || emp.shift}
                           </span>
                         </td>
                         <td className="py-3.5 space-y-1">
-                          <div className="flex items-center gap-1.5 text-slate-300">
+                          <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                             <Phone className="w-3.5 h-3.5 text-slate-400" />
                             <span>{emp.phone}</span>
                           </div>
                           {emp.email && (
-                            <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
-                              <Mail className="w-3 h-3 text-slate-500" />
+                            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px]">
+                              <Mail className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                               <span>{emp.email}</span>
                             </div>
                           )}
                         </td>
                         <td className="py-3.5">
                           {emp.hourlyRate ? (
-                            <div className="font-mono font-medium text-emerald-400">
+                            <div className="font-mono font-medium text-emerald-700 dark:text-emerald-400">
                               {formatCurrency(emp.hourlyRate)}/h
                             </div>
                           ) : null}
                           {emp.monthlySalary ? (
-                            <div className="text-[11px] text-slate-400">
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400">
                               {formatCurrency(emp.monthlySalary)}/mês
                             </div>
                           ) : (
-                            !emp.hourlyRate && <span className="text-slate-500">-</span>
+                            !emp.hourlyRate && <span className="text-slate-400 dark:text-slate-500">-</span>
                           )}
                         </td>
                         <td className="py-3.5">
@@ -406,7 +406,7 @@ export const EmployeesPage: React.FC = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleOpenEditModal(emp)}
-                              className="text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 p-1.5 h-7 w-7"
+                              className="text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 p-1.5 h-7 w-7"
                               title="Editar Colaborador"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -415,7 +415,7 @@ export const EmployeesPage: React.FC = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => setEmployeeToDelete(emp)}
-                              className="text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 p-1.5 h-7 w-7"
+                              className="text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 p-1.5 h-7 w-7"
                               title="Excluir Colaborador"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
