@@ -7,12 +7,13 @@ import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { formatCurrency } from '../../lib/utils';
-import { Printer, Plus, Gauge, Clock } from 'lucide-react';
+import { Printer, Plus, Gauge, Clock, Trash2, AlertTriangle } from 'lucide-react';
 import { MachineItem } from '../../types';
 
 export const MachinesPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [machineToDelete, setMachineToDelete] = useState<MachineItem | null>(null);
 
   // Form states
   const [name, setName] = useState('');
@@ -49,6 +50,21 @@ export const MachinesPage: React.FC = () => {
       const error = err as { response?: { data?: { message?: string | string[] } } };
       const msg = error.response?.data?.message;
       alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Erro ao cadastrar máquina.'));
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/machines/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['machines-list'] });
+      setMachineToDelete(null);
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Erro ao excluir máquina.');
     },
   });
 
@@ -95,8 +111,18 @@ export const MachinesPage: React.FC = () => {
                         Ativa
                       </Badge>
                     </div>
-                    <div className="p-2 rounded-lg bg-slate-800 text-emerald-400">
-                      <Printer className="w-4 h-4" />
+                    <div className="flex items-center gap-1.5">
+                      <div className="p-2 rounded-lg bg-slate-800 text-emerald-400">
+                        <Printer className="w-4 h-4" />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setMachineToDelete(machine)}
+                        className="p-2 rounded-lg bg-slate-800/80 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 transition-colors cursor-pointer border border-slate-700/50"
+                        title="Excluir Máquina"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 
@@ -189,6 +215,45 @@ export const MachinesPage: React.FC = () => {
             onChange={(e) => setMaxSheetsHour(Number(e.target.value))}
             helperText="Usada para calcular o tempo estimado de tiragem no orçamento."
           />
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={Boolean(machineToDelete)}
+        onClose={() => setMachineToDelete(null)}
+        title="Confirmar Exclusão de Máquina"
+        description="Esta ação removerá a máquina do parque gráfico."
+        maxWidth="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button variant="secondary" onClick={() => setMachineToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (machineToDelete) deleteMutation.mutate(machineToDelete.id);
+              }}
+              isLoading={deleteMutation.isPending}
+            >
+              Excluir Máquina
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex items-start gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-400" />
+          <div>
+            <p className="font-semibold text-rose-200">
+              Tem certeza que deseja excluir a máquina {machineToDelete?.name}?
+            </p>
+            <p className="mt-1 text-slate-300">
+              Taxa: <strong className="text-white">{machineToDelete ? formatCurrency(machineToDelete.hourlyRate) : ''}/h</strong>
+              <br />
+              Apontamentos históricos serão preservados sem vínculo ativo.
+            </p>
+          </div>
         </div>
       </Modal>
     </div>

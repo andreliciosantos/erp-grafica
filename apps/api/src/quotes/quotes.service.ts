@@ -268,4 +268,50 @@ export class QuotesService {
 
     return result;
   }
+
+  async remove(id: string): Promise<Quote> {
+    const quote = await this.prisma.quote.findUnique({
+      where: { id },
+      include: {
+        workOrder: {
+          include: {
+            stages: true,
+          },
+        },
+      },
+    });
+
+    if (!quote) {
+      throw new NotFoundException(`Orçamento com ID ${id} não encontrado.`);
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      if (quote.workOrder) {
+        const stageIds = quote.workOrder.stages.map((s) => s.id);
+        if (stageIds.length > 0) {
+          await tx.stageExecutionLog.deleteMany({
+            where: { stageId: { in: stageIds } },
+          });
+        }
+        await tx.workOrderStage.deleteMany({
+          where: { workOrderId: quote.workOrder.id },
+        });
+        await tx.stockMovement.deleteMany({
+          where: { workOrderId: quote.workOrder.id },
+        });
+        await tx.workOrder.delete({
+          where: { id: quote.workOrder.id },
+        });
+      }
+
+      await tx.quoteItem.deleteMany({
+        where: { quoteId: id },
+      });
+
+      return tx.quote.delete({
+        where: { id },
+      });
+    });
+  }
 }
+

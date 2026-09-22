@@ -8,12 +8,13 @@ import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { formatDateTime } from '../../lib/utils';
-import { ShieldCheck, Plus, UserCheck } from 'lucide-react';
+import { ShieldCheck, Plus, UserCheck, Trash2, AlertTriangle } from 'lucide-react';
 import { UserItem, PaginatedResult } from '../../types';
 
 export const UsersPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
 
   // Form states
   const [name, setName] = useState('');
@@ -26,6 +27,24 @@ export const UsersPage: React.FC = () => {
     queryFn: async () => {
       const res = await api.get('/users?limit=50');
       return res.data;
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/users/${id}`);
+      return res.data;
+    },
+    onSuccess: (data: { message?: string }) => {
+      queryClient.invalidateQueries({ queryKey: ['users-list'] });
+      setUserToDelete(null);
+      if (data?.message) {
+        alert(data.message);
+      }
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Erro ao excluir/desativar usuário.');
     },
   });
 
@@ -93,6 +112,7 @@ export const UsersPage: React.FC = () => {
                     <th className="pb-3 font-medium">Perfil / Função</th>
                     <th className="pb-3 font-medium">Status</th>
                     <th className="pb-3 font-medium">Data de Cadastro</th>
+                    <th className="pb-3 font-medium text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -125,6 +145,17 @@ export const UsersPage: React.FC = () => {
                         </Badge>
                       </td>
                       <td className="py-3.5 text-slate-400">{formatDateTime(user.createdAt)}</td>
+                      <td className="py-3.5 text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setUserToDelete(user)}
+                          className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border-rose-500/30"
+                          title="Excluir ou Desativar Usuário"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -193,6 +224,47 @@ export const UsersPage: React.FC = () => {
               { value: 'ADMIN', label: 'Administrador do Sistema' },
             ]}
           />
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={Boolean(userToDelete)}
+        onClose={() => setUserToDelete(null)}
+        title="Confirmar Exclusão ou Desativação de Usuário"
+        description="Esta ação excluirá ou desativará a conta do colaborador no ERP."
+        maxWidth="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button variant="secondary" onClick={() => setUserToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (userToDelete) deleteMutation.mutate(userToDelete.id);
+              }}
+              isLoading={deleteMutation.isPending}
+            >
+              Excluir / Desativar
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex items-start gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-400" />
+          <div>
+            <p className="font-semibold text-rose-200">
+              Deseja remover o acesso de {userToDelete?.name}?
+            </p>
+            <p className="mt-1 text-slate-300">
+              E-mail: <strong className="text-white">{userToDelete?.email}</strong>
+              <br />
+              Perfil: <strong className="text-white">{userToDelete?.role}</strong>
+              <br />
+              Se houver ordens de serviço ou apontamentos registrados pelo colaborador, o usuário será desativado preservando o histórico de auditoria.
+            </p>
+          </div>
         </div>
       </Modal>
     </div>

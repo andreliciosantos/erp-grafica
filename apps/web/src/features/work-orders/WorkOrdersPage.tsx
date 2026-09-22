@@ -10,8 +10,10 @@ import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { formatCurrency, formatDate, getStatusConfig, getPriorityConfig } from '../../lib/utils';
-import { KanbanSquare, List, Search, Eye } from 'lucide-react';
+import { KanbanSquare, List, Search, Eye, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { WorkOrderItem, PaginatedResult } from '../../types';
+import { CreateOrderModal } from './CreateOrderModal';
+import { Modal } from '../../components/common/Modal';
 
 export const WorkOrdersPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -19,6 +21,8 @@ export const WorkOrdersPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'KANBAN' | 'TABLE'>('KANBAN');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<WorkOrderItem | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<WorkOrderItem | null>(null);
 
   // Stage Action Modal State
   const [stageModalData, setStageModalData] = useState<{
@@ -31,6 +35,23 @@ export const WorkOrdersPage: React.FC = () => {
     stageId: null,
     stageName: null,
     orderNumber: null,
+  });
+
+  // Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const res = await api.delete(`/work-orders/${orderId}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['work-orders'] });
+      setOrderToDelete(null);
+      setSelectedOrder(null);
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Falha ao excluir ordem de serviço.');
+    },
   });
 
   // Fetch Work Orders
@@ -142,8 +163,18 @@ export const WorkOrdersPage: React.FC = () => {
           </p>
         </div>
 
-        {/* View Switcher & Search */}
+        {/* Action Button & View Switcher & Search */}
         <div className="flex items-center gap-3">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-1.5 shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Novo Pedido / OS</span>
+          </Button>
+
           <div className="w-56 hidden sm:block">
             <Input
               placeholder="Buscar OS, cliente, código..."
@@ -256,10 +287,19 @@ export const WorkOrdersPage: React.FC = () => {
                           <td className="py-3.5 font-bold text-slate-100">
                             {formatCurrency(order.totalAmount)}
                           </td>
-                          <td className="py-3.5 text-right space-x-2">
+                          <td className="py-3.5 text-right space-x-1.5">
                             <Button size="sm" variant="outline" onClick={() => setSelectedOrder(order)}>
                               <Eye className="w-3.5 h-3.5" />
                               Ver Detalhes
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setOrderToDelete(order)}
+                              className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border-rose-500/30"
+                              title="Excluir Ordem de Serviço"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </td>
                         </tr>
@@ -272,6 +312,12 @@ export const WorkOrdersPage: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Create Order Modal */}
+      <CreateOrderModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
 
       {/* Order Details Modal */}
       <OrderDetailsModal
@@ -286,7 +332,48 @@ export const WorkOrdersPage: React.FC = () => {
             orderNumber: order.orderNumber,
           });
         }}
+        onDeleteOrder={(order) => {
+          setOrderToDelete(order);
+        }}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={Boolean(orderToDelete)}
+        onClose={() => setOrderToDelete(null)}
+        title="Confirmar Exclusão de Ordem de Serviço"
+        description="Esta ação removerá a OS e seu histórico de etapas."
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button variant="secondary" onClick={() => setOrderToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (orderToDelete) deleteMutation.mutate(orderToDelete.id);
+              }}
+              isLoading={deleteMutation.isPending}
+            >
+              Excluir Definitivamente
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex items-start gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-400" />
+          <div>
+            <p className="font-semibold text-rose-200">
+              Tem certeza que deseja excluir a OS {orderToDelete?.orderNumber}?
+            </p>
+            <p className="mt-1 text-slate-300">
+              Cliente: <strong className="text-white">{orderToDelete?.party?.name || 'Cliente'}</strong>
+              <br />
+              Valor: <strong className="text-white">{orderToDelete ? formatCurrency(orderToDelete.totalAmount) : ''}</strong>
+            </p>
+          </div>
+        </div>
+      </Modal>
 
       {/* Stage Action Modal */}
       <StageActionModal
@@ -299,3 +386,4 @@ export const WorkOrdersPage: React.FC = () => {
     </div>
   );
 };
+

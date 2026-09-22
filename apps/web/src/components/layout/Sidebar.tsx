@@ -35,7 +35,7 @@ export const Sidebar: React.FC = () => {
       to: '/quotes',
       label: 'Orçamentos',
       icon: <Calculator className="w-4 h-4" />,
-      roles: [Role.ADMIN, Role.COMMERCIAL],
+      roles: [Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR],
     },
     {
       to: '/work-orders',
@@ -53,7 +53,7 @@ export const Sidebar: React.FC = () => {
       to: '/parties',
       label: 'Clientes & Fornec.',
       icon: <Users className="w-4 h-4" />,
-      roles: [Role.ADMIN, Role.COMMERCIAL],
+      roles: [Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR],
     },
     {
       to: '/machines',

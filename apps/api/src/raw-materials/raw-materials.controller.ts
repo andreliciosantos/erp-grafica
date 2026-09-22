@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Body,
   Param,
   Query,
@@ -54,5 +55,11 @@ export class RawMaterialsController {
   @Roles(Role.ADMIN, Role.COMMERCIAL)
   update(@Param('id') id: string, @Body() dto: UpdateRawMaterialDto): Promise<RawMaterial> {
     return this.rawMaterialsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles(Role.ADMIN)
+  remove(@Param('id') id: string): Promise<{ message: string }> {
+    return this.rawMaterialsService.remove(id);
   }
 }

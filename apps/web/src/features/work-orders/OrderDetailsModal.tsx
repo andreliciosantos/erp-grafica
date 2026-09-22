@@ -4,13 +4,14 @@ import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { formatCurrency, formatDate, getStatusConfig, getPriorityConfig } from '../../lib/utils';
-import { User, Calendar, Barcode, Layers, PlayCircle, Clock } from 'lucide-react';
+import { User, Calendar, Barcode, Layers, PlayCircle, Clock, Trash2 } from 'lucide-react';
 
 interface OrderDetailsModalProps {
   order: WorkOrderItem | null;
   isOpen: boolean;
   onClose: () => void;
   onOpenStageAction: (order: WorkOrderItem, stageId: string, stageName: string) => void;
+  onDeleteOrder?: (order: WorkOrderItem) => void;
 }
 
 export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
@@ -18,6 +19,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   isOpen,
   onClose,
   onOpenStageAction,
+  onDeleteOrder,
 }) => {
   if (!order) return null;
 
@@ -32,9 +34,24 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       description="Acompanhamento do histórico de produção e apontamentos de máquina"
       maxWidth="2xl"
       footer={
-        <Button variant="secondary" onClick={onClose}>
-          Fechar
-        </Button>
+        <div className="flex items-center justify-between w-full">
+          {onDeleteOrder ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDeleteOrder(order)}
+              className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border-rose-500/30"
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              Excluir Ordem de Serviço
+            </Button>
+          ) : (
+            <div />
+          )}
+          <Button variant="secondary" onClick={onClose}>
+            Fechar
+          </Button>
+        </div>
       }
     >
       <div className="space-y-5 text-xs">

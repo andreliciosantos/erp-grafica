@@ -146,4 +146,28 @@ export class UsersService {
       role: updated.role as Role,
     };
   }
+
+  async remove(id: string): Promise<{ success: boolean; message: string }> {
+    await this.findOne(id);
+
+    const [quotesCount, workOrdersCount, stageLogsCount] = await Promise.all([
+      this.prisma.quote.count({ where: { userId: id } }),
+      this.prisma.workOrder.count({ where: { userId: id } }),
+      this.prisma.stageExecutionLog.count({ where: { operatorId: id } }),
+    ]);
+
+    if (quotesCount > 0 || workOrdersCount > 0 || stageLogsCount > 0) {
+      await this.prisma.user.update({
+        where: { id },
+        data: { isActive: false },
+      });
+      return { success: true, message: 'Usuário desativado com sucesso (histórico preservado).' };
+    } else {
+      await this.prisma.user.delete({
+        where: { id },
+      });
+      return { success: true, message: 'Usuário excluído com sucesso.' };
+    }
+  }
 }
+

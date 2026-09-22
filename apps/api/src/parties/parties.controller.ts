@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Body,
   Param,
   Query,
@@ -25,7 +26,7 @@ export class PartiesController {
   constructor(private readonly partiesService: PartiesService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.COMMERCIAL)
+  @Roles(Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR)
   create(@Body() dto: CreatePartyDto): Promise<Party> {
     return this.partiesService.create(dto);
   }
@@ -50,5 +51,11 @@ export class PartiesController {
   @Roles(Role.ADMIN, Role.COMMERCIAL)
   update(@Param('id') id: string, @Body() dto: UpdatePartyDto): Promise<Party> {
     return this.partiesService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles(Role.ADMIN, Role.COMMERCIAL)
+  remove(@Param('id') id: string): Promise<Party> {
+    return this.partiesService.remove(id);
   }
 }

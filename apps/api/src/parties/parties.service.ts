@@ -128,4 +128,32 @@ export class PartiesService {
       data: dataToUpdate,
     });
   }
+
+  async remove(id: string): Promise<Party> {
+    const party = await this.findOne(id);
+    const workOrdersCount = await this.prisma.workOrder.count({ where: { partyId: id } });
+    if (workOrdersCount > 0) {
+      throw new ConflictException(
+        `Não é possível excluir o cliente/fornecedor pois existem ${workOrdersCount} ordens de serviço vinculadas.`
+      );
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const quotes = await tx.quote.findMany({ where: { partyId: id } });
+      const quoteIds = quotes.map((q) => q.id);
+      if (quoteIds.length > 0) {
+        await tx.quoteItem.deleteMany({
+          where: { quoteId: { in: quoteIds } },
+        });
+        await tx.quote.deleteMany({
+          where: { partyId: id },
+        });
+      }
+
+      return tx.party.delete({
+        where: { id },
+      });
+    });
+  }
 }
+

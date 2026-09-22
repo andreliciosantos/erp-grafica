@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   Query,
@@ -9,7 +10,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { WorkOrder } from '@erp/database';
+import { WorkOrder, Quote } from '@erp/database';
 import {
   QuotesService,
   QuoteWithDetails,
@@ -28,7 +29,7 @@ export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.COMMERCIAL)
+  @Roles(Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR)
   create(
     @Body() dto: CreateQuoteDto,
     @CurrentUser() user: { id: string },
@@ -37,7 +38,7 @@ export class QuotesController {
   }
 
   @Get()
-  @Roles(Role.ADMIN, Role.COMMERCIAL, Role.FINANCIAL)
+  @Roles(Role.ADMIN, Role.COMMERCIAL, Role.FINANCIAL, Role.OPERATOR)
   findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
@@ -53,11 +54,18 @@ export class QuotesController {
   }
 
   @Post(':id/approve')
-  @Roles(Role.ADMIN, Role.COMMERCIAL)
+  @Roles(Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR)
   approve(
     @Param('id') id: string,
     @CurrentUser() user: { id: string },
   ): Promise<WorkOrder> {
     return this.quotesService.approve(id, user.id);
   }
+
+  @Delete(':id')
+  @Roles(Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR)
+  remove(@Param('id') id: string): Promise<Quote> {
+    return this.quotesService.remove(id);
+  }
 }
+

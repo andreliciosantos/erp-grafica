@@ -100,4 +100,17 @@ export class RawMaterialsService {
       },
     });
   }
+
+  async remove(id: string): Promise<{ message: string }> {
+    await this.findOne(id);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.stockMovement.deleteMany({ where: { rawMaterialId: id } });
+      await tx.quoteItem.updateMany({
+        where: { rawMaterialId: id },
+        data: { rawMaterialId: null },
+      });
+      await tx.rawMaterial.delete({ where: { id } });
+    });
+    return { message: 'Matéria-prima removida com sucesso.' };
+  }
 }

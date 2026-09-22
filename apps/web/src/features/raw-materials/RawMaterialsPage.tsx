@@ -8,12 +8,13 @@ import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { formatCurrency } from '../../lib/utils';
-import { Package, Plus, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Package, Plus, AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
 import { RawMaterialItem, PaginatedResult } from '../../types';
 
 export const RawMaterialsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [materialToDelete, setMaterialToDelete] = useState<RawMaterialItem | null>(null);
 
   // Form state
   const [name, setName] = useState('');
@@ -31,6 +32,21 @@ export const RawMaterialsPage: React.FC = () => {
     queryFn: async () => {
       const res = await api.get('/raw-materials?limit=100');
       return res.data;
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/raw-materials/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['raw-materials-list'] });
+      setMaterialToDelete(null);
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Erro ao excluir insumo.');
     },
   });
 
@@ -103,6 +119,7 @@ export const RawMaterialsPage: React.FC = () => {
                     <th className="pb-3 font-medium">Custo Unitário</th>
                     <th className="pb-3 font-medium">Estoque Atual</th>
                     <th className="pb-3 font-medium">Status do Estoque</th>
+                    <th className="pb-3 font-medium text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -142,6 +159,17 @@ export const RawMaterialsPage: React.FC = () => {
                               Normal
                             </span>
                           )}
+                        </td>
+                        <td className="py-3.5 text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setMaterialToDelete(item)}
+                            className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border-rose-500/30"
+                            title="Excluir Insumo"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         </td>
                       </tr>
                     );
@@ -249,6 +277,45 @@ export const RawMaterialsPage: React.FC = () => {
               value={minStock}
               onChange={(e) => setMinStock(Number(e.target.value))}
             />
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={Boolean(materialToDelete)}
+        onClose={() => setMaterialToDelete(null)}
+        title="Confirmar Exclusão de Insumo"
+        description="Esta ação removerá o insumo do estoque."
+        maxWidth="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button variant="secondary" onClick={() => setMaterialToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (materialToDelete) deleteMutation.mutate(materialToDelete.id);
+              }}
+              isLoading={deleteMutation.isPending}
+            >
+              Excluir Insumo
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex items-start gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-400" />
+          <div>
+            <p className="font-semibold text-rose-200">
+              Tem certeza que deseja excluir o insumo {materialToDelete?.name}?
+            </p>
+            <p className="mt-1 text-slate-300">
+              Estoque atual: <strong className="text-white">{materialToDelete?.currentStock} {materialToDelete?.unitOfMeasure}</strong>
+              <br />
+              Custo: <strong className="text-white">{materialToDelete ? formatCurrency(materialToDelete.costPerUnit) : ''}</strong>
+            </p>
           </div>
         </div>
       </Modal>

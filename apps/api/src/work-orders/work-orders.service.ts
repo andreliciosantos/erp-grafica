@@ -19,10 +19,13 @@ import {
   WorkOrderStatus,
   StageStatus,
   ChannelSource,
+  QuoteStatus,
+  PaymentStatus,
 } from '@erp/shared-types';
 import { Decimal } from '@erp/business-core';
 import { EventsGateway } from '../events/events.gateway';
 import { StageActionDto, StageActionEnum } from './dto/stage-action.dto';
+import { CreateDirectOrderDto } from './dto/create-direct-order.dto';
 
 const VALID_TRANSITIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
   [WorkOrderStatus.PENDING]: [WorkOrderStatus.PRE_PRESS, WorkOrderStatus.CANCELLED],
@@ -369,4 +372,142 @@ export class WorkOrdersService {
 
     throw new BadRequestException('Ação desconhecida.');
   }
+
+  async createDirect(dto: CreateDirectOrderDto, userId: string): Promise<WorkOrder> {
+    const party = await this.prisma.party.findUnique({
+      where: { id: dto.partyId },
+    });
+    if (!party) {
+      throw new NotFoundException(`Cliente com ID ${dto.partyId} não encontrado.`);
+    }
+
+    const currentYear = new Date().getFullYear();
+    const deliveryDays = dto.deliveryDays || 5;
+    const deliveryDate = new Date();
+    deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const quote = await tx.quote.create({
+        data: {
+          partyId: dto.partyId,
+          userId,
+          status: QuoteStatus.APPROVED,
+          origin: ChannelSource.WEB,
+          totalCost: dto.totalAmount,
+          markupApplied: 0.3,
+          totalAmount: dto.totalAmount,
+          validUntil: deliveryDate,
+          notes: dto.notes,
+          items: {
+            create: [
+              {
+                productName: dto.productName,
+                quantity: dto.quantity,
+                widthMm: 0,
+                heightMm: 0,
+                colorsFront: 4,
+                colorsBack: 0,
+                finishingOptions: [],
+                sheetsRequired: 0,
+                itemsPerSheet: 1,
+                paperCostCalculated: 0,
+                finishingCostTotal: 0,
+                machineCostTotal: 0,
+                unitPrice: dto.quantity > 0 ? dto.totalAmount / dto.quantity : dto.totalAmount,
+                itemTotalAmount: dto.totalAmount,
+              },
+            ],
+          },
+        },
+      });
+
+      const orderNumber = `OS-${currentYear}-${String(quote.code).padStart(5, '0')}`;
+      const barcode = `OS${currentYear}${String(quote.code).padStart(5, '0')}`;
+
+      const workOrder = await tx.workOrder.create({
+        data: {
+          orderNumber,
+          barcode,
+          quoteId: quote.id,
+          partyId: dto.partyId,
+          userId,
+          origin: ChannelSource.WEB,
+          status: WorkOrderStatus.PENDING,
+          priority: dto.priority || 2,
+          deliveryDate,
+          totalAmount: dto.totalAmount,
+          paymentStatus: PaymentStatus.PENDING,
+          stages: {
+            create: [
+              { stepOrder: 1, name: 'Pré-impressão', status: StageStatus.PENDING },
+              { stepOrder: 2, name: 'Impressão', status: StageStatus.PENDING },
+              { stepOrder: 3, name: 'Acabamento', status: StageStatus.PENDING },
+              { stepOrder: 4, name: 'Controle de Qualidade', status: StageStatus.PENDING },
+              { stepOrder: 5, name: 'Expedição / Retirada', status: StageStatus.PENDING },
+            ],
+          },
+        },
+        include: {
+          stages: { orderBy: { stepOrder: 'asc' } },
+          party: { select: { id: true, name: true, phone: true } },
+        },
+      });
+
+      return workOrder;
+    });
+
+    this.eventsGateway.emitWorkOrderStatusChanged({
+      workOrderId: result.id,
+      orderNumber: result.orderNumber,
+      previousStatus: WorkOrderStatus.PENDING,
+      newStatus: WorkOrderStatus.PENDING,
+      updatedAt: new Date().toISOString(),
+    });
+
+    return result;
+  }
+
+  async remove(id: string): Promise<WorkOrder> {
+    const workOrder = await this.prisma.workOrder.findFirst({
+      where: {
+        OR: [{ id }, { orderNumber: id }],
+      },
+      include: {
+        stages: true,
+      },
+    });
+
+    if (!workOrder) {
+      throw new NotFoundException(`Ordem de Serviço com ID ${id} não encontrada.`);
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const stageIds = workOrder.stages.map((s) => s.id);
+      if (stageIds.length > 0) {
+        await tx.stageExecutionLog.deleteMany({
+          where: { stageId: { in: stageIds } },
+        });
+      }
+
+      await tx.workOrderStage.deleteMany({
+        where: { workOrderId: workOrder.id },
+      });
+
+      await tx.stockMovement.deleteMany({
+        where: { workOrderId: workOrder.id },
+      });
+
+      const deleted = await tx.workOrder.delete({
+        where: { id: workOrder.id },
+      });
+
+      await tx.quote.update({
+        where: { id: workOrder.quoteId },
+        data: { status: QuoteStatus.DRAFT },
+      });
+
+      return deleted;
+    });
+  }
 }
+

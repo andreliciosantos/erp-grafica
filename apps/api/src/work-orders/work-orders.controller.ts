@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -18,9 +19,11 @@ import {
 } from './work-orders.service';
 import { UpdateWorkOrderStatusDto } from './dto/update-status.dto';
 import { StageActionDto } from './dto/stage-action.dto';
+import { CreateDirectOrderDto } from './dto/create-direct-order.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { WorkOrderStatus, Role } from '@erp/shared-types';
 
 @Controller()
@@ -39,6 +42,15 @@ export class WorkOrdersController {
     return this.workOrdersService.findAll(page, limit, status, search);
   }
 
+  @Post('work-orders')
+  @Roles(Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR)
+  createDirect(
+    @Body() dto: CreateDirectOrderDto,
+    @CurrentUser() user: { id: string },
+  ): Promise<WorkOrder> {
+    return this.workOrdersService.createDirect(dto, user.id);
+  }
+
   @Get('work-orders/:id')
   @Roles(Role.ADMIN, Role.COMMERCIAL, Role.FINANCIAL, Role.OPERATOR)
   findOne(@Param('id') id: string): Promise<WorkOrderFullDetails> {
@@ -54,6 +66,12 @@ export class WorkOrdersController {
     return this.workOrdersService.updateStatus(id, dto.status);
   }
 
+  @Delete('work-orders/:id')
+  @Roles(Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR)
+  remove(@Param('id') id: string): Promise<WorkOrder> {
+    return this.workOrdersService.remove(id);
+  }
+
   @Post('stages/:stageId/action')
   @Roles(Role.ADMIN, Role.OPERATOR)
   executeStageAction(
@@ -63,3 +81,4 @@ export class WorkOrdersController {
     return this.workOrdersService.executeStageAction(stageId, dto);
   }
 }
+

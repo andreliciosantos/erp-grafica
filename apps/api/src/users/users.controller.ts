@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Body,
   Param,
   Query,
@@ -45,5 +46,10 @@ export class UsersController {
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateUserDto): Promise<UserSummary> {
     return this.usersService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string): Promise<{ success: boolean; message: string }> {
+    return this.usersService.remove(id);
   }
 }

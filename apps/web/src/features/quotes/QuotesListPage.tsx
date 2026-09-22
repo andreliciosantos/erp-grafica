@@ -7,13 +7,15 @@ import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Input } from '../../components/common/Input';
 import { formatCurrency, formatDate, getStatusConfig } from '../../lib/utils';
-import { Plus, Search, CheckCircle, Calculator, Eye } from 'lucide-react';
+import { Plus, Search, CheckCircle, Calculator, Trash2, AlertTriangle } from 'lucide-react';
 import { QuoteResponseDto, PaginatedResult } from '../../types';
+import { Modal } from '../../components/common/Modal';
 
 export const QuotesListPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [quoteToDelete, setQuoteToDelete] = useState<QuoteResponseDto | null>(null);
 
   const { data, isLoading } = useQuery<PaginatedResult<QuoteResponseDto>>({
     queryKey: ['quotes-list', statusFilter],
@@ -37,6 +39,22 @@ export const QuotesListPage: React.FC = () => {
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || 'Erro ao aprovar orçamento.');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (quoteId: string) => {
+      const res = await api.delete(`/quotes/${quoteId}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes-list'] });
+      queryClient.invalidateQueries({ queryKey: ['work-orders'] });
+      setQuoteToDelete(null);
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Erro ao excluir orçamento.');
     },
   });
 
@@ -184,11 +202,15 @@ export const QuotesListPage: React.FC = () => {
                               Aprovar
                             </Button>
                           )}
-                          <Link to={`/quotes`}>
-                            <Button size="sm" variant="ghost">
-                              <Eye className="w-3.5 h-3.5" />
-                            </Button>
-                          </Link>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setQuoteToDelete(quote)}
+                            className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border-rose-500/30"
+                            title="Excluir Orçamento"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         </td>
                       </tr>
                     );
@@ -199,6 +221,50 @@ export const QuotesListPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={Boolean(quoteToDelete)}
+        onClose={() => setQuoteToDelete(null)}
+        title="Confirmar Exclusão de Orçamento"
+        description="Esta ação removerá permanentemente o orçamento e registros vinculados."
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button variant="secondary" onClick={() => setQuoteToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (quoteToDelete) deleteMutation.mutate(quoteToDelete.id);
+              }}
+              isLoading={deleteMutation.isPending}
+            >
+              Excluir Orçamento
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex items-start gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-400" />
+          <div>
+            <p className="font-semibold text-rose-200">
+              Tem certeza que deseja excluir o orçamento #{quoteToDelete?.code}?
+            </p>
+            <p className="mt-1 text-slate-300">
+              Item:{' '}
+              <strong className="text-white">
+                {quoteToDelete?.items?.[0]?.productName || 'Material Gráfico'}
+              </strong>
+              <br />
+              Valor:{' '}
+              <strong className="text-white">
+                {quoteToDelete ? formatCurrency(quoteToDelete.totalAmount) : ''}
+              </strong>
+            </p>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

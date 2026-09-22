@@ -52,4 +52,16 @@ export class MachinesService {
       },
     });
   }
+
+  async remove(id: string): Promise<{ message: string }> {
+    await this.findOne(id);
+    await this.prisma.stageExecutionLog.updateMany({
+      where: { machineId: id },
+      data: { machineId: null },
+    });
+    await this.prisma.machine.delete({
+      where: { id },
+    });
+    return { message: 'Máquina removida com sucesso.' };
+  }
 }

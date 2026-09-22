@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Body,
   Param,
   Query,
@@ -47,5 +48,11 @@ export class MachinesController {
   @Roles(Role.ADMIN)
   update(@Param('id') id: string, @Body() dto: UpdateMachineDto): Promise<Machine> {
     return this.machinesService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles(Role.ADMIN)
+  remove(@Param('id') id: string): Promise<{ message: string }> {
+    return this.machinesService.remove(id);
   }
 }
