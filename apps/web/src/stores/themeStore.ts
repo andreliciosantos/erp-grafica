@@ -1,20 +1,34 @@
 import { create } from 'zustand';
 
-export type Theme = 'light' | 'dark';
+export type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeState {
   theme: Theme;
+  resolvedTheme: 'light' | 'dark';
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   initialize: () => void;
 }
 
-export const applyThemeClass = (theme: Theme) => {
+export const getSystemTheme = (): 'light' | 'dark' => {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    try {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch {
+      return 'dark';
+    }
+  }
+  return 'dark';
+};
+
+export const applyThemeClass = (theme: Theme, overrideResolved?: 'light' | 'dark'): 'light' | 'dark' => {
+  const resolved = overrideResolved ?? (theme === 'system' ? getSystemTheme() : theme);
+
   if (typeof document !== 'undefined') {
     const root = document.documentElement;
     const body = document.body;
 
-    if (theme === 'dark') {
+    if (resolved === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
       if (body) {
@@ -29,11 +43,32 @@ export const applyThemeClass = (theme: Theme) => {
         body.classList.remove('dark');
       }
     }
+
+    try {
+      let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (!metaThemeColor) {
+        metaThemeColor = document.createElement('meta');
+        metaThemeColor.setAttribute('name', 'theme-color');
+        document.head.appendChild(metaThemeColor);
+      }
+      metaThemeColor.setAttribute('content', resolved === 'dark' ? '#090e18' : '#f8fafc');
+    } catch {
+      // Ignore in non-browser environments
+    }
   }
+
+  return resolved;
+};
+
+let mediaQueryListenerAttached = false;
+
+export const _resetListenerForTesting = () => {
+  mediaQueryListenerAttached = false;
 };
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
-  theme: 'dark', // Padrão industrial incondicional
+  theme: 'system',
+  resolvedTheme: 'dark',
 
   setTheme: (theme: Theme) => {
     try {
@@ -44,36 +79,61 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     } catch {
       // Ignore storage restrictions
     }
-    applyThemeClass(theme);
-    set({ theme });
+    const resolved = applyThemeClass(theme);
+    set({ theme, resolvedTheme: resolved });
   },
 
   toggleTheme: () => {
-    const current = get().theme;
+    const current = get().resolvedTheme;
     const next: Theme = current === 'dark' ? 'light' : 'dark';
     get().setTheme(next);
   },
 
   initialize: () => {
-    let initialTheme: Theme = 'dark';
+    let initialTheme: Theme = 'system';
 
     try {
       if (typeof localStorage !== 'undefined') {
-        const isExplicit = localStorage.getItem('erp_theme_set_by_user');
         const stored = localStorage.getItem('erp_theme') as Theme | null;
-        if (isExplicit && (stored === 'light' || stored === 'dark')) {
+        if (stored === 'light' || stored === 'dark' || stored === 'system') {
           initialTheme = stored;
         } else {
-          // Se não foi explicitamente setado pelo usuário com clique no botão, força 'dark'
-          initialTheme = 'dark';
-          localStorage.setItem('erp_theme', 'dark');
+          initialTheme = 'system';
         }
       }
     } catch {
-      initialTheme = 'dark';
+      initialTheme = 'system';
     }
 
-    applyThemeClass(initialTheme);
-    set({ theme: initialTheme });
+    const resolved = applyThemeClass(initialTheme);
+    set({ theme: initialTheme, resolvedTheme: resolved });
+
+    if (!mediaQueryListenerAttached && typeof window !== 'undefined' && window.matchMedia) {
+      try {
+        const mql = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleSystemChange = (e: MediaQueryListEvent | MediaQueryList) => {
+          const currentTheme = get().theme;
+          const isDark = typeof e.matches === 'boolean' ? e.matches : getSystemTheme() === 'dark';
+          const newResolved: 'light' | 'dark' = isDark ? 'dark' : 'light';
+
+          if (currentTheme === 'system') {
+            applyThemeClass('system', newResolved);
+            set({ resolvedTheme: newResolved });
+          } else {
+            // Se o usuário alternou o modo do próprio dispositivo, acompanha nativamente
+            get().setTheme(newResolved);
+          }
+        };
+
+        if (mql.addEventListener) {
+          mql.addEventListener('change', handleSystemChange);
+        } else if ((mql as any).addListener) {
+          (mql as any).addListener(handleSystemChange);
+        }
+        mediaQueryListenerAttached = true;
+      } catch {
+        // Ignore in environments without matchMedia
+      }
+    }
   },
 }));

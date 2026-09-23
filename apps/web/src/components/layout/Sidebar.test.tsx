@@ -33,13 +33,15 @@ describe('Sidebar component', () => {
     expect(themeToggle).toBeInTheDocument();
     expect(screen.getByTestId('theme-light-btn')).toBeInTheDocument();
     expect(screen.getByTestId('theme-dark-btn')).toBeInTheDocument();
+    expect(screen.getByTestId('theme-system-btn')).toBeInTheDocument();
     expect(screen.getByText('Escuro Ativo')).toBeInTheDocument();
   });
 
-  it('should switch theme when light and dark buttons are clicked', () => {
+  it('should switch theme when light, dark, and system buttons are clicked', () => {
     renderWithProviders(<Sidebar />);
     const lightBtn = screen.getByTestId('theme-light-btn');
     const darkBtn = screen.getByTestId('theme-dark-btn');
+    const systemBtn = screen.getByTestId('theme-system-btn');
 
     fireEvent.click(lightBtn);
     expect(useThemeStore.getState().theme).toBe('light');
@@ -48,6 +50,9 @@ describe('Sidebar component', () => {
     fireEvent.click(darkBtn);
     expect(useThemeStore.getState().theme).toBe('dark');
     expect(screen.getByText('Escuro Ativo')).toBeInTheDocument();
+
+    fireEvent.click(systemBtn);
+    expect(useThemeStore.getState().theme).toBe('system');
   });
 
   it('should render mobile backdrop and drawer when isMobileOpen is true', () => {

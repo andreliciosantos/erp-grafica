@@ -1,14 +1,24 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark h-full antialiased">
   <head>
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#090e18" />
     <script>
       (function() {
         try {
-          var isExplicit = localStorage.getItem('erp_theme_set_by_user');
           var t = localStorage.getItem('erp_theme');
-          var theme = (isExplicit && t === 'light') ? 'light' : 'dark';
+          var isDark = true;
 
-          if (theme === 'dark') {
+          if (t === 'light') {
+            isDark = false;
+          } else if (t === 'dark') {
+            isDark = true;
+          } else {
+            // 'system' ou primeira visita: detecta a preferência nativa do dispositivo
+            isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          }
+
+          if (isDark) {
             document.documentElement.classList.add('dark');
             document.documentElement.classList.remove('light');
           } else {

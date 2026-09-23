@@ -3,12 +3,14 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  html.light {
     --color-bg: #f8fafc;
     --color-surface: #ffffff;
     --color-border: #e2e8f0;
     --color-text-main: #1e293b;
     --color-text-muted: #64748b;
+    color-scheme: light;
   }
   
   html.dark,
