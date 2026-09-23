@@ -11,12 +11,14 @@
     --color-text-muted: #64748b;
   }
   
+  html.dark,
   .dark {
     --color-bg: #090e18;
     --color-surface: #0f172a;
     --color-border: #1e293b;
     --color-text-main: #f1f5f9;
     --color-text-muted: #94a3b8;
+    color-scheme: dark;
   }
 
   body {

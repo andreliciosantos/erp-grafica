@@ -4,8 +4,10 @@
     <script>
       (function() {
         try {
+          var isExplicit = localStorage.getItem('erp_theme_set_by_user');
           var t = localStorage.getItem('erp_theme');
-          var theme = t === 'light' ? 'light' : 'dark';
+          var theme = (isExplicit && t === 'light') ? 'light' : 'dark';
+
           if (theme === 'dark') {
             document.documentElement.classList.add('dark');
             document.documentElement.classList.remove('light');
@@ -26,7 +28,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   </head>
-  <body class="h-full selection:bg-emerald-500 selection:text-white font-['Plus_Jakarta_Sans',sans-serif]">
+  <body class="h-full selection:bg-emerald-500 selection:text-white font-['Plus_Jakarta_Sans',sans-serif] bg-slate-50 dark:bg-[#090e18] text-slate-850 dark:text-slate-100">
     <div id="root" class="h-full"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

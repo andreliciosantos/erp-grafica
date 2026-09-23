@@ -9,10 +9,11 @@ interface ThemeState {
   initialize: () => void;
 }
 
-const applyThemeClass = (theme: Theme) => {
+export const applyThemeClass = (theme: Theme) => {
   if (typeof document !== 'undefined') {
     const root = document.documentElement;
     const body = document.body;
+
     if (theme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
@@ -32,12 +33,13 @@ const applyThemeClass = (theme: Theme) => {
 };
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
-  theme: 'dark', // Padrão industrial prioritário
+  theme: 'dark', // Padrão industrial incondicional
 
   setTheme: (theme: Theme) => {
     try {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('erp_theme', theme);
+        localStorage.setItem('erp_theme_set_by_user', 'true');
       }
     } catch {
       // Ignore storage restrictions
@@ -57,13 +59,17 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 
     try {
       if (typeof localStorage !== 'undefined') {
+        const isExplicit = localStorage.getItem('erp_theme_set_by_user');
         const stored = localStorage.getItem('erp_theme') as Theme | null;
-        if (stored === 'light' || stored === 'dark') {
+        if (isExplicit && (stored === 'light' || stored === 'dark')) {
           initialTheme = stored;
+        } else {
+          // Se não foi explicitamente setado pelo usuário com clique no botão, força 'dark'
+          initialTheme = 'dark';
+          localStorage.setItem('erp_theme', 'dark');
         }
       }
     } catch {
-      // Default to dark on storage error
       initialTheme = 'dark';
     }
 
