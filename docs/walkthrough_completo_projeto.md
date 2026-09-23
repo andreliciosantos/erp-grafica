@@ -274,5 +274,39 @@ Atendendo à necessidade de permitir alternância manual do tema a qualquer mome
 * **Seletor Segmentado (Barra Lateral):** Três botões intuitivos (`[ ☀️ Claro | 🌙 Escuro | 💻 Auto ]`), com indicador contextual de status (`Escuro Ativo`, `Claro Ativo`, `Auto (Escuro)` ou `Auto (Claro)`).
 * **Toggle Compacto (Cabeçalho Superior):** Botão circular de alternância rápida, permitindo transitar instantaneamente entre claro e escuro em qualquer dispositivo ou tamanho de tela.
 
+---
+
+## 14. Módulo de Despesas Operacionais (OPEX): Gestão Estrutural, Contas Recorrentes e Alicerce Financeiro
+
+Atendendo à necessidade de gerenciar os gastos da gráfica que **não estão vinculados diretamente ao custo de matérias-primas e insumos de uma ordem de serviço específica**, foi concebido e implementado o módulo completo de **Despesas Operacionais (OPEX)**:
+
+### 14.1. Separação Contábil Estratégica (CPV vs. OPEX)
+* **Custos dos Produtos Vendidos (CPV / Custos Diretos):** Papéis, chapas CTP, tintas da tiragem e taxas de máquina orçados diretamente na OS via `@erp/business-core`.
+* **Despesas Operacionais (OPEX):** Custos fixos e despesas variáveis essenciais para manter o parque fabril e os escritórios funcionando mês a mês:
+  - **Aluguel & Estrutura:** Galpão industrial, IPTU, condomínio.
+  - **Utilidades & Energia:** Energia elétrica predial, água, internet dedicada (essencial para envio/recebimento de arquivos pesados de pré-impressão), telefonia.
+  - **Softwares & Licenças:** Assinaturas Adobe Creative Cloud (InDesign, Illustrator, Photoshop), Softwares RIP (Caldera/Onyx), ERP, Antivírus, Hospedagem.
+  - **Administrativo & Contábil:** Honorários do escritório de contabilidade, assessoria jurídica, materiais de escritório, copa e limpeza.
+  - **Comercial & Marketing:** Anúncios Google/Meta, mostruários e catálogos para clientes.
+  - **Manutenção Predial:** Compressores de ar, instalações elétricas gerais.
+  - **Tributos, Taxas & Bancos:** Tarifas bancárias, taxas de boletos, licenças de bombeiros (AVCB) e ambientais.
+
+### 14.2. Contas Recorrentes com Limite de Renovação e Credor Avulso
+* **Recorrência Inteligente:** Despesas fixas (Aluguel, Softwares, Internet) podem ser marcadas como `isRecurring = true`, com periodicidade mensal/anual e campo específico para **Data Limite da Recorrência / Renovação** (`recurrenceEndDate`), alertando sobre o fim de contratos de locação ou ciclos de licenças.
+* **Duplicação com 1 Clique (`duplicateNextMonth`):** Botão dedicado na tabela e nos cards que projeta e replica a despesa recorrente para o mês seguinte com vencimento ajustado, respeitando a data de renovação.
+* **Credor Avulso Flexível (`beneficiaryName`):** Permite vincular um fornecedor cadastrado na base de parceiros (`Party`) ou simplesmente preencher o nome de um credor avulso (ex: CEMIG, Imobiliária Souza), agilizando lançamentos de contas de consumo e prestadores esporádicos sem burocracia cadastral.
+
+### 14.3. Backend NestJS e Persistência PostgreSQL (`packages/database` e `apps/api`)
+* **Modelo Prisma `OperatingExpense`:** Armazena descrição, categoria, tipo (Fixa vs. Variável), valor decimal, vencimento, data de competência, status (`PENDING`, `PAID`, `OVERDUE`, `CANCELLED`), método de pagamento, linha digitável/código PIX e número do documento.
+* **Agrupamento e Métricas Consolidadas (`GET /operating-expenses/summary`):** Retorna o total previsto do mês, total quitado, total pendente, total vencido, proporção entre despesas fixas e variáveis e o rateio percentual por categoria em tempo $\mathcal{O}(N)$.
+* **Liquidação Rápida (`PATCH /operating-expenses/:id/pay`):** Registra o pagamento com data efetiva, valor efetivo e forma de pagamento.
+
+### 14.4. Interface Web Reativa e Mobile-First (`apps/web`)
+* **Seletor de Competência:** Filtro dinâmico por ano-mês (`YYYY-MM`) com atualização instantânea de todos os indicadores.
+* **Grid de 4 KPIs:** Total do Mês, Despesas Pagas (% liquidada), Contas a Vencer e Alertas de Contas Vencidas.
+* **Barra Multi-Segmentada de Distribuição:** Representação gráfica visual proporcional do destino dos recursos financeiros no mês.
+* **Tabela e Cards Responsivos:** Suporte total a desktop e smartphone, com botões para Liquidação Rápida (`CheckCircle2`), Replicar Recorrência (`CalendarPlus`), Edição (`Edit2`) e Remoção (`Trash2`).
+* **Rota Protegida `/expenses`:** Integrada ao menu lateral e acessível aos perfis `ADMIN`, `FINANCIAL` e `COMMERCIAL`.
+
 
 

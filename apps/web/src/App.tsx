@@ -13,6 +13,7 @@ import { PartiesPage } from './features/parties/PartiesPage';
 import { MachinesPage } from './features/machines/MachinesPage';
 import { UsersPage } from './features/users/UsersPage';
 import { EmployeesPage } from './features/employees/EmployeesPage';
+import { OperatingExpensesPage } from './features/operating-expenses/OperatingExpensesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ export const App: React.FC = () => {
               <Route path="/raw-materials" element={<RawMaterialsPage />} />
               <Route path="/parties" element={<PartiesPage />} />
               <Route path="/employees" element={<EmployeesPage />} />
+              <Route path="/expenses" element={<OperatingExpensesPage />} />
               <Route path="/machines" element={<MachinesPage />} />
               <Route path="/users" element={<UsersPage />} />
             </Route>

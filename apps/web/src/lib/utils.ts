@@ -91,4 +91,40 @@ export function getPriorityConfig(priority: number) {
   }
 }
 
+export function getExpenseCategoryConfig(category: string) {
+  switch (category) {
+    case 'RENT_FACILITIES':
+      return { label: 'Aluguel & Estrutura', variant: 'primary' as const, bg: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20' };
+    case 'UTILITIES':
+      return { label: 'Utilidades & Energia', variant: 'warning' as const, bg: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' };
+    case 'SOFTWARE_LICENSES':
+      return { label: 'Softwares & Licenças', variant: 'cyan' as const, bg: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20' };
+    case 'OFFICE_ADMINISTRATIVE':
+      return { label: 'Administrativo & Contábil', variant: 'purple' as const, bg: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20' };
+    case 'COMMERCIAL_MARKETING':
+      return { label: 'Comercial & Marketing', variant: 'danger' as const, bg: 'bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/20' };
+    case 'MAINTENANCE_PREDIAL':
+      return { label: 'Manutenção Predial', variant: 'warning' as const, bg: 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20' };
+    case 'FINANCIAL_TAXES':
+      return { label: 'Tributos & Taxas', variant: 'success' as const, bg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' };
+    default:
+      return { label: 'Outras Despesas', variant: 'neutral' as const, bg: 'bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20' };
+  }
+}
+
+export function getPaymentStatusConfig(status: string) {
+  switch (status) {
+    case 'PAID':
+      return { label: 'Pago', variant: 'success' as const, bg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' };
+    case 'PENDING':
+      return { label: 'Pendente', variant: 'warning' as const, bg: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' };
+    case 'OVERDUE':
+      return { label: 'Vencido', variant: 'danger' as const, bg: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20' };
+    case 'CANCELLED':
+      return { label: 'Cancelado', variant: 'neutral' as const, bg: 'bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20' };
+    default:
+      return { label: status, variant: 'neutral' as const, bg: 'bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20' };
+  }
+}
+
 export * from './formatters';

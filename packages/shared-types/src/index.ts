@@ -263,3 +263,129 @@ export interface UpdateEmployeeDto {
   notes?: string;
 }
 
+// -------------------------------------------------------------
+// Operating Expenses (OPEX) Types & DTOs
+// -------------------------------------------------------------
+export enum ExpenseCategory {
+  RENT_FACILITIES = 'RENT_FACILITIES',
+  UTILITIES = 'UTILITIES',
+  SOFTWARE_LICENSES = 'SOFTWARE_LICENSES',
+  OFFICE_ADMINISTRATIVE = 'OFFICE_ADMINISTRATIVE',
+  COMMERCIAL_MARKETING = 'COMMERCIAL_MARKETING',
+  MAINTENANCE_PREDIAL = 'MAINTENANCE_PREDIAL',
+  FINANCIAL_TAXES = 'FINANCIAL_TAXES',
+  OTHER = 'OTHER',
+}
+
+export enum ExpenseType {
+  FIXED = 'FIXED',
+  VARIABLE = 'VARIABLE',
+}
+
+export enum PaymentMethod {
+  BOLETO = 'BOLETO',
+  PIX = 'PIX',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  CREDIT_CARD = 'CREDIT_CARD',
+  DEBIT_CARD = 'DEBIT_CARD',
+  CASH = 'CASH',
+  AUTO_DEBIT = 'AUTO_DEBIT',
+}
+
+export interface OperatingExpenseItem {
+  id: string;
+  description: string;
+  category: ExpenseCategory;
+  expenseType: ExpenseType;
+  amount: number;
+  dueDate: string;
+  paidAt?: string | null;
+  status: PaymentStatus;
+  paymentMethod?: PaymentMethod | null;
+  competenceDate: string;
+  supplierId?: string | null;
+  beneficiaryName?: string | null;
+  barcode?: string | null;
+  documentNumber?: string | null;
+  isRecurring: boolean;
+  recurrenceInterval?: string | null;
+  recurrenceEndDate?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  supplier?: {
+    id: string;
+    name: string;
+    tradeName?: string | null;
+    document: string;
+  } | null;
+}
+
+export interface CreateOperatingExpenseDto {
+  description: string;
+  category: ExpenseCategory;
+  expenseType?: ExpenseType;
+  amount: number;
+  dueDate: string;
+  competenceDate: string;
+  supplierId?: string;
+  beneficiaryName?: string;
+  barcode?: string;
+  documentNumber?: string;
+  isRecurring?: boolean;
+  recurrenceInterval?: string;
+  recurrenceEndDate?: string;
+  notes?: string;
+  paymentMethod?: PaymentMethod;
+  status?: PaymentStatus;
+  paidAt?: string;
+}
+
+export interface UpdateOperatingExpenseDto {
+  description?: string;
+  category?: ExpenseCategory;
+  expenseType?: ExpenseType;
+  amount?: number;
+  dueDate?: string;
+  competenceDate?: string;
+  supplierId?: string | null;
+  beneficiaryName?: string | null;
+  barcode?: string | null;
+  documentNumber?: string | null;
+  isRecurring?: boolean;
+  recurrenceInterval?: string | null;
+  recurrenceEndDate?: string | null;
+  notes?: string | null;
+  paymentMethod?: PaymentMethod | null;
+  status?: PaymentStatus;
+  paidAt?: string | null;
+}
+
+export interface PayExpenseDto {
+  paidAt: string;
+  paidAmount?: number;
+  paymentMethod: PaymentMethod;
+  notes?: string;
+}
+
+export interface OperatingExpensesSummaryDto {
+  totalAmount: number;
+  paidAmount: number;
+  pendingAmount: number;
+  overdueAmount: number;
+  totalCount: number;
+  paidCount: number;
+  pendingCount: number;
+  overdueCount: number;
+  fixedTotal: number;
+  variableTotal: number;
+  categoryBreakdown: {
+    category: ExpenseCategory;
+    label: string;
+    total: number;
+    count: number;
+    percentage: number;
+  }[];
+}
+
+

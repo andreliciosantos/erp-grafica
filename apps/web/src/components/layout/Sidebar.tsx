@@ -8,8 +8,9 @@ import {
   Users,
   Printer,
   ShieldCheck,
-  PrinterIcon,
   UserCheck,
+  Receipt,
+  PrinterIcon,
   X,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -71,6 +72,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Equipe & RH',
       icon: <UserCheck className="w-4 h-4" />,
       roles: [Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR],
+    },
+    {
+      to: '/expenses',
+      label: 'Despesas Operacionais',
+      icon: <Receipt className="w-4 h-4" />,
+      roles: [Role.ADMIN, Role.FINANCIAL, Role.COMMERCIAL],
     },
     {
       to: '/machines',

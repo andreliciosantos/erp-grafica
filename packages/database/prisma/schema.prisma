@@ -114,6 +114,7 @@ model Party {
 
   quotes        Quote[]
   workOrders    WorkOrder[]
+  operatingExpenses OperatingExpense[]
 
   @@map("parties")
 }
@@ -335,5 +336,61 @@ model Employee {
   updatedAt      DateTime            @updatedAt
 
   @@map("employees")
+}
+
+// -------------------------------------------------------------
+// DESPESAS OPERACIONAIS (OPEX)
+// -------------------------------------------------------------
+enum ExpenseCategory {
+  RENT_FACILITIES       // Aluguel, IPTU, Condomínio Predial
+  UTILITIES             // Energia Elétrica Predial, Água, Gás, Telefonia/Internet
+  SOFTWARE_LICENSES     // Assinaturas Adobe CC, Softwares RIP, Antivírus, Hospedagem
+  OFFICE_ADMINISTRATIVE // Contabilidade, Jurídico, Material de Escritório, Limpeza/Copa
+  COMMERCIAL_MARKETING  // Anúncios, Mostruários de Papéis, Catálogos, Divulgação
+  MAINTENANCE_PREDIAL   // Manutenção predial, compressores de ar, elétrica geral
+  FINANCIAL_TAXES       // Tarifas bancárias, taxas de boletos, licenças de bombeiros (AVCB)
+  OTHER                 // Outras despesas operacionais avulsas
+}
+
+enum ExpenseType {
+  FIXED                 // Despesa Fixa (ex: Aluguel, Internet, Softwares)
+  VARIABLE              // Despesa Variável (ex: Energia Elétrica, Manutenção)
+}
+
+enum PaymentMethod {
+  BOLETO                // Boleto Bancário
+  PIX                   // PIX
+  BANK_TRANSFER         // Transferência / TED / DOC
+  CREDIT_CARD           // Cartão de Crédito
+  DEBIT_CARD            // Cartão de Débito
+  CASH                  // Dinheiro em Espécie
+  AUTO_DEBIT            // Débito Automático em Conta
+}
+
+model OperatingExpense {
+  id                  String           @id @default(uuid())
+  description         String
+  category            ExpenseCategory
+  expenseType         ExpenseType      @default(FIXED)
+  amount              Decimal          @db.Decimal(12, 2)
+  dueDate             DateTime
+  paidAt              DateTime?
+  status              PaymentStatus    @default(PENDING)
+  paymentMethod       PaymentMethod?
+  competenceDate      DateTime         // Mês e ano a que se refere a despesa
+  supplierId          String?          // Fornecedor opcional cadastrado
+  beneficiaryName     String?          // Nome do credor avulso (ex: CEMIG, Imobiliária Central)
+  barcode             String?          // Linha digitável ou código PIX
+  documentNumber      String?          // NF de serviço / Fatura / Recibo
+  isRecurring         Boolean          @default(false)
+  recurrenceInterval  String?          @default("MONTHLY") // MONTHLY, YEARLY
+  recurrenceEndDate   DateTime?        // Fim da recorrência ou data limite de renovação
+  notes               String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  supplier            Party?           @relation(fields: [supplierId], references: [id])
+
+  @@map("operating_expenses")
 }
 

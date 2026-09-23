@@ -25,6 +25,7 @@ describe('Sidebar component', () => {
     expect(screen.getByText('Visão Geral')).toBeInTheDocument();
     expect(screen.getByText('Chão de Fábrica (PCP)')).toBeInTheDocument();
     expect(screen.getByText('Equipe & RH')).toBeInTheDocument();
+    expect(screen.getByText('Despesas Operacionais')).toBeInTheDocument();
   });
 
   it('should render theme toggle selector at the bottom of sidebar', () => {
