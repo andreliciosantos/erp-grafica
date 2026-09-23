@@ -27,3 +27,9 @@ Esta pasta reúne a documentação técnica oficial, relatórios de execução, 
    - Histórico consolidado de tudo o que foi implementado, testado e publicado.
    - Tabela de resultados dos 60 testes automatizados aprovados (100% de sucesso).
    - Comandos práticos de execução, compilação e desenvolvimento.
+
+6. **[Plano Estratégico de Melhorias e Evolução do ERP Gráfica Modular](plano_melhorias_sugeridas_erp_grafica.md)**
+   - Pesquisa aprofundada de mercado e engenharia de software aplicada ao segmento gráfico.
+   - Matriz de priorização RICE abrangendo Financeiro (Contas a Receber, DRE, Fluxo de Caixa), Chão de Fábrica (Ficha Técnica, Terminal Kiosk), Engenharia (Bobinas/Comunicação Visual, Imposição Mista), Comercial (WhatsApp, Modelos Rápidos) e Logística.
+   - Roadmap de implementação em 3 Fases estratégicas.
+
