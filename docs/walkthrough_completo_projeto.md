@@ -254,4 +254,25 @@ Para proporcionar controle operacional irrestrito e eliminar a necessidade de re
   - Botão "Editar Ordem de Serviço" dentro do modal de detalhes (`OrderDetailsModal.tsx`).
   - Formulário unificado em `CreateOrderModal.tsx`, operando de forma transparente tanto em modo de criação (`POST`) quanto em modo de edição (`PUT`).
 
+---
+
+## 13. Arquitetura Unificada de Temas: Claro, Escuro e Sincronização Automática com o Dispositivo (Mobile First)
+
+Atendendo à necessidade de permitir alternância manual do tema a qualquer momento pelo usuário no site, ao mesmo tempo em que o site acompanha organicamente a preferência do dispositivo móvel com as cores nativas do projeto (fundo grafite escuro `#090e18`, tons pastel suaves e ausência de distorção de cores pelos motores de auto-escurecimento mobile):
+
+### 13.1. Declaração do Contrato de Renderização com o Navegador (`apps/web/index.html`)
+* **Metatag `color-scheme`:** Inclusão de `<meta name="color-scheme" content="light dark" />`, instruindo os motores Blink/V8 (Android Chrome) e WebKit (iOS Safari) de que o site possui sua própria paleta de alta fidelidade tanto para o modo claro quanto para o modo escuro, desativando a heurística de "Force Dark Mode / Auto-darken web contents" dos navegadores móveis.
+* **Metatag Dinâmica `theme-color`:** Controla a cor da barra de status e da interface do sistema operacional móvel (`#090e18` para escuro, `#f8fafc` para claro), atualizada em tempo real conforme o tema ativo.
+* **Script de Inicialização Anti-FOUC (Flash of Unstyled Content):** Executado sincronicamente no `<head>` antes da renderização do DOM, lendo a chave `erp_theme` no `localStorage` ou delegando para a mídia nativa `(prefers-color-scheme: dark)` quando o modo for `system` ou na primeira visita do usuário.
+
+### 13.2. Gerenciador Global Reativo de Tema (`apps/web/src/stores/themeStore.ts`)
+* **Tipagem Estrita Tripartite:** `Theme = 'light' | 'dark' | 'system'`.
+* **Estado Resolvido (`resolvedTheme: 'light' | 'dark'`):** Mantém a derivação exata entre o que o usuário selecionou e o que o motor de renderização CSS deve aplicar na raiz (`html.dark` ou `html.light`).
+* **Listener Ativo de Mudança de SO:** Registra `window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ...)` para capturar transições automáticas do dispositivo (ex: modo noturno agendado por horário no celular), adaptando o layout dinamicamente em tempo de execução sem exigir recarregamento de página.
+
+### 13.3. Seletor de Três Estados e Toggle Compacto (`ThemeToggle.tsx`)
+* **Seletor Segmentado (Barra Lateral):** Três botões intuitivos (`[ ☀️ Claro | 🌙 Escuro | 💻 Auto ]`), com indicador contextual de status (`Escuro Ativo`, `Claro Ativo`, `Auto (Escuro)` ou `Auto (Claro)`).
+* **Toggle Compacto (Cabeçalho Superior):** Botão circular de alternância rápida, permitindo transitar instantaneamente entre claro e escuro em qualquer dispositivo ou tamanho de tela.
+
+
 
