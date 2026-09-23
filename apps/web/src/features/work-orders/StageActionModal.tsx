@@ -6,6 +6,7 @@ import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
 import { Select } from '../../components/common/Select';
 import { Input } from '../../components/common/Input';
+import { NumberInput } from '../../components/common/NumberInput';
 import { MachineItem } from '../../types';
 import { Play, Pause, CheckCircle } from 'lucide-react';
 
@@ -146,12 +147,12 @@ export const StageActionModal: React.FC<StageActionModalProps> = ({
         />
 
         {/* Waste quantity */}
-        <Input
+        <NumberInput
           label="Perda Operacional de Folhas/Peças (Descarte de Acerto)"
-          type="number"
+          suffix="fl"
           min={0}
           value={wasteQuantity}
-          onChange={(e) => setWasteQuantity(Number(e.target.value))}
+          onChangeValue={setWasteQuantity}
           helperText="Informe quantas folhas foram perdidas no ajuste ou impressão."
         />
 

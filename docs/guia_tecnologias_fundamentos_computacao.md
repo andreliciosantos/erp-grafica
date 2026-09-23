@@ -273,11 +273,11 @@ Ao projetar a alternância entre tema claro e escuro em aplicações de página 
 4. A classe `.dark` é adicionada ao elemento raiz após um intervalo de 100ms a 300ms.
 O resultado perceptivo é o **FOUC**: uma cintilação ofuscante de luz branca no olho do usuário em um ambiente escuro, quebrando a integridade visual do sistema.
 
-### 13.2. Sincronização Síncrona Precoce no DOM
-Para extirpar formalmente qualquer possibilidade de FOUC no ERP Gráfica Modular:
-* O módulo `apps/web/src/stores/themeStore.ts` disponibiliza uma rotina síncrona `initializeTheme()` que avalia deterministicamente a precedência:
-  $$\text{Tema Efetivo} = \text{localStorage}['\text{erp\_theme}'] \;\lor\; (\text{matchMedia}('\text{prefers-color-scheme: dark}').\text{matches} \ ? \ \text{'dark'} : \text{'light'})$$
-* Essa rotina é invocada diretamente no ponto de entrada `main.tsx` antes do método `createRoot(document.getElementById('root')!).render(...)`, garantindo que a classe `.dark` já esteja formalmente assentada na tag `<html>` antes do cálculo do primeiro frame pelo compositor da GPU.
+### 13.2. Sincronização Síncrona Precoce no DOM e a Soberania Industrial
+Para extirpar formalmente qualquer possibilidade de FOUC e garantir o padrão industrial escuro:
+* **Script Síncrono no `<head>`:** Antes mesmo de qualquer folha de estilo ou script de bundle ser carregado, uma rotina de auto-execução instantânea no `<head>` do `index.html` inspeciona o `localStorage`. Caso não exista preferência explícita de tema claro (`erp_theme === 'light'`), a classe `.dark` é atribuída deterministicamente à tag `<html>`.
+* **Superação de Heurísticas Espúrias do SO:** Em ambientes fabris, muitos terminais operam com distribuições de Windows ou Linux cuja configuração padrão do sistema operacional reporta equivocadamente `prefers-color-scheme: light`. Ao remover essa dependência cega e estabelecer o tema escuro como identidade nativa, garantimos estabilidade visual imediata para os operadores gráficos.
+* **Controle Segmentado Sem Ambiguidade:** A substituição de botões alternadores unitários (cujo rótulo frequentemente confunde o operador sobre se aquilo representa o estado atual ou a ação futura) por um seletor segmentado com dois botões dedicados `[ ☀️ Claro | 🌙 Escuro ]` implementa o **Princípio da Clareza de Estado**, eliminando hesitações na interação humano-computador.
 
 ### 13.3. CSS Custom Properties (Variáveis de Estilo) vs. Tailwind `darkMode: 'class'`
 Adotar a estratégia `darkMode: 'media'` do Tailwind limitaria o sistema a refletir passivamente a configuração do sistema operacional do usuário, retirando do operador a liberdade de forçar o modo claro em um monitor que receba reflexo de luz solar na fábrica. A configuração `darkMode: 'class'` implementa o **Princípio da Soberania do Usuário**:
@@ -307,7 +307,51 @@ Nossa arquitetura implementa o padrão de **Mutações Otimistas**:
 
 ---
 
+## 15. Teoria dos Autômatos e Análise Léxica de Entradas: A Camada de Parsing e Máscaras
+
+### 15.1. A Patologia do `<input type="number">` e a Teoria das Linguagens Formais
+A especificação HTML5 para o elemento `<input type="number">` apresenta uma divergência notória entre a semântica da linguagem formal e a implementação prática dos motores de renderização (Blink/V8, Gecko, WebKit). A especificação determina que o valor exposto por `element.value` deve ser uma *floating-point number string* em conformidade com a gramática léxica da linguagem C / ECMAScript (onde o separador decimal é estritamente o caractere ponto `.`).
+
+Quando um operador em território brasileiro digita a tecla de vírgula (`,`) do teclado numérico ABNT2 em um formulário padrão:
+1. O motor do navegador considera o caractere `,` inválido sob a gramática binária do User-Agent.
+2. O parser descarta a entrada ou, pior, zera o valor interno retornando uma cadeia vazia `""`.
+3. O estado do componente é corrompido para `NaN` ou `0`, inviabilizando cotações financeiras e cadastros de insumos.
+
+### 15.2. Autômatos Finitos Determinísticos (DFA) para Máscaras Dinâmicas
+Para solucionar essa fricção sem comprometer a integridade dos dados, implementamos em `apps/web/src/lib/formatters.ts` um conjunto de **Autômatos Finitos Determinísticos (DFA)**:
+$$M = (Q, \Sigma, \delta, q_0, F)$$
+Onde:
+* $\Sigma = \{0, 1, \dots, 9\}$ é o alfabeto dos dígitos decimais.
+* $Q$ representa os estados de transição da máscara.
+* $\delta: Q \times \Sigma \to Q$ rege a transição estrita de pontuação.
+
+Na máscara dinâmica de identificador fiscal (`maskCpfCnpj`), o autômato bifurca deterministicamente:
+* Para comprimentos de cadeia $|\omega| \le 11$, o autômato emite a gramática de CPF:
+  $$\text{DFA}_{\text{CPF}}: d_1 d_2 d_3 . d_4 d_5 d_6 . d_7 d_8 d_9 - d_{10} d_{11}$$
+* Quando $|\omega| > 11$ (até o limite de 14 dígitos), o autômato reconfigura a cadeia de saída para a gramática de CNPJ corporativo:
+  $$\text{DFA}_{\text{CNPJ}}: d_1 d_2 . d_3 d_4 d_5 . d_6 d_7 d_8 / d_9 d_{10} d_{11} d_{12} - d_{13} d_{14}$$
+
+### 15.3. A Dualidade Funcional: Projeção Visual vs. Estado Escalar Normalizado
+Uma decisão arquitetural crucial foi desacoplar a **Projeção Visual** (a representação em string formatada com símbolos, pontos de milhar e vírgula) do **Estado do Modelo** (o escalar numérico puro consumido pelo motor de cálculo geométrico e pela API REST).
+
+```mermaid
+flowchart LR
+    A["Teclado / Numpad"] -->|"String bruta (ex: '1250,5')"| B["formatters.formatCurrencyInput"]
+    B -->|"Projeção Visual ('1.250,5')"| C["DOM / Input Visual"]
+    B -->|"Parser Léxico (1250.5)"| D["Estado React (number)"]
+    D -->|"Aritmética Exata"| E["@erp/business-core (Decimal.js)"]
+    D -->|"JSON Payload"| F["NestJS / Prisma (PostgreSQL)"]
+```
+
+Através dos componentes especializados `CurrencyInput` e `NumberInput`, os eventos de digitação garantem:
+1. **Resistência à Histerese:** O cursor do usuário não salta desordenadamente entre as casas decimais durante a digitação.
+2. **Formatação no Blur ($\mathcal{O}(1)$):** Ao desfocar do campo, o autômato normaliza a precisão para exatamente duas casas decimais (`1500` $\to$ `1.500,00`).
+3. **Imutabilidade e Tipagem Rigorosa:** Os formulários emitem tipos primitivos limpos (`number` para valores monetários e dimensões; `string` sanitizada para CPF/CNPJ), garantindo que a camada de persistência Prisma jamais receba caracteres de pontuação em colunas numéricas de banco de dados.
+
+---
+
 ## Conclusão da Aula Magistral
 
-> *"Como pudemos constatar ao longo desta análise, o ERP Gráfica Modular não é uma coleção fortuita de bibliotecas da moda. Cada tecnologia — do rigor aritmético do `Decimal.js` à eficiência de grafos do `Turborepo`, da integridade relacional do `PostgreSQL` à reatividade funcional do `React 18`, da ergonomia biomecânica de Fitts na adaptação Mobile-First à fotometria cromática de acessibilidade WCAG em tons pastel — foi selecionada para responder a um desafio rigoroso de computação e física industrial. Arquitetura de software de excelência consiste exatamente nisto: a harmonização elegante entre a teoria da ciência da computação e a resolução pragmática de problemas de negócio no mundo real."*
+> *"Como pudemos constatar ao longo desta análise, o ERP Gráfica Modular não é uma coleção fortuita de bibliotecas da moda. Cada tecnologia — do rigor aritmético do `Decimal.js` à eficiência de grafos do `Turborepo`, da integridade relacional do `PostgreSQL` à reatividade funcional do `React 18`, da ergonomia biomecânica de Fitts na adaptação Mobile-First à fotometria cromática de acessibilidade WCAG em tons pastel, até os autômatos formais de formatação léxica — foi selecionada para responder a um desafio rigoroso de computação e física industrial. Arquitetura de software de excelência consiste exatamente nisto: a harmonização elegante entre a teoria da ciência da computação e a resolução pragmática de problemas de negócio no mundo real."*
+
 

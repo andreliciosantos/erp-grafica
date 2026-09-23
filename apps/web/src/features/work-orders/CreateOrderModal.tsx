@@ -4,6 +4,8 @@ import { api } from '../../lib/api';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { CurrencyInput } from '../../components/common/CurrencyInput';
+import { NumberInput } from '../../components/common/NumberInput';
 import { PaginatedResult, PartyItem } from '../../types';
 import { AlertCircle, PlusCircle } from 'lucide-react';
 
@@ -146,18 +148,14 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-slate-300 font-medium mb-1.5">
-              Quantidade <span className="text-rose-400">*</span>
-            </label>
-            <Input
-              type="number"
-              min={1}
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              required
-            />
-          </div>
+          <NumberInput
+            label="Quantidade"
+            suffix="un"
+            min={1}
+            value={quantity}
+            onChangeValue={setQuantity}
+            required
+          />
 
           <div>
             <label className="block text-slate-300 font-medium mb-1.5">
@@ -177,32 +175,21 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-slate-300 font-medium mb-1.5">
-              Prazo de Entrega (dias)
-            </label>
-            <Input
-              type="number"
-              min={1}
-              value={deliveryDays}
-              onChange={(e) => setDeliveryDays(Number(e.target.value))}
-              required
-            />
-          </div>
+          <NumberInput
+            label="Prazo de Entrega"
+            suffix="dias"
+            min={1}
+            value={deliveryDays}
+            onChangeValue={setDeliveryDays}
+            required
+          />
 
-          <div>
-            <label className="block text-slate-300 font-medium mb-1.5">
-              Valor Total (R$) <span className="text-rose-400">*</span>
-            </label>
-            <Input
-              type="number"
-              step="0.01"
-              min={0}
-              value={totalAmount}
-              onChange={(e) => setTotalAmount(Number(e.target.value))}
-              required
-            />
-          </div>
+          <CurrencyInput
+            label="Valor Total"
+            value={totalAmount}
+            onChangeValue={setTotalAmount}
+            required
+          />
         </div>
 
         <div>

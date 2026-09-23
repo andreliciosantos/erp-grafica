@@ -90,3 +90,5 @@ export function getPriorityConfig(priority: number) {
       return { label: 'Baixa', badge: 'bg-slate-500/20 text-slate-300 border-slate-500/30' };
   }
 }
+
+export * from './formatters';

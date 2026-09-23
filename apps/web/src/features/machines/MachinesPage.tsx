@@ -4,6 +4,8 @@ import { api } from '../../lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { CurrencyInput } from '../../components/common/CurrencyInput';
+import { NumberInput } from '../../components/common/NumberInput';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { formatCurrency } from '../../lib/utils';
@@ -190,29 +192,28 @@ export const MachinesPage: React.FC = () => {
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <Input
-              label="Custo Hora-Máquina (R$)"
-              type="number"
+            <CurrencyInput
+              label="Custo Hora-Máquina"
+              suffix="/h"
               required
-              step="0.01"
               value={hourlyRate}
-              onChange={(e) => setHourlyRate(Number(e.target.value))}
+              onChangeValue={setHourlyRate}
             />
-            <Input
-              label="Tempo de Setup (minutos)"
-              type="number"
+            <NumberInput
+              label="Tempo de Setup"
+              suffix="min"
               required
               value={setupMinutes}
-              onChange={(e) => setSetupMinutes(Number(e.target.value))}
+              onChangeValue={setSetupMinutes}
             />
           </div>
 
-          <Input
-            label="Velocidade Nominal (folhas/hora)"
-            type="number"
-            placeholder="Ex: 8000"
+          <NumberInput
+            label="Velocidade Nominal"
+            suffix="fl/h"
+            placeholder="8.000"
             value={maxSheetsHour}
-            onChange={(e) => setMaxSheetsHour(Number(e.target.value))}
+            onChangeValue={setMaxSheetsHour}
             helperText="Usada para calcular o tempo estimado de tiragem no orçamento."
           />
         </div>

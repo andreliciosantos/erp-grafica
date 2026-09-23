@@ -4,6 +4,7 @@ import { api } from '../../lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { MaskedInput } from '../../components/common/MaskedInput';
 import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
@@ -231,12 +232,13 @@ export const PartiesPage: React.FC = () => {
                 { value: 'INDIVIDUAL', label: 'Pessoa Física (CPF)' },
               ]}
             />
-            <Input
+            <MaskedInput
               label="Documento (CPF / CNPJ)"
+              maskType="cpfCnpj"
               required
-              placeholder="Apenas números..."
+              placeholder="00.000.000/0000-00"
               value={document}
-              onChange={(e) => setDocument(e.target.value)}
+              onChangeValue={setDocument}
             />
           </div>
 
@@ -256,12 +258,13 @@ export const PartiesPage: React.FC = () => {
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <Input
+            <MaskedInput
               label="Telefone / WhatsApp"
+              maskType="phone"
               required
-              placeholder="Ex: 11988887777"
+              placeholder="(11) 98888-7777"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChangeValue={setPhone}
             />
             <Input
               label="E-mail"

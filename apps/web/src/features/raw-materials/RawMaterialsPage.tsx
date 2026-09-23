@@ -4,6 +4,8 @@ import { api } from '../../lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { CurrencyInput } from '../../components/common/CurrencyInput';
+import { NumberInput } from '../../components/common/NumberInput';
 import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
@@ -234,48 +236,46 @@ export const RawMaterialsPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <Input
-              label="Largura da Folha (mm)"
-              type="number"
+            <NumberInput
+              label="Largura da Folha"
+              suffix="mm"
               placeholder="660"
               value={sheetWidthMm}
-              onChange={(e) => setSheetWidthMm(Number(e.target.value))}
+              onChangeValue={setSheetWidthMm}
             />
-            <Input
-              label="Altura da Folha (mm)"
-              type="number"
+            <NumberInput
+              label="Altura da Folha"
+              suffix="mm"
               placeholder="960"
               value={sheetHeightMm}
-              onChange={(e) => setSheetHeightMm(Number(e.target.value))}
+              onChangeValue={setSheetHeightMm}
             />
-            <Input
-              label="Gramatura (g/m²)"
-              type="number"
+            <NumberInput
+              label="Gramatura"
+              suffix="g/m²"
               placeholder="150"
               value={grammage}
-              onChange={(e) => setGrammage(Number(e.target.value))}
+              onChangeValue={setGrammage}
             />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <Input
-              label="Custo Unitário (R$)"
-              type="number"
-              step="0.01"
+            <CurrencyInput
+              label="Custo Unitário"
               value={costPerUnit}
-              onChange={(e) => setCostPerUnit(Number(e.target.value))}
+              onChangeValue={setCostPerUnit}
             />
-            <Input
+            <NumberInput
               label="Estoque Inicial"
-              type="number"
+              suffix="fl"
               value={currentStock}
-              onChange={(e) => setCurrentStock(Number(e.target.value))}
+              onChangeValue={setCurrentStock}
             />
-            <Input
-              label="Estoque Mínimo (Alerta)"
-              type="number"
+            <NumberInput
+              label="Estoque Mínimo"
+              suffix="fl"
               value={minStock}
-              onChange={(e) => setMinStock(Number(e.target.value))}
+              onChangeValue={setMinStock}
             />
           </div>
         </div>

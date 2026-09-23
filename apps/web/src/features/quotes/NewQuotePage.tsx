@@ -6,6 +6,7 @@ import { calculateSheetCutting, calculateQuotePricing } from '@erp/business-core
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { NumberInput } from '../../components/common/NumberInput';
 import { Select } from '../../components/common/Select';
 import { SheetCuttingCanvas } from '../../components/cutting-preview/SheetCuttingCanvas';
 import { formatCurrency } from '../../lib/utils';
@@ -219,29 +220,29 @@ export const NewQuotePage: React.FC = () => {
               />
 
               <div className="grid grid-cols-3 gap-3">
-                <Input
-                  label="Tiragem (Qtd)"
-                  type="number"
+                <NumberInput
+                  label="Tiragem"
+                  suffix="un"
                   required
                   min={1}
                   value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  onChangeValue={setQuantity}
                 />
-                <Input
-                  label="Largura Aberta (mm)"
-                  type="number"
+                <NumberInput
+                  label="Largura Aberta"
+                  suffix="mm"
                   required
                   min={1}
                   value={widthMm}
-                  onChange={(e) => setWidthMm(Number(e.target.value))}
+                  onChangeValue={setWidthMm}
                 />
-                <Input
-                  label="Altura Aberta (mm)"
-                  type="number"
+                <NumberInput
+                  label="Altura Aberta"
+                  suffix="mm"
                   required
                   min={1}
                   value={heightMm}
-                  onChange={(e) => setHeightMm(Number(e.target.value))}
+                  onChangeValue={setHeightMm}
                 />
               </div>
             </CardContent>
@@ -297,14 +298,14 @@ export const NewQuotePage: React.FC = () => {
                     { value: 0, label: 'Em Branco (4x0)' },
                   ]}
                 />
-                <Input
-                  label="Markup Comercial (%)"
-                  type="number"
+                <NumberInput
+                  label="Markup Comercial"
+                  suffix="%"
                   required
                   min={0}
                   max={90}
                   value={markupPercent}
-                  onChange={(e) => setMarkupPercent(Number(e.target.value))}
+                  onChangeValue={setMarkupPercent}
                 />
               </div>
 

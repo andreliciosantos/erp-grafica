@@ -142,10 +142,11 @@ A interface foi inteiramente adaptada seguindo os princípios rígidos de **Mobi
 
 Para atender tanto a ambientes industriais escuros quanto escritórios com iluminação solar direta, o sistema conta com uma alternância dinâmica de tema:
 
-### 8.1. Botão de Escolha de Tema
-* Posicionado permanentemente no **rodapé da barra lateral esquerda** (`Sidebar`), visível em todas as telas.
-* Alterna entre os modos com transição suave, exibindo o ícone do Sol (`Sun`) para o tema claro e da Lua (`Moon`) para o tema escuro.
-* O estado é persistido no `localStorage` sob a chave `erp_theme` e sincronizado com as preferências do sistema operacional (`prefers-color-scheme`).
+### 8.1. Arquitetura de Tema Blindada e Inicialização Garantida
+* **Padrão Escuro (Dark-first):** O sistema agora adota o tema escuro como padrão industrial absoluto. Usuários que acessam a aplicação pela primeira vez ou abrem em computadores corporativos recebem instantaneamente a experiência escura imersiva, sem que a preferência do sistema operacional force o tema claro indesejado.
+* **Prevenção de FOUC (Flash of Unstyled Content):** Um script síncrono inline posicionado no `<head>` do `index.html` avalia a chave `erp_theme` no `localStorage` antes mesmo do primeiro frame ser renderizado pelo navegador, injetando a classe `.dark` no elemento `<html>` de forma atômica e eliminando flashes brancos na tela.
+* **Controle Intuitivo de Dois Botões (Segmented Control):** A barra lateral esquerda (`Sidebar`) agora conta com um seletor visual explícito `[ ☀️ Claro | 🌙 Escuro ]`, que destaca com precisão qual modo está ativo no momento e permite troca direta com um único clique.
+* **Acesso Universal no Cabeçalho Móvel e Desktop (`Header`):** Além do menu lateral, o cabeçalho superior inclui uma versão compacta do `ThemeToggle`, permitindo que operadores no celular ou no tablet alternem o tema a qualquer segundo sem precisar abrir gavetas laterais.
 
 ### 8.2. A Filosofia das Cores Pastel
 Ao invés de cores primárias ultra-saturadas que causam cansaço visual (*visual fatigue*) em operadores que passam 8 horas olhando para telas de acompanhamento, o ERP adota uma paleta em tons pastel:
@@ -167,11 +168,14 @@ O sistema conta com **100% de aprovação** nos testes automatizados em todos os
 
 1. **`@erp/business-core`:** Testes de estresse para os cálculos geométricos de corte, permutações de 90° e fórmulas de precificação com precisão arbitrária.
 2. **`apps/api` (Jest):** 19 testes automatizados cobrindo serviços e controladores, além do script de integração `test-swagger.cjs` que valida o fluxo de ponta a ponta (login, clientes, insumos, máquinas, orçamentos, OS e eventos).
-3. **`apps/web` (Vitest + Testing Library + JSDOM):** **72 testes** distribuídos em 13 arquivos cobrindo:
+3. **`apps/web` (Vitest + Testing Library + JSDOM):** **94 testes** distribuídos em **16 arquivos** cobrindo:
+   - Utilitários de formatação e parsing (`formatters.test.ts`): validação de BRL, moedas, inteiros, grandezas e máscaras de CPF/CNPJ e Telefone.
+   - Componente monetário (`CurrencyInput.test.tsx`): formatação durante digitação, blur com 2 casas decimais e prefixo `R$`.
+   - Componente de grandezas físicas (`NumberInput.test.tsx`): sufixos contextuais (`mm`, `un`, `%`), separadores de milhar e limites `min`/`max`.
    - Gerenciamento de Tema Zustand (`themeStore.test.ts`): alternância, persistência em localStorage e sincronização com a classe `.dark` do DOM.
-   - Barra lateral responsiva (`Sidebar.test.tsx`): renderização de rotas, drawer móvel e acionamento do botão de alternância de tema no rodapé.
+   - Barra lateral responsiva (`Sidebar.test.tsx`): renderização de rotas, drawer móvel e seletor segmentado de tema.
    - Layout mestre móvel (`MainLayout.test.tsx`): abertura e fechamento do menu hamburguer em dispositivos móveis.
-   - Utilitários e formatadores monetários BRL.
+   - Utilitários e formatadores monetários BRL (`utils.test.ts`).
    - Estado de autenticação Zustand (login, logout, hidratação de sessão).
    - Componentes visuais do Design System (Button, Badge, Input, Select, Modal, StatCard).
    - Canvas SVG de imposição de folha pai (`SheetCuttingCanvas`).
@@ -185,3 +189,33 @@ Para viabilizar a demonstração pública do sistema para testes de clientes ou 
 * **Binário Nativo `cloudflared`:** Cria uma conexão de saída (*outbound*) criptografada para a rede edge global da Cloudflare.
 * **Certificado SSL Automático (HTTPS):** Gera uma URL segura (ex: `https://...trycloudflare.com`) sem telas de aviso de segurança.
 * **Proxy Unificado no Vite:** O túnel aponta para a porta `5173`. O Vite, por sua vez, atua como *Reverse Proxy*, redirecionando chamadas `/api` e `/docs` para a porta `3000` e canais `/socket.io` para o WebSocket Gateway, garantindo que qualquer usuário externo consiga interagir com o front, o back e os websockets em uma única URL.
+
+---
+
+## 11. Formatação Inteligente de Entradas Numéricas, Monetárias e Máscaras (BRL)
+
+Para solucionar de forma definitiva o problema clássico de navegadores em que campos `<input type="number">` descartam a vírgula do teclado numérico brasileiro ABNT2 ou anulam o valor para `NaN`, foi introduzida uma camada completa de componentes de formulário especializados:
+
+### 11.1. `CurrencyInput`: Valores Monetários em Reais (R$)
+* **Prefixo Fixo e Elegante:** Exibe o prefixo `R$` estilizado à esquerda do campo.
+* **Digitação Natural com Vírgula ou Ponto:** O usuário pode digitar `1250,5` ou `1250.5` sem que o navegador trave ou descarte a pontuação.
+* **Separadores de Milhar em Tempo Real:** Conforme o usuário digita, números grandes são pontuados instantaneamente (ex: `1.500`).
+* **Auto-correção de Casas Decimais no `onBlur`:** Ao sair do campo, o valor é automaticamente arredondado e formatado com duas casas decimais obrigatórias (ex: `1500` vira `1.500,00`; `0,8` vira `0,80`).
+* **Contrato Limpo com o Estado:** Emite diretamente o tipo primitivo `number` via prop `onChangeValue(num)`, desacoplando a máscara visual do modelo de dados da API.
+
+### 11.2. `NumberInput`: Quantidades e Grandezas Físicas Gráficas
+* **Sufixos Físicos Especializados:** Exibe unidades contextuais à direita do campo:
+  - `mm` para largura e altura de folhas e formatos abertos;
+  - `g/m²` para gramaturas de papéis (ex: Couché 150g/m²);
+  - `un` ou `fl` para tiragens e estoques de folhas;
+  - `min` para tempos de setup e acerto de máquinas;
+  - `fl/h` para velocidades nominais de equipamentos;
+  - `%` para margem de lucro e markups comerciais;
+  - `dias` para prazos de produção e expedição.
+* **Filtragem de Caracteres Inválidos:** Impede a digitação inadvertida de notações científicas (`e`, `+`, `-`) comuns em inputs numéricos padrão.
+
+### 11.3. `MaskedInput`: Identificadores Fiscais e Comunicação
+* **CPF e CNPJ Dinâmicos (`maskType="cpfCnpj"`):** Adapta-se automaticamente ao comprimento digitado, exibindo `000.000.000-00` até 11 dígitos e convertendo suavemente para `00.000.000/0000-00` para pessoas jurídicas.
+* **Telefones e WhatsApp (`maskType="phone"`):** Formata com precisão números fixos de 10 dígitos `(11) 3333-4444` e celulares de 11 dígitos com o 9º dígito móvel `(11) 98765-4321`.
+* **Sanitização Transparente:** Mantém a interface legível e amigável, enquanto as requisições para a API enviam os dígitos limpos para indexação no banco de dados.
+

@@ -4,6 +4,8 @@ import { api } from '../../lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { CurrencyInput } from '../../components/common/CurrencyInput';
+import { MaskedInput } from '../../components/common/MaskedInput';
 import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
@@ -455,12 +457,13 @@ export const EmployeesPage: React.FC = () => {
               onChange={(e) => setName(e.target.value)}
             />
 
-            <Input
+            <MaskedInput
               label="CPF"
+              maskType="cpf"
               required
               placeholder="000.000.000-00"
               value={document}
-              onChange={(e) => setDocument(e.target.value)}
+              onChangeValue={setDocument}
             />
 
             <Input
@@ -511,12 +514,13 @@ export const EmployeesPage: React.FC = () => {
               }))}
             />
 
-            <Input
+            <MaskedInput
               label="Telefone / WhatsApp"
+              maskType="phone"
               required
               placeholder="(11) 98765-4321"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChangeValue={setPhone}
             />
 
             <Input
@@ -534,22 +538,19 @@ export const EmployeesPage: React.FC = () => {
               onChange={(e) => setHireDate(e.target.value)}
             />
 
-            <Input
-              label="Custo Hora (R$/h)"
-              type="number"
-              step="0.01"
-              placeholder="Ex: 25.50"
+            <CurrencyInput
+              label="Custo Hora"
+              suffix="/h"
+              placeholder="25,50"
               value={hourlyRate}
-              onChange={(e) => setHourlyRate(e.target.value === '' ? '' : Number(e.target.value))}
+              onChangeValue={(v) => setHourlyRate(v)}
             />
 
-            <Input
-              label="Salário Base Mensal (R$)"
-              type="number"
-              step="0.01"
-              placeholder="Ex: 3500.00"
+            <CurrencyInput
+              label="Salário Base Mensal"
+              placeholder="3.500,00"
               value={monthlySalary}
-              onChange={(e) => setMonthlySalary(e.target.value === '' ? '' : Number(e.target.value))}
+              onChangeValue={(v) => setMonthlySalary(v)}
             />
           </div>
 
