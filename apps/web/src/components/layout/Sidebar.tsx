@@ -10,13 +10,11 @@ import {
   ShieldCheck,
   PrinterIcon,
   UserCheck,
-  Sun,
-  Moon,
   X,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../stores/authStore';
-import { useThemeStore } from '../../stores/themeStore';
+import { ThemeToggle } from '../common/ThemeToggle';
 import { Role } from '../../types';
 
 interface NavItem {
@@ -36,7 +34,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
 }) => {
   const { user } = useAuthStore();
-  const { theme, toggleTheme } = useThemeStore();
 
   const navItems: NavItem[] = [
     {
@@ -166,29 +163,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ))}
         </div>
 
-        {/* Theme Toggle Button & Footer Info */}
-        <div className="p-3 border-t border-slate-200/80 dark:border-slate-800/80 space-y-2">
-          {/* Theme Toggle Button at bottom of sidebar */}
-          <button
-            type="button"
-            data-testid="theme-toggle-btn"
-            onClick={toggleTheme}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700/60 transition-colors shadow-sm"
-            title={`Alternar para ${theme === 'dark' ? 'Tema Claro' : 'Tema Escuro'}`}
-            aria-label="Alternar tema claro e escuro"
-          >
-            <div className="flex items-center gap-2.5">
-              {theme === 'dark' ? (
-                <Moon className="w-4 h-4 text-indigo-400" />
-              ) : (
-                <Sun className="w-4 h-4 text-amber-500" />
-              )}
-              <span>{theme === 'dark' ? 'Tema Escuro' : 'Tema Claro'}</span>
-            </div>
-            <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400">
-              {theme === 'dark' ? 'Escuro' : 'Claro'}
-            </span>
-          </button>
+        {/* Theme Toggle & Footer Info */}
+        <div className="p-3 border-t border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <ThemeToggle />
 
           {/* Footer status */}
           <div className="bg-slate-50 dark:bg-slate-950/60 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-850 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">

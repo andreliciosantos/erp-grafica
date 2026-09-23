@@ -12,22 +12,35 @@ interface ThemeState {
 const applyThemeClass = (theme: Theme) => {
   if (typeof document !== 'undefined') {
     const root = document.documentElement;
+    const body = document.body;
     if (theme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
+      if (body) {
+        body.classList.add('dark');
+        body.classList.remove('light');
+      }
     } else {
       root.classList.add('light');
       root.classList.remove('dark');
+      if (body) {
+        body.classList.add('light');
+        body.classList.remove('dark');
+      }
     }
   }
 };
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
-  theme: 'dark', // default fallback
+  theme: 'dark', // Padrão industrial prioritário
 
   setTheme: (theme: Theme) => {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('erp_theme', theme);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('erp_theme', theme);
+      }
+    } catch {
+      // Ignore storage restrictions
     }
     applyThemeClass(theme);
     set({ theme });
@@ -42,17 +55,16 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   initialize: () => {
     let initialTheme: Theme = 'dark';
 
-    if (typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem('erp_theme') as Theme | null;
-      if (stored === 'light' || stored === 'dark') {
-        initialTheme = stored;
-      } else if (
-        typeof window !== 'undefined' &&
-        window.matchMedia &&
-        window.matchMedia('(prefers-color-scheme: light)').matches
-      ) {
-        initialTheme = 'light';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('erp_theme') as Theme | null;
+        if (stored === 'light' || stored === 'dark') {
+          initialTheme = stored;
+        }
       }
+    } catch {
+      // Default to dark on storage error
+      initialTheme = 'dark';
     }
 
     applyThemeClass(initialTheme);

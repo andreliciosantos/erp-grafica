@@ -3,6 +3,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { getSocket } from '../../lib/socket';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
+import { ThemeToggle } from '../common/ThemeToggle';
 import { LogOut, Wifi, WifiOff, Menu } from 'lucide-react';
 
 export interface HeaderProps {
@@ -75,6 +76,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
             {user?.role || 'OPERATOR'}
           </Badge>
         </div>
+
+        {/* Theme quick toggle */}
+        <ThemeToggle variant="compact" />
 
         <Button
           variant="outline"

@@ -27,24 +27,27 @@ describe('Sidebar component', () => {
     expect(screen.getByText('Equipe & RH')).toBeInTheDocument();
   });
 
-  it('should render theme toggle button at the bottom of sidebar', () => {
+  it('should render theme toggle selector at the bottom of sidebar', () => {
     renderWithProviders(<Sidebar />);
-    const themeBtn = screen.getByTestId('theme-toggle-btn');
-    expect(themeBtn).toBeInTheDocument();
-    expect(screen.getByText('Tema Escuro')).toBeInTheDocument();
+    const themeToggle = screen.getByTestId('theme-toggle-btn');
+    expect(themeToggle).toBeInTheDocument();
+    expect(screen.getByTestId('theme-light-btn')).toBeInTheDocument();
+    expect(screen.getByTestId('theme-dark-btn')).toBeInTheDocument();
+    expect(screen.getByText('Escuro Ativo')).toBeInTheDocument();
   });
 
-  it('should toggle theme from dark to light when theme button is clicked', () => {
+  it('should switch theme when light and dark buttons are clicked', () => {
     renderWithProviders(<Sidebar />);
-    const themeBtn = screen.getByTestId('theme-toggle-btn');
+    const lightBtn = screen.getByTestId('theme-light-btn');
+    const darkBtn = screen.getByTestId('theme-dark-btn');
 
-    fireEvent.click(themeBtn);
+    fireEvent.click(lightBtn);
     expect(useThemeStore.getState().theme).toBe('light');
-    expect(screen.getByText('Tema Claro')).toBeInTheDocument();
+    expect(screen.getByText('Claro Ativo')).toBeInTheDocument();
 
-    fireEvent.click(themeBtn);
+    fireEvent.click(darkBtn);
     expect(useThemeStore.getState().theme).toBe('dark');
-    expect(screen.getByText('Tema Escuro')).toBeInTheDocument();
+    expect(screen.getByText('Escuro Ativo')).toBeInTheDocument();
   });
 
   it('should render mobile backdrop and drawer when isMobileOpen is true', () => {
