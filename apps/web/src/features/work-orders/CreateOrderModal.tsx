@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { Modal } from '../../components/common/Modal';
@@ -6,15 +6,20 @@ import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { CurrencyInput } from '../../components/common/CurrencyInput';
 import { NumberInput } from '../../components/common/NumberInput';
-import { PaginatedResult, PartyItem } from '../../types';
-import { AlertCircle, PlusCircle } from 'lucide-react';
+import { PaginatedResult, PartyItem, WorkOrderItem } from '../../types';
+import { AlertCircle, PlusCircle, Edit3 } from 'lucide-react';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  orderToEdit?: WorkOrderItem | null;
 }
 
-export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onClose }) => {
+export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
+  isOpen,
+  onClose,
+  orderToEdit,
+}) => {
   const queryClient = useQueryClient();
 
   const [partyId, setPartyId] = useState('');
@@ -38,7 +43,54 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
 
   const parties = partiesData?.data || [];
 
-  const createMutation = useMutation({
+  // Populate data when editing
+  useEffect(() => {
+    if (orderToEdit && isOpen) {
+      setPartyId(orderToEdit.partyId || (orderToEdit.party?.id ?? ''));
+      setPriority(orderToEdit.priority || 2);
+      setTotalAmount(Number(orderToEdit.totalAmount) || 150);
+      const days = orderToEdit.deliveryDate
+        ? Math.max(1, Math.round((new Date(orderToEdit.deliveryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        : 5;
+      setDeliveryDays(days);
+
+      api.get(`/work-orders/${orderToEdit.id}`)
+        .then((res) => {
+          const full = res.data;
+          const firstItem = full?.quote?.items?.[0];
+          if (firstItem?.productName) {
+            setProductName(firstItem.productName);
+          }
+          if (firstItem?.quantity) {
+            setQuantity(firstItem.quantity);
+          }
+          if (full?.quote?.notes) {
+            setNotes(full.quote.notes);
+          }
+          if (full?.partyId) {
+            setPartyId(full.partyId);
+          }
+          if (full?.priority) {
+            setPriority(full.priority);
+          }
+          if (full?.totalAmount) {
+            setTotalAmount(Number(full.totalAmount));
+          }
+        })
+        .catch(() => {});
+    } else if (!orderToEdit && isOpen) {
+      setPartyId('');
+      setProductName('');
+      setQuantity(1000);
+      setPriority(2);
+      setDeliveryDays(5);
+      setTotalAmount(150);
+      setNotes('');
+    }
+    setErrorMsg(null);
+  }, [orderToEdit, isOpen]);
+
+  const saveMutation = useMutation({
     mutationFn: async () => {
       if (!partyId) throw new Error('Selecione um cliente.');
       if (!productName.trim()) throw new Error('Informe o nome/descrição do produto.');
@@ -54,14 +106,18 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
         notes: notes.trim() || undefined,
       };
 
-      const res = await api.post('/work-orders', payload);
-      return res.data;
+      if (orderToEdit) {
+        const res = await api.put(`/work-orders/${orderToEdit.id}`, payload);
+        return res.data;
+      } else {
+        const res = await api.post('/work-orders', payload);
+        return res.data;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       onClose();
-      // Reset form
       setPartyId('');
       setProductName('');
       setQuantity(1000);
@@ -73,7 +129,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string | string[] } }; message?: string };
-      const message = error.response?.data?.message || error.message || 'Erro ao criar pedido.';
+      const message = error.response?.data?.message || error.message || 'Erro ao salvar pedido.';
       setErrorMsg(Array.isArray(message) ? message.join(' ') : message);
     },
   });
@@ -81,15 +137,15 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-    createMutation.mutate();
+    saveMutation.mutate();
   };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Novo Pedido / Ordem de Serviço"
-      description="Cadastre uma ordem de produção diretamente no Chão de Fábrica"
+      title={orderToEdit ? `Editar Ordem de Serviço: ${orderToEdit.orderNumber}` : "Novo Pedido / Ordem de Serviço"}
+      description={orderToEdit ? "Altere as especificações comerciais e técnicas da ordem de produção" : "Cadastre uma ordem de produção diretamente no Chão de Fábrica"}
       maxWidth="lg"
       footer={
         <div className="flex items-center justify-end gap-2 w-full">
@@ -99,11 +155,20 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
           <Button
             variant="primary"
             onClick={handleSubmit}
-            isLoading={createMutation.isPending}
+            isLoading={saveMutation.isPending}
             type="button"
           >
-            <PlusCircle className="w-4 h-4 mr-1.5" />
-            Criar Ordem de Serviço
+            {orderToEdit ? (
+              <>
+                <Edit3 className="w-4 h-4 mr-1.5" />
+                Atualizar Ordem de Serviço
+              </>
+            ) : (
+              <>
+                <PlusCircle className="w-4 h-4 mr-1.5" />
+                Criar Ordem de Serviço
+              </>
+            )}
           </Button>
         </div>
       }
@@ -117,13 +182,13 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
         )}
 
         <div>
-          <label className="block text-slate-300 font-medium mb-1.5">
-            Cliente <span className="text-rose-400">*</span>
+          <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1.5">
+            Cliente <span className="text-rose-500 dark:text-rose-400">*</span>
           </label>
           <select
             value={partyId}
             onChange={(e) => setPartyId(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-500 text-xs"
+            className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500 text-xs"
             required
           >
             <option value="">Selecione um cliente...</option>
@@ -136,8 +201,8 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
         </div>
 
         <div>
-          <label className="block text-slate-300 font-medium mb-1.5">
-            Descrição do Produto / Serviço <span className="text-rose-400">*</span>
+          <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1.5">
+            Descrição do Produto / Serviço <span className="text-rose-500 dark:text-rose-400">*</span>
           </label>
           <Input
             placeholder="Ex: Panfleto 10x15cm 4x0 couchê 90g, Cartão de Visita, Banner 2x1m"
@@ -158,13 +223,13 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
           />
 
           <div>
-            <label className="block text-slate-300 font-medium mb-1.5">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1.5">
               Prioridade da Produção
             </label>
             <select
               value={priority}
               onChange={(e) => setPriority(Number(e.target.value))}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-500 text-xs"
+              className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500 text-xs"
             >
               <option value={1}>1 - Baixa</option>
               <option value={2}>2 - Normal</option>
@@ -193,12 +258,12 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ isOpen, onCl
         </div>
 
         <div>
-          <label className="block text-slate-300 font-medium mb-1.5">
+          <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1.5">
             Observações Técnicas / Acabamentos
           </label>
           <textarea
             rows={2}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-500 text-xs"
+            className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 text-xs"
             placeholder="Ex: Laminação fosca frente, refilar no formato final, embalar em pacotes de 100un."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

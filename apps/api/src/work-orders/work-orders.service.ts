@@ -26,6 +26,7 @@ import { Decimal } from '@erp/business-core';
 import { EventsGateway } from '../events/events.gateway';
 import { StageActionDto, StageActionEnum } from './dto/stage-action.dto';
 import { CreateDirectOrderDto } from './dto/create-direct-order.dto';
+import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
 
 const VALID_TRANSITIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
   [WorkOrderStatus.PENDING]: [
@@ -504,6 +505,75 @@ export class WorkOrdersService {
       orderNumber: result.orderNumber,
       previousStatus: WorkOrderStatus.PENDING,
       newStatus: WorkOrderStatus.PENDING,
+      updatedAt: new Date().toISOString(),
+    });
+
+    return result;
+  }
+
+  async update(id: string, dto: UpdateWorkOrderDto): Promise<WorkOrder> {
+    const workOrder = await this.findOne(id);
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      // 1. Update WorkOrder fields
+      const workOrderUpdateData: Record<string, any> = {};
+      if (dto.partyId) workOrderUpdateData.partyId = dto.partyId;
+      if (dto.priority !== undefined) workOrderUpdateData.priority = dto.priority;
+      if (dto.totalAmount !== undefined) workOrderUpdateData.totalAmount = dto.totalAmount;
+      if (dto.deliveryDays !== undefined) {
+        workOrderUpdateData.deliveryDate = new Date(Date.now() + dto.deliveryDays * 86400000);
+      }
+
+      const updatedWorkOrder = await tx.workOrder.update({
+        where: { id: workOrder.id },
+        data: workOrderUpdateData,
+        include: {
+          stages: { orderBy: { stepOrder: 'asc' } },
+          party: { select: { id: true, name: true, phone: true } },
+        },
+      });
+
+      // 2. Update Quote & QuoteItem if needed
+      const quoteUpdateData: Record<string, any> = {};
+      if (dto.partyId) quoteUpdateData.partyId = dto.partyId;
+      if (dto.totalAmount !== undefined) quoteUpdateData.totalAmount = dto.totalAmount;
+      if (dto.notes !== undefined) quoteUpdateData.notes = dto.notes;
+
+      if (Object.keys(quoteUpdateData).length > 0) {
+        await tx.quote.update({
+          where: { id: workOrder.quoteId },
+          data: quoteUpdateData,
+        });
+      }
+
+      // Update QuoteItem if productName, quantity or totalAmount provided
+      if (dto.productName !== undefined || dto.quantity !== undefined || dto.totalAmount !== undefined) {
+        const firstItem = workOrder.quote?.items?.[0];
+        if (firstItem) {
+          const newQty = dto.quantity !== undefined ? dto.quantity : firstItem.quantity;
+          const newTotal = dto.totalAmount !== undefined ? dto.totalAmount : Number(firstItem.itemTotalAmount);
+          const newUnitPrice = newQty > 0 ? newTotal / newQty : newTotal;
+
+          await tx.quoteItem.update({
+            where: { id: firstItem.id },
+            data: {
+              ...(dto.productName ? { productName: dto.productName } : {}),
+              ...(dto.quantity ? { quantity: dto.quantity } : {}),
+              ...(dto.totalAmount !== undefined ? { itemTotalAmount: dto.totalAmount } : {}),
+              unitPrice: newUnitPrice,
+            },
+          });
+        }
+      }
+
+      return updatedWorkOrder;
+    });
+
+    this.eventsGateway.emitWorkOrderStatusChanged({
+      workOrderId: result.id,
+      orderNumber: result.orderNumber,
+      previousStatus: result.status as WorkOrderStatus,
+      newStatus: result.status as WorkOrderStatus,
       updatedAt: new Date().toISOString(),
     });
 

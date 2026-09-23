@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
@@ -20,6 +21,7 @@ import {
 import { UpdateWorkOrderStatusDto } from './dto/update-status.dto';
 import { StageActionDto } from './dto/stage-action.dto';
 import { CreateDirectOrderDto } from './dto/create-direct-order.dto';
+import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -64,6 +66,15 @@ export class WorkOrdersController {
     @Body() dto: UpdateWorkOrderStatusDto,
   ): Promise<WorkOrder> {
     return this.workOrdersService.updateStatus(id, dto.status);
+  }
+
+  @Put('work-orders/:id')
+  @Roles(Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR)
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateWorkOrderDto,
+  ): Promise<WorkOrder> {
+    return this.workOrdersService.update(id, dto);
   }
 
   @Delete('work-orders/:id')

@@ -219,3 +219,39 @@ Para solucionar de forma definitiva o problema clássico de navegadores em que c
 * **Telefones e WhatsApp (`maskType="phone"`):** Formata com precisão números fixos de 10 dígitos `(11) 3333-4444` e celulares de 11 dígitos com o 9º dígito móvel `(11) 98765-4321`.
 * **Sanitização Transparente:** Mantém a interface legível e amigável, enquanto as requisições para a API enviam os dígitos limpos para indexação no banco de dados.
 
+---
+
+## 12. Universalização da Funcionalidade de Edição em Todas as Entidades (CRUD Completo)
+
+Para proporcionar controle operacional irrestrito e eliminar a necessidade de re-cadastros manuais por pequenos erros de digitação, a funcionalidade de **Edição Completa** foi implementada e padronizada em todos os módulos e entidades do ERP Gráfica:
+
+### 12.1. Insumos Gráficos & Papéis (`RawMaterialsPage.tsx`)
+* **Ação de Edição:** Botão com ícone `Edit2` integrado à tabela ao lado da exclusão.
+* **Modal Reativo:** Abre com os dados do insumo selecionado (nome, categoria, unidade de medida, dimensões da folha pai, gramatura, custo unitário e estoques).
+* **Persistência Backend:** Rota `PUT /api/v1/raw-materials/:id` sincronizada via TanStack Query.
+
+### 12.2. Parque Gráfico & Máquinas de Impressão (`MachinesPage.tsx`)
+* **Ação de Edição:** Botão de edição presente no cabeçalho de cada card de máquina.
+* **Modal Reativo:** Permite calibrar a taxa horária de máquina (`hourlyRate`), tempo de setup (`setupMinutes`) e velocidade nominal de tiragem (`maxSheetsHour`).
+* **Persistência Backend:** Rota `PUT /api/v1/machines/:id`.
+
+### 12.3. Clientes & Parceiros Comerciais (`PartiesPage.tsx`)
+* **Ação de Edição:** Botão de edição na tabela de parceiros.
+* **Modal Reativo:** Edição completa de razão social, nome fantasia, documento fiscal com máscara automática, canais de contato e endereço.
+* **Persistência Backend:** Rota `PUT /api/v1/parties/:id`.
+
+### 12.4. Gestão de Usuários & Acessos (`UsersPage.tsx`)
+* **Ação de Edição:** Permite atualizar o nome, e-mail, perfil de permissão (`Role`) e alternar o status da conta entre Ativo e Inativo.
+* **Gestão Segura de Credenciais:** Campo de senha opcional na edição; caso deixado em branco, a hash bcrypt existente é estritamente preservada no banco.
+* **Persistência Backend:** Rota `PUT /api/v1/users/:id`.
+
+### 12.5. Chão de Fábrica & Ordens de Serviço (`WorkOrdersPage.tsx`)
+* **Novo Endpoint no Backend:** Implementação de `PUT /api/v1/work-orders/:id` no NestJS (`WorkOrdersController` e `WorkOrdersService`) via `UpdateWorkOrderDto`.
+* **Consistência Transacional:** Atualiza atomicamente a `WorkOrder` (cliente, prioridade, data de entrega recalculada a partir do prazo, valor total) e propaga as alterações para o `Quote` e o `QuoteItem` correspondente (nome do produto, tiragem e recálculo proporcional do preço unitário).
+* **Disparo em Tempo Real:** Emite o evento `work_order_status_changed` via WebSocket Gateway, atualizando instantaneamente os quadros Kanban dos operadores conectados.
+* **Pontos de Acesso na Interface:**
+  - Botão de edição na visão em Tabela de Ordens de Serviço.
+  - Botão "Editar Ordem de Serviço" dentro do modal de detalhes (`OrderDetailsModal.tsx`).
+  - Formulário unificado em `CreateOrderModal.tsx`, operando de forma transparente tanto em modo de criação (`POST`) quanto em modo de edição (`PUT`).
+
+

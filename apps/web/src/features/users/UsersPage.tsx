@@ -8,12 +8,13 @@ import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { formatDateTime } from '../../lib/utils';
-import { ShieldCheck, Plus, UserCheck, Trash2, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Plus, UserCheck, Trash2, AlertTriangle, Edit2 } from 'lucide-react';
 import { UserItem, PaginatedResult } from '../../types';
 
 export const UsersPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
 
   // Form states
@@ -21,6 +22,7 @@ export const UsersPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('OPERATOR');
+  const [isActive, setIsActive] = useState(true);
 
   const { data, isLoading } = useQuery<PaginatedResult<UserItem>>({
     queryKey: ['users-list'],
@@ -48,20 +50,55 @@ export const UsersPage: React.FC = () => {
     },
   });
 
-  const createMutation = useMutation({
+  const handleOpenCreateModal = () => {
+    setEditingUser(null);
+    setName('');
+    setEmail('');
+    setPassword('');
+    setRole('OPERATOR');
+    setIsActive(true);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (user: UserItem) => {
+    setEditingUser(user);
+    setName(user.name);
+    setEmail(user.email);
+    setPassword('');
+    setRole(user.role);
+    setIsActive(user.isActive);
+    setIsModalOpen(true);
+  };
+
+  const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = {
-        name,
-        email,
-        password,
-        role,
-      };
-      const res = await api.post('/users', payload);
-      return res.data;
+      if (editingUser) {
+        const payload: Record<string, any> = {
+          name,
+          email,
+          role,
+          isActive,
+        };
+        if (password) {
+          payload.password = password;
+        }
+        const res = await api.put(`/users/${editingUser.id}`, payload);
+        return res.data;
+      } else {
+        const payload = {
+          name,
+          email,
+          password,
+          role,
+        };
+        const res = await api.post('/users', payload);
+        return res.data;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users-list'] });
       setIsModalOpen(false);
+      setEditingUser(null);
       setName('');
       setEmail('');
       setPassword('');
@@ -69,7 +106,7 @@ export const UsersPage: React.FC = () => {
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string | string[] } } };
       const msg = error.response?.data?.message;
-      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Erro ao cadastrar usuário.'));
+      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Erro ao salvar usuário.'));
     },
   });
 
@@ -87,7 +124,7 @@ export const UsersPage: React.FC = () => {
             Gestão de operadores de fábrica, vendedores e administradores do ERP
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsModalOpen(true)}>
+        <Button size="sm" onClick={handleOpenCreateModal}>
           <Plus className="w-4 h-4" />
           Cadastrar Usuário
         </Button>
@@ -145,7 +182,16 @@ export const UsersPage: React.FC = () => {
                         </Badge>
                       </td>
                       <td className="py-3.5 text-slate-500 dark:text-slate-400">{formatDateTime(user.createdAt)}</td>
-                      <td className="py-3.5 text-right">
+                      <td className="py-3.5 text-right space-x-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenEditModal(user)}
+                          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700"
+                          title="Editar Usuário"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -165,23 +211,32 @@ export const UsersPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Register Modal */}
+      {/* Register/Edit Modal */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Cadastrar Novo Usuário"
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingUser(null);
+        }}
+        title={editingUser ? "Editar Usuário" : "Cadastrar Novo Usuário"}
         maxWidth="md"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingUser(null);
+              }}
+            >
               Cancelar
             </Button>
             <Button
               variant="primary"
-              onClick={() => createMutation.mutate()}
-              isLoading={createMutation.isPending}
+              onClick={() => saveMutation.mutate()}
+              isLoading={saveMutation.isPending}
             >
-              Salvar Usuário
+              {editingUser ? "Atualizar Usuário" : "Salvar Usuário"}
             </Button>
           </>
         }
@@ -205,10 +260,10 @@ export const UsersPage: React.FC = () => {
           />
 
           <Input
-            label="Senha Provisória"
+            label={editingUser ? "Nova Senha (opcional)" : "Senha Provisória"}
             type="password"
-            required
-            placeholder="Mínimo 6 caracteres..."
+            required={!editingUser}
+            placeholder={editingUser ? "Deixe em branco para manter a mesma" : "Mínimo 6 caracteres..."}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -224,6 +279,18 @@ export const UsersPage: React.FC = () => {
               { value: 'ADMIN', label: 'Administrador do Sistema' },
             ]}
           />
+
+          {editingUser && (
+            <Select
+              label="Status da Conta"
+              value={isActive ? 'true' : 'false'}
+              onChange={(e) => setIsActive(e.target.value === 'true')}
+              options={[
+                { value: 'true', label: 'Ativo' },
+                { value: 'false', label: 'Inativo' },
+              ]}
+            />
+          )}
         </div>
       </Modal>
 

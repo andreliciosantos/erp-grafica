@@ -9,12 +9,13 @@ import { NumberInput } from '../../components/common/NumberInput';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { formatCurrency } from '../../lib/utils';
-import { Printer, Plus, Gauge, Clock, Trash2, AlertTriangle } from 'lucide-react';
+import { Printer, Plus, Gauge, Clock, Trash2, AlertTriangle, Edit2 } from 'lucide-react';
 import { MachineItem } from '../../types';
 
 export const MachinesPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingMachine, setEditingMachine] = useState<MachineItem | null>(null);
   const [machineToDelete, setMachineToDelete] = useState<MachineItem | null>(null);
 
   // Form states
@@ -31,7 +32,25 @@ export const MachinesPage: React.FC = () => {
     },
   });
 
-  const createMutation = useMutation({
+  const handleOpenCreateModal = () => {
+    setEditingMachine(null);
+    setName('');
+    setHourlyRate(180);
+    setSetupMinutes(15);
+    setMaxSheetsHour(5000);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (machine: MachineItem) => {
+    setEditingMachine(machine);
+    setName(machine.name);
+    setHourlyRate(Number(machine.hourlyRate));
+    setSetupMinutes(machine.setupMinutes || 15);
+    setMaxSheetsHour(machine.maxSheetsHour || 0);
+    setIsModalOpen(true);
+  };
+
+  const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
         name,
@@ -40,18 +59,24 @@ export const MachinesPage: React.FC = () => {
         maxSheetsHour: Number(maxSheetsHour) || undefined,
         isActive: true,
       };
-      const res = await api.post('/machines', payload);
-      return res.data;
+      if (editingMachine) {
+        const res = await api.put(`/machines/${editingMachine.id}`, payload);
+        return res.data;
+      } else {
+        const res = await api.post('/machines', payload);
+        return res.data;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['machines-list'] });
       setIsModalOpen(false);
+      setEditingMachine(null);
       setName('');
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string | string[] } } };
       const msg = error.response?.data?.message;
-      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Erro ao cadastrar máquina.'));
+      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Erro ao salvar máquina.'));
     },
   });
 
@@ -84,7 +109,7 @@ export const MachinesPage: React.FC = () => {
             Configuração de velocidades nominais, taxas horárias e tempos médios de setup
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsModalOpen(true)}>
+        <Button size="sm" onClick={handleOpenCreateModal}>
           <Plus className="w-4 h-4" />
           Cadastrar Máquina
         </Button>
@@ -117,6 +142,14 @@ export const MachinesPage: React.FC = () => {
                       <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:text-emerald-400 border border-emerald-100 dark:border-slate-700/60">
                         <Printer className="w-4 h-4" />
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditModal(machine)}
+                        className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-700 transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-700/50"
+                        title="Editar Máquina"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => setMachineToDelete(machine)}
@@ -161,23 +194,32 @@ export const MachinesPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Register Modal */}
+      {/* Register/Edit Modal */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Cadastrar Máquina Gráfica"
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingMachine(null);
+        }}
+        title={editingMachine ? "Editar Máquina Gráfica" : "Cadastrar Máquina Gráfica"}
         maxWidth="md"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingMachine(null);
+              }}
+            >
               Cancelar
             </Button>
             <Button
               variant="primary"
-              onClick={() => createMutation.mutate()}
-              isLoading={createMutation.isPending}
+              onClick={() => saveMutation.mutate()}
+              isLoading={saveMutation.isPending}
             >
-              Salvar Máquina
+              {editingMachine ? "Atualizar Máquina" : "Salvar Máquina"}
             </Button>
           </>
         }

@@ -10,12 +10,13 @@ import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { formatCurrency } from '../../lib/utils';
-import { Package, Plus, AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
+import { Package, Plus, AlertTriangle, CheckCircle2, Trash2, Edit2 } from 'lucide-react';
 import { RawMaterialItem, PaginatedResult } from '../../types';
 
 export const RawMaterialsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingMaterial, setEditingMaterial] = useState<RawMaterialItem | null>(null);
   const [materialToDelete, setMaterialToDelete] = useState<RawMaterialItem | null>(null);
 
   // Form state
@@ -52,7 +53,35 @@ export const RawMaterialsPage: React.FC = () => {
     },
   });
 
-  const createMutation = useMutation({
+  const handleOpenCreateModal = () => {
+    setEditingMaterial(null);
+    setName('');
+    setCategory('PAPER');
+    setUnitOfMeasure('FL');
+    setCostPerUnit(0.85);
+    setCurrentStock(5000);
+    setMinStock(1000);
+    setSheetWidthMm(660);
+    setSheetHeightMm(960);
+    setGrammage(150);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (item: RawMaterialItem) => {
+    setEditingMaterial(item);
+    setName(item.name);
+    setCategory(item.category);
+    setUnitOfMeasure(item.unitOfMeasure);
+    setCostPerUnit(Number(item.costPerUnit));
+    setCurrentStock(Number(item.currentStock));
+    setMinStock(Number(item.minStock));
+    setSheetWidthMm(item.sheetWidthMm || 0);
+    setSheetHeightMm(item.sheetHeightMm || 0);
+    setGrammage(item.grammage || 0);
+    setIsModalOpen(true);
+  };
+
+  const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
         name,
@@ -65,18 +94,24 @@ export const RawMaterialsPage: React.FC = () => {
         sheetHeightMm: Number(sheetHeightMm) || undefined,
         grammage: Number(grammage) || undefined,
       };
-      const res = await api.post('/raw-materials', payload);
-      return res.data;
+      if (editingMaterial) {
+        const res = await api.put(`/raw-materials/${editingMaterial.id}`, payload);
+        return res.data;
+      } else {
+        const res = await api.post('/raw-materials', payload);
+        return res.data;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['raw-materials-list'] });
       setIsModalOpen(false);
+      setEditingMaterial(null);
       setName('');
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string | string[] } } };
       const msg = error.response?.data?.message;
-      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Erro ao cadastrar insumo.'));
+      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Erro ao salvar insumo.'));
     },
   });
 
@@ -94,7 +129,7 @@ export const RawMaterialsPage: React.FC = () => {
             Formatos de folha inteira, gramaturas, custo unitário e monitoramento de estoque
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsModalOpen(true)}>
+        <Button size="sm" onClick={handleOpenCreateModal}>
           <Plus className="w-4 h-4" />
           Cadastrar Novo Insumo
         </Button>
@@ -162,7 +197,16 @@ export const RawMaterialsPage: React.FC = () => {
                             </span>
                           )}
                         </td>
-                        <td className="py-3.5 text-right">
+                        <td className="py-3.5 text-right space-x-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenEditModal(item)}
+                            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700"
+                            title="Editar Insumo"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
@@ -183,23 +227,32 @@ export const RawMaterialsPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Register Modal */}
+      {/* Register/Edit Modal */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Cadastrar Insumo / Papel Gráfico"
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingMaterial(null);
+        }}
+        title={editingMaterial ? "Editar Insumo / Papel Gráfico" : "Cadastrar Insumo / Papel Gráfico"}
         maxWidth="lg"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingMaterial(null);
+              }}
+            >
               Cancelar
             </Button>
             <Button
               variant="primary"
-              onClick={() => createMutation.mutate()}
-              isLoading={createMutation.isPending}
+              onClick={() => saveMutation.mutate()}
+              isLoading={saveMutation.isPending}
             >
-              Salvar Insumo
+              {editingMaterial ? "Atualizar Insumo" : "Salvar Insumo"}
             </Button>
           </>
         }

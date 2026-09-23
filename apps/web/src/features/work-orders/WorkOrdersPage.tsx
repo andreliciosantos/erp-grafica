@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   PackageCheck,
   Award,
+  Edit2,
 } from 'lucide-react';
 import { WorkOrderItem, PaginatedResult } from '../../types';
 import { CreateOrderModal } from './CreateOrderModal';
@@ -37,6 +38,7 @@ export const WorkOrdersPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<WorkOrderItem | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [orderToEdit, setOrderToEdit] = useState<WorkOrderItem | null>(null);
   const [orderToDelete, setOrderToDelete] = useState<WorkOrderItem | null>(null);
 
   // Stage Action Modal State
@@ -246,7 +248,10 @@ export const WorkOrdersPage: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => {
+              setOrderToEdit(null);
+              setIsCreateModalOpen(true);
+            }}
             className="flex items-center gap-1.5 shadow-sm"
           >
             <Plus className="w-4 h-4" />
@@ -377,6 +382,19 @@ export const WorkOrdersPage: React.FC = () => {
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={() => {
+                                setOrderToEdit(order);
+                                setIsCreateModalOpen(true);
+                              }}
+                              className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700"
+                              title="Editar Ordem de Serviço"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Editar</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => setOrderToDelete(order)}
                               className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-500/30"
                               title="Excluir Ordem de Serviço"
@@ -395,10 +413,14 @@ export const WorkOrdersPage: React.FC = () => {
         </Card>
       )}
 
-      {/* Create Order Modal */}
+      {/* Create / Edit Order Modal */}
       <CreateOrderModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setOrderToEdit(null);
+        }}
+        orderToEdit={orderToEdit}
       />
 
       {/* Order Details Modal */}
@@ -416,6 +438,10 @@ export const WorkOrdersPage: React.FC = () => {
         }}
         onDeleteOrder={(order) => {
           setOrderToDelete(order);
+        }}
+        onEditOrder={(order) => {
+          setOrderToEdit(order);
+          setIsCreateModalOpen(true);
         }}
       />
 

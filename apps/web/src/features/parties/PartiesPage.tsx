@@ -8,13 +8,14 @@ import { MaskedInput } from '../../components/common/MaskedInput';
 import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
-import { Users, Plus, Search, Phone, Mail, MapPin, Trash2, AlertTriangle } from 'lucide-react';
+import { Users, Plus, Search, Phone, Mail, MapPin, Trash2, AlertTriangle, Edit2 } from 'lucide-react';
 import { PartyItem, PaginatedResult } from '../../types';
 
 export const PartiesPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingParty, setEditingParty] = useState<PartyItem | null>(null);
   const [partyToDelete, setPartyToDelete] = useState<PartyItem | null>(null);
 
   // Form states
@@ -52,7 +53,35 @@ export const PartiesPage: React.FC = () => {
     },
   });
 
-  const createMutation = useMutation({
+  const handleOpenCreateModal = () => {
+    setEditingParty(null);
+    setName('');
+    setTradeName('');
+    setDocument('');
+    setEmail('');
+    setPhone('');
+    setType('COMPANY');
+    setAddress('');
+    setCity('');
+    setState('');
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (party: PartyItem) => {
+    setEditingParty(party);
+    setName(party.name);
+    setTradeName(party.tradeName || '');
+    setDocument(party.document || '');
+    setEmail(party.email || '');
+    setPhone(party.phone || '');
+    setType(party.type || 'COMPANY');
+    setAddress(party.address || '');
+    setCity(party.city || '');
+    setState(party.state || '');
+    setIsModalOpen(true);
+  };
+
+  const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
         type,
@@ -67,12 +96,18 @@ export const PartiesPage: React.FC = () => {
         isCustomer: true,
         isSupplier: false,
       };
-      const res = await api.post('/parties', payload);
-      return res.data;
+      if (editingParty) {
+        const res = await api.put(`/parties/${editingParty.id}`, payload);
+        return res.data;
+      } else {
+        const res = await api.post('/parties', payload);
+        return res.data;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parties-list'] });
       setIsModalOpen(false);
+      setEditingParty(null);
       setName('');
       setTradeName('');
       setDocument('');
@@ -85,7 +120,7 @@ export const PartiesPage: React.FC = () => {
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string | string[] } } };
       const msg = error.response?.data?.message;
-      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Erro ao cadastrar parceiro.'));
+      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Erro ao salvar parceiro.'));
     },
   });
 
@@ -103,7 +138,7 @@ export const PartiesPage: React.FC = () => {
             Gestão da carteira de clientes, dados cadastrais e canais de contato
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsModalOpen(true)}>
+        <Button size="sm" onClick={handleOpenCreateModal}>
           <Plus className="w-4 h-4" />
           Cadastrar Novo Cliente
         </Button>
@@ -180,7 +215,16 @@ export const PartiesPage: React.FC = () => {
                           </span>
                         ) : '-'}
                       </td>
-                      <td className="py-3.5 text-right">
+                      <td className="py-3.5 text-right space-x-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenEditModal(party)}
+                          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700"
+                          title="Editar Cliente"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -200,23 +244,32 @@ export const PartiesPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Register Modal */}
+      {/* Register/Edit Modal */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Cadastrar Novo Cliente"
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingParty(null);
+        }}
+        title={editingParty ? "Editar Cliente / Parceiro" : "Cadastrar Novo Cliente"}
         maxWidth="lg"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingParty(null);
+              }}
+            >
               Cancelar
             </Button>
             <Button
               variant="primary"
-              onClick={() => createMutation.mutate()}
-              isLoading={createMutation.isPending}
+              onClick={() => saveMutation.mutate()}
+              isLoading={saveMutation.isPending}
             >
-              Salvar Cadastro
+              {editingParty ? "Atualizar Cadastro" : "Salvar Cadastro"}
             </Button>
           </>
         }

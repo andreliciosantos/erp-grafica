@@ -350,8 +350,60 @@ Através dos componentes especializados `CurrencyInput` e `NumberInput`, os even
 
 ---
 
+## 16. Idempotência, Teoria dos Grafos e Consistência Transacional em Operações de Atualização (CRUD Completo e PUT /work-orders/:id)
+
+### 16.1. O Princípio Matemático da Idempotência em Protocolos de Aplicação (RFC 7231)
+Na álgebra abstrata e na ciência da computação teórica, uma operação unária $f$ sobre um domínio $S$ é formalmente classificada como **idempotente** se e somente se a aplicação sucessiva da operação não altera o estado resultante além da primeira execução:
+$$\forall x \in S, \quad f(f(x)) = f(x)$$
+
+No projeto da nossa API RESTful com o NestJS, a implementação da edição universal (Insumos, Máquinas, Clientes, Usuários e Ordens de Serviço) obedece estritamente às diretrizes da RFC 7231 da IETF para o verbo HTTP `PUT`:
+* **A Falácia do `POST` para Alterações:** O método `POST` não é idempotente ($f(f(x)) \neq f(x)$), pois requisições repetidas decorrentes de quedas de conexão ou múltiplos cliques acidentais gerariam registros duplicados no banco relacional.
+* **A Semântica do `PUT`:** O endpoint `PUT /work-orders/:id` recebe a projeção pretendida do recurso. Submeter a mesma requisição uma ou cem vezes resulta no mesmo e exato estado determinístico no PostgreSQL, tornando a infraestrutura industrial tolerante a falhas de rede transitórias.
+
+### 16.2. Transações Atômicas ($\text{ACID}$) em Grafos Hierárquicos de Entidades
+No modelo relacional do ERP Gráfica, uma Ordem de Serviço não é um nó isolado na base de dados, mas a raiz de um **Grafo Hierárquico de Agregados** (*Domain-Driven Design Aggregate Root*):
+
+```mermaid
+graph TD
+    WO["WorkOrder (Ordem de Serviço)"] --> Q["Quote (Orçamento Pai)"]
+    Q --> QI["QuoteItem (Item Gráfico: Tiragem, Formato, Preço)"]
+    WO --> S["WorkOrderStage[] (5 Etapas Fabris)"]
+    WO --> P["Party (Cliente Vinculado)"]
+```
+
+Se um usuário editar a tiragem de um pedido de 1.000 para 5.000 unidades e o total de R\$ 150 para R\$ 500, a integridade do sistema exige que:
+1. A tabela `work_orders` receba o novo valor e o novo prazo de entrega.
+2. A tabela vinculada `quotes` tenha seu `totalAmount` atualizado.
+3. A tabela `quote_items` tenha seu `quantity` e seu `unitPrice` ($P_{unit} = \frac{\text{totalAmount}}{\text{quantity}}$) recalculados em estrita sincronia.
+
+Se um erro de hardware ou concorrência interrompesse o processo entre o passo 1 e o passo 3, o sistema entraria em um estado patológico de **corrupção de dados** (onde a OS registra 5.000 unidades, mas a linha de corte calcula insumos para 1.000).
+
+Para blindar formalmente esse invariante matemático, a execução de `update()` em `WorkOrdersService` é encapsulada na primitiva transacional do Prisma:
+```typescript
+return this.prisma.$transaction(async (tx) => {
+  // Operações atômicas coordenadas
+  await tx.workOrder.update(...);
+  await tx.quote.update(...);
+  await tx.quoteItem.update(...);
+  return updatedWorkOrder;
+});
+```
+Garante-se a propriedade fundamental de **Atomicidade** ($\text{All-or-Nothing}$): ou todas as mutações do grafo são consolidadas em disco com sucesso, ou ocorre o desfazimento total (*rollback*) instantâneo via engine do PostgreSQL.
+
+### 16.3. Invalidamento de Cache em $\mathcal{O}(1)$ via Tags de Chave de Consulta (TanStack Query)
+No cliente React, manter a visão sincronizada sem causar renderizações em cascata (*re-render storms*) constitui um desafio clássico de complexidade algorítmica.
+
+Utilizando a arquitetura de **Tags Hierárquicas** do TanStack Query:
+* Ao consolidar com sucesso uma mutação de edição (`saveMutation.onSuccess`), dispara-se a invalidação declarativa:
+  `queryClient.invalidateQueries({ queryKey: ['work-orders'] })`
+* O gerenciador marca o nó correspondente na árvore de cache em tempo $\mathcal{O}(1)$ como *stale* (obsoleto).
+* A árvore de componentes React re-executa a busca em segundo plano e realiza a reconciliação do Virtual DOM apenas para as células e cartões que sofreram mutação delta, mantendo o consumo de memória estável e 60 FPS nos dispositivos móveis dos operadores industriais.
+
+---
+
 ## Conclusão da Aula Magistral
 
-> *"Como pudemos constatar ao longo desta análise, o ERP Gráfica Modular não é uma coleção fortuita de bibliotecas da moda. Cada tecnologia — do rigor aritmético do `Decimal.js` à eficiência de grafos do `Turborepo`, da integridade relacional do `PostgreSQL` à reatividade funcional do `React 18`, da ergonomia biomecânica de Fitts na adaptação Mobile-First à fotometria cromática de acessibilidade WCAG em tons pastel, até os autômatos formais de formatação léxica — foi selecionada para responder a um desafio rigoroso de computação e física industrial. Arquitetura de software de excelência consiste exatamente nisto: a harmonização elegante entre a teoria da ciência da computação e a resolução pragmática de problemas de negócio no mundo real."*
+> *"Como pudemos constatar ao longo desta análise, o ERP Gráfica Modular não é uma coleção fortuita de bibliotecas da moda. Cada tecnologia — do rigor aritmético do `Decimal.js` à eficiência de grafos do `Turborepo`, da integridade relacional do `PostgreSQL` à reatividade funcional do `React 18`, da ergonomia biomecânica de Fitts na adaptação Mobile-First à fotometria cromática de acessibilidade WCAG em tons pastel, dos autômatos formais de formatação léxica à consistência transacional e idempotência matemática nas operações universais de atualização — foi selecionada para responder a um desafio rigoroso de computação e física industrial. Arquitetura de software de excelência consiste exatamente nisto: a harmonização elegante entre a teoria da ciência da computação e a resolução pragmática de problemas de negócio no mundo real."*
+
 
 
