@@ -388,4 +388,234 @@ export interface OperatingExpensesSummaryDto {
   }[];
 }
 
+// -------------------------------------------------------------
+// Contas a Receber (Receivables) Types & DTOs
+// -------------------------------------------------------------
+export interface ReceivableItem {
+  id: string;
+  workOrderId?: string | null;
+  partyId: string;
+  description: string;
+  installmentNumber: number;
+  totalInstallments: number;
+  amount: number;
+  dueDate: string;
+  paidAt?: string | null;
+  status: PaymentStatus;
+  paymentMethod?: PaymentMethod | null;
+  barcode?: string | null;
+  documentNumber?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  party?: {
+    id: string;
+    name: string;
+    tradeName?: string | null;
+    document: string;
+    phone?: string | null;
+  };
+  workOrder?: {
+    id: string;
+    orderNumber: string;
+    totalAmount: number;
+    status: WorkOrderStatus;
+  } | null;
+}
+
+export interface CreateReceivableDto {
+  workOrderId?: string;
+  partyId: string;
+  description: string;
+  installmentNumber?: number;
+  totalInstallments?: number;
+  amount: number;
+  dueDate: string;
+  status?: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  barcode?: string;
+  documentNumber?: string;
+  notes?: string;
+}
+
+export interface UpdateReceivableDto {
+  partyId?: string;
+  description?: string;
+  installmentNumber?: number;
+  totalInstallments?: number;
+  amount?: number;
+  dueDate?: string;
+  status?: PaymentStatus;
+  paymentMethod?: PaymentMethod | null;
+  barcode?: string | null;
+  documentNumber?: string | null;
+  notes?: string | null;
+  paidAt?: string | null;
+}
+
+export interface PayReceivableDto {
+  paidAt: string;
+  paymentMethod: PaymentMethod;
+  notes?: string;
+}
+
+export interface GenerateOrderInstallmentsDto {
+  workOrderId: string;
+  plan: 'FULL_ADVANCE' | 'HALF_DOWN_HALF_PICKUP' | 'CUSTOM_INSTALLMENTS';
+  installmentsCount?: number;
+  downPaymentPercent?: number; // ex: 50
+  firstDueDate?: string;
+  intervalDays?: number; // ex: 30
+}
+
+export interface ReceivablesSummaryDto {
+  totalAmount: number;
+  receivedAmount: number;
+  pendingAmount: number;
+  overdueAmount: number;
+  totalCount: number;
+  receivedCount: number;
+  pendingCount: number;
+  overdueCount: number;
+  defaultRatePercent: number; // taxa de inadimplência (% vencido / total)
+}
+
+// -------------------------------------------------------------
+// DRE Gerencial & Fluxo de Caixa (Financial) Types
+// -------------------------------------------------------------
+export interface DreSectionItem {
+  code: string;
+  name: string;
+  amount: number;
+  percentageOfRevenue: number;
+  isTotal?: boolean;
+  type: 'REVENUE' | 'DEDUCTION' | 'CPV' | 'OPEX' | 'RESULT';
+  children?: {
+    name: string;
+    amount: number;
+    percentage: number;
+  }[];
+}
+
+export interface DreMonthlyReportDto {
+  competenceMonth: string; // YYYY-MM
+  grossRevenue: number; // Receita Bruta (faturamento de OS)
+  taxRatePercent: number; // Alíquota estimada (ex: 6%)
+  taxDeductions: number; // Impostos deduzidos
+  netRevenue: number; // Receita Líquida
+  cpvTotal: number; // Custo dos Produtos Vendidos total
+  cpvBreakdown: {
+    paperCost: number;
+    printingMachineCost: number;
+    finishingCost: number;
+  };
+  grossProfit: number; // Lucro Bruto (Margem de Contribuição)
+  grossMarginPercent: number; // Margem Bruta %
+  opexTotal: number; // Despesas Operacionais totais
+  opexBreakdown: {
+    category: ExpenseCategory;
+    label: string;
+    amount: number;
+  }[];
+  ebitda: number; // Lucro Operacional
+  ebitdaMarginPercent: number; // Margem EBITDA %
+  breakEvenPoint: number; // Ponto de Equilíbrio (R$)
+  sections: DreSectionItem[];
+}
+
+export interface CashFlowDayDto {
+  date: string; // YYYY-MM-DD
+  inflows: number; // Recebimentos previstos/realizados
+  outflows: number; // Pagamentos de despesas previstos/realizados
+  netBalance: number; // inflows - outflows
+  accumulatedBalance: number;
+}
+
+export interface CashFlowSummaryDto {
+  month: string;
+  totalInflows: number;
+  totalOutflows: number;
+  netCashFlow: number;
+  days: CashFlowDayDto[];
+}
+
+// -------------------------------------------------------------
+// Modelos Rápidos de Balcão (Product Templates)
+// -------------------------------------------------------------
+export interface ProductTemplateItem {
+  id: string;
+  name: string;
+  category: string;
+  description?: string | null;
+  defaultWidthMm: number;
+  defaultHeightMm: number;
+  defaultColorsFront: number;
+  defaultColorsBack: number;
+  defaultFinishing: string[];
+  defaultRawMaterialId?: string | null;
+  defaultMachineId?: string | null;
+  defaultMarkupPercent: number;
+  suggestedQuantities: number[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  rawMaterial?: {
+    id: string;
+    name: string;
+    costPerUnit: number;
+    sheetWidthMm?: number | null;
+    sheetHeightMm?: number | null;
+  } | null;
+  machine?: {
+    id: string;
+    name: string;
+    hourlyRate: number;
+    setupMinutes: number;
+    maxSheetsHour?: number | null;
+  } | null;
+}
+
+export interface CreateProductTemplateDto {
+  name: string;
+  category?: string;
+  description?: string;
+  defaultWidthMm: number;
+  defaultHeightMm: number;
+  defaultColorsFront?: number;
+  defaultColorsBack?: number;
+  defaultFinishing?: string[];
+  defaultRawMaterialId?: string;
+  defaultMachineId?: string;
+  defaultMarkupPercent?: number;
+  suggestedQuantities?: number[];
+  isActive?: boolean;
+}
+
+export interface UpdateProductTemplateDto {
+  name?: string;
+  category?: string;
+  description?: string;
+  defaultWidthMm?: number;
+  defaultHeightMm?: number;
+  defaultColorsFront?: number;
+  defaultColorsBack?: number;
+  defaultFinishing?: string[];
+  defaultRawMaterialId?: string | null;
+  defaultMachineId?: string | null;
+  defaultMarkupPercent?: number;
+  suggestedQuantities?: number[];
+  isActive?: boolean;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+
 

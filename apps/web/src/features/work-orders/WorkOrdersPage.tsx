@@ -30,6 +30,7 @@ import {
 import { WorkOrderItem, PaginatedResult } from '../../types';
 import { CreateOrderModal } from './CreateOrderModal';
 import { Modal } from '../../components/common/Modal';
+import { JobTicketModal } from './JobTicketModal';
 
 export const WorkOrdersPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -40,6 +41,7 @@ export const WorkOrdersPage: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [orderToEdit, setOrderToEdit] = useState<WorkOrderItem | null>(null);
   const [orderToDelete, setOrderToDelete] = useState<WorkOrderItem | null>(null);
+  const [ticketOrder, setTicketOrder] = useState<WorkOrderItem | null>(null);
 
   // Stage Action Modal State
   const [stageModalData, setStageModalData] = useState<{
@@ -382,6 +384,16 @@ export const WorkOrdersPage: React.FC = () => {
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={() => setTicketOrder(order)}
+                              className="text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                              title="Imprimir Ficha Técnica de Produção"
+                            >
+                              <Printer className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Ficha</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => {
                                 setOrderToEdit(order);
                                 setIsCreateModalOpen(true);
@@ -443,6 +455,9 @@ export const WorkOrdersPage: React.FC = () => {
           setOrderToEdit(order);
           setIsCreateModalOpen(true);
         }}
+        onPrintJobTicket={(order) => {
+          setTicketOrder(order);
+        }}
       />
 
       {/* Delete Confirmation Modal */}
@@ -490,6 +505,13 @@ export const WorkOrdersPage: React.FC = () => {
         stageId={stageModalData.stageId}
         stageName={stageModalData.stageName}
         orderNumber={stageModalData.orderNumber}
+      />
+
+      {/* Job Ticket Modal */}
+      <JobTicketModal
+        isOpen={Boolean(ticketOrder)}
+        onClose={() => setTicketOrder(null)}
+        order={ticketOrder}
       />
     </div>
   );

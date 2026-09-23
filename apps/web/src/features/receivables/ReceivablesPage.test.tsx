@@ -1,0 +1,169 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { renderWithProviders, screen, waitFor, fireEvent } from '../../test/test-utils';
+import { ReceivablesPage } from './ReceivablesPage';
+import { api } from '../../lib/api';
+import { PaymentStatus, PaymentMethod } from '@erp/shared-types';
+
+vi.mock('../../lib/api', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+describe('ReceivablesPage', () => {
+  const mockSummary = {
+    totalAmount: 12500,
+    receivedAmount: 6250,
+    pendingAmount: 4250,
+    overdueAmount: 2000,
+    totalCount: 4,
+    receivedCount: 2,
+    pendingCount: 1,
+    overdueCount: 1,
+    defaultRatePercent: 16.0,
+  };
+
+  const mockReceivables = [
+    {
+      id: 'rec-1',
+      workOrderId: 'wo-1',
+      partyId: 'party-1',
+      description: 'Sinal 50% - OS-2026-00042',
+      installmentNumber: 1,
+      totalInstallments: 2,
+      amount: 6250,
+      dueDate: '2026-09-10T12:00:00.000Z',
+      paidAt: '2026-09-10T14:30:00.000Z',
+      status: PaymentStatus.PAID,
+      paymentMethod: PaymentMethod.PIX,
+      party: {
+        id: 'party-1',
+        name: 'Agência Criativa Alpha',
+        document: '12345678000199',
+        phone: '11988887777',
+      },
+      workOrder: {
+        id: 'wo-1',
+        orderNumber: 'OS-2026-00042',
+        totalAmount: 12500,
+        status: 'PRINTING',
+      },
+      createdAt: '2026-09-01T10:00:00.000Z',
+      updatedAt: '2026-09-10T14:30:00.000Z',
+    },
+    {
+      id: 'rec-2',
+      workOrderId: 'wo-1',
+      partyId: 'party-1',
+      description: 'Saldo na Retirada - OS-2026-00042',
+      installmentNumber: 2,
+      totalInstallments: 2,
+      amount: 6250,
+      dueDate: '2026-09-25T12:00:00.000Z',
+      paidAt: null,
+      status: PaymentStatus.PENDING,
+      paymentMethod: null,
+      party: {
+        id: 'party-1',
+        name: 'Agência Criativa Alpha',
+        document: '12345678000199',
+        phone: '11988887777',
+      },
+      workOrder: {
+        id: 'wo-1',
+        orderNumber: 'OS-2026-00042',
+        totalAmount: 12500,
+        status: 'PRINTING',
+      },
+      createdAt: '2026-09-01T10:00:00.000Z',
+      updatedAt: '2026-09-01T10:00:00.000Z',
+    },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (api.get as any).mockImplementation((url: string) => {
+      if (url.includes('/receivables/summary')) {
+        return Promise.resolve({ data: mockSummary });
+      }
+      if (url.includes('/receivables')) {
+        return Promise.resolve({
+          data: {
+            data: mockReceivables,
+            meta: { page: 1, limit: 100, total: 2, totalPages: 1 },
+          },
+        });
+      }
+      return Promise.resolve({ data: {} });
+    });
+  });
+
+  it('renders page header and stat cards with formatted values', async () => {
+    renderWithProviders(<ReceivablesPage />);
+
+    expect(screen.getByText('Contas a Receber (Receivables)')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Previsão de Receita')).toBeInTheDocument();
+      expect(screen.getAllByText('R$ 12.500,00').length).toBeGreaterThan(0);
+      expect(screen.getByText('Total Recebido')).toBeInTheDocument();
+      expect(screen.getAllByText('R$ 6.250,00').length).toBeGreaterThan(0);
+      expect(screen.getByText('A Receber no Prazo')).toBeInTheDocument();
+      expect(screen.getByText('Inadimplência (Vencidos)')).toBeInTheDocument();
+      expect(screen.getAllByText('R$ 2.000,00').length).toBeGreaterThan(0);
+    });
+  });
+
+  it('renders receivables table with client, OS number and installment tags', async () => {
+    renderWithProviders(<ReceivablesPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Sinal 50% - OS-2026-00042').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Saldo na Retirada - OS-2026-00042').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Agência Criativa Alpha').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('OS-2026-00042').length).toBeGreaterThan(0);
+      expect(screen.getByText('1/2')).toBeInTheDocument();
+      expect(screen.getByText('2/2')).toBeInTheDocument();
+    });
+  });
+
+  it('filters receivables by search term and status tabs', async () => {
+    renderWithProviders(<ReceivablesPage />);
+
+    const searchInput = screen.getByPlaceholderText(/Buscar por descrição/i);
+    fireEvent.change(searchInput, { target: { value: 'Sinal' } });
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith(expect.stringContaining('search=Sinal'));
+    });
+
+    const pendingBtn = screen.getByRole('button', { name: 'Pendentes' });
+    fireEvent.click(pendingBtn);
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith(expect.stringContaining('status=PENDING'));
+    });
+  });
+
+  it('opens payment modal when clicking on "Receber"', async () => {
+    renderWithProviders(<ReceivablesPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Saldo na Retirada - OS-2026-00042').length).toBeGreaterThan(0);
+    });
+
+    const receiveButtons = screen.getAllByRole('button', { name: /Receber/i });
+    expect(receiveButtons.length).toBeGreaterThan(0);
+
+    fireEvent.click(receiveButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Registrar Recebimento').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Confirmar Recebimento').length).toBeGreaterThan(0);
+    });
+  });
+});

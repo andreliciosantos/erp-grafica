@@ -95,6 +95,9 @@ export interface WorkOrderItem {
   totalAmount: number;
   paymentStatus: string;
   createdAt: string;
+  updatedAt?: string;
+  fileUrl?: string | null;
   party?: PartyItem;
   stages?: WorkOrderStageItem[];
+  quote?: any;
 }

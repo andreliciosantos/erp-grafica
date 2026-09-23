@@ -10,6 +10,8 @@ import {
   ShieldCheck,
   UserCheck,
   Receipt,
+  Coins,
+  PieChart,
   PrinterIcon,
   X,
 } from 'lucide-react';
@@ -74,10 +76,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
       roles: [Role.ADMIN, Role.COMMERCIAL, Role.OPERATOR],
     },
     {
+      to: '/receivables',
+      label: 'Contas a Receber',
+      icon: <Coins className="w-4 h-4" />,
+      roles: [Role.ADMIN, Role.FINANCIAL, Role.COMMERCIAL],
+    },
+    {
       to: '/expenses',
       label: 'Despesas Operacionais',
       icon: <Receipt className="w-4 h-4" />,
       roles: [Role.ADMIN, Role.FINANCIAL, Role.COMMERCIAL],
+    },
+    {
+      to: '/financial/dre',
+      label: 'DRE Gerencial',
+      icon: <PieChart className="w-4 h-4" />,
+      roles: [Role.ADMIN, Role.FINANCIAL],
     },
     {
       to: '/machines',

@@ -10,8 +10,9 @@ import { NumberInput } from '../../components/common/NumberInput';
 import { Select } from '../../components/common/Select';
 import { SheetCuttingCanvas } from '../../components/cutting-preview/SheetCuttingCanvas';
 import { formatCurrency } from '../../lib/utils';
-import { ArrowLeft, Save, Sparkles, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Sparkles, AlertCircle, Bookmark } from 'lucide-react';
 import { PartyItem, RawMaterialItem, MachineItem, PaginatedResult } from '../../types';
+import { ProductTemplateItem } from '@erp/shared-types';
 
 export const NewQuotePage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,6 +30,15 @@ export const NewQuotePage: React.FC = () => {
   const [markupPercent, setMarkupPercent] = useState(35);
   const [notes, setNotes] = useState('');
   const [finishingOptions, setFinishingOptions] = useState<string[]>(['DOBRA']);
+
+  // Fetch Product Templates
+  const { data: templates = [] } = useQuery<ProductTemplateItem[]>({
+    queryKey: ['product-templates'],
+    queryFn: async () => {
+      const res = await api.get('/product-templates');
+      return res.data;
+    },
+  });
 
   // Fetch Parties
   const { data: partiesData } = useQuery<PaginatedResult<PartyItem>>({
@@ -175,6 +185,21 @@ export const NewQuotePage: React.FC = () => {
     },
   });
 
+  const applyTemplate = (tpl: ProductTemplateItem) => {
+    setProductName(tpl.name);
+    setWidthMm(tpl.defaultWidthMm);
+    setHeightMm(tpl.defaultHeightMm);
+    setColorsFront(tpl.defaultColorsFront);
+    setColorsBack(tpl.defaultColorsBack);
+    setFinishingOptions(tpl.defaultFinishing || []);
+    setMarkupPercent(tpl.defaultMarkupPercent || 35);
+    if (tpl.defaultRawMaterialId) setRawMaterialId(tpl.defaultRawMaterialId);
+    if (tpl.defaultMachineId) setMachineId(tpl.defaultMachineId);
+    if (tpl.suggestedQuantities && tpl.suggestedQuantities.length > 0) {
+      setQuantity(tpl.suggestedQuantities[0]);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header */}
@@ -184,16 +209,45 @@ export const NewQuotePage: React.FC = () => {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               Calculadora Gráfica de Orçamento Técnico
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Imposição em folha inteira, consumo de insumos e formação de preço em tempo real
             </p>
           </div>
         </div>
       </div>
+
+      {/* Modelos Rápidos de Balcão (1-Clique) */}
+      {templates.length > 0 && (
+        <Card className="border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20">
+          <CardContent className="p-3.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
+                <Bookmark className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                Modelos Rápidos de Balcão (1-Clique)
+              </span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                Preenchimento instantâneo de formato e especificações
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {templates.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => applyTemplate(tpl)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all shadow-xs active:scale-95"
+                >
+                  <span>{tpl.name}</span>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Form Controls */}
@@ -244,6 +298,25 @@ export const NewQuotePage: React.FC = () => {
                   value={heightMm}
                   onChangeValue={setHeightMm}
                 />
+              </div>
+
+              {/* Quick Quantity Pills */}
+              <div className="flex items-center gap-1.5 pt-1">
+                <span className="text-[11px] font-medium text-slate-400">Tiragens comuns:</span>
+                {[500, 1000, 2500, 5000].map((qty) => (
+                  <button
+                    key={qty}
+                    type="button"
+                    onClick={() => setQuantity(qty)}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border transition-all ${
+                      quantity === qty
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {qty.toLocaleString('pt-BR')} un
+                  </button>
+                ))}
               </div>
             </CardContent>
           </Card>

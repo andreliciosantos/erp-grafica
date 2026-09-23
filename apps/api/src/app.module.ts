@@ -11,6 +11,9 @@ import { QuotesModule } from './quotes/quotes.module';
 import { WorkOrdersModule } from './work-orders/work-orders.module';
 import { EmployeesModule } from './employees/employees.module';
 import { OperatingExpensesModule } from './operating-expenses/operating-expenses.module';
+import { ReceivablesModule } from './receivables/receivables.module';
+import { FinancialModule } from './financial/financial.module';
+import { ProductTemplatesModule } from './product-templates/product-templates.module';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { OperatingExpensesModule } from './operating-expenses/operating-expenses
     WorkOrdersModule,
     EmployeesModule,
     OperatingExpensesModule,
+    ReceivablesModule,
+    FinancialModule,
+    ProductTemplatesModule,
   ],
 })
 export class AppModule {}

@@ -308,5 +308,71 @@ Atendendo à necessidade de gerenciar os gastos da gráfica que **não estão vi
 * **Tabela e Cards Responsivos:** Suporte total a desktop e smartphone, com botões para Liquidação Rápida (`CheckCircle2`), Replicar Recorrência (`CalendarPlus`), Edição (`Edit2`) e Remoção (`Trash2`).
 * **Rota Protegida `/expenses`:** Integrada ao menu lateral e acessível aos perfis `ADMIN`, `FINANCIAL` e `COMMERCIAL`.
 
+---
+
+## 15. Fase 1: Inteligência Financeira e Chão de Fábrica de Alta Precisão
+
+Consolidando os alicerces operacionais da gráfica, a **Fase 1 do Roadmap** entregou uma suíte integrada que conecta o atendimento de balcão, a ordem de serviço fabril e a contabilidade gerencial em tempo real:
+
+### 15.1. Módulo de Contas a Receber (Receivables)
+* **Parcelamento Automático da OS:**
+  - **Sinal 50% + 50% na Retirada:** Padrão industrial do setor gráfico para garantir a compra da matéria-prima (papel/chapas) antes do início da tiragem.
+  - **À Vista Antecipado (100%):** Pagamento integral antecipado com conciliação imediata.
+  - **Parcelado Customizado (ex: 3x, 4x, 6x):** Geração com datas mensais consecutivas e distribuição precisa de resíduos de centavos.
+* **Baixa Rápida de Recebimento (`PayReceivableModal.tsx`):**
+  - Modal para registro de pagamento parcial ou total informando valor recebido, data de efetivação, meio de pagamento (PIX, Cartão, Boleto, Dinheiro) e comprovante/observações.
+  - Sincronização automática do status financeiro da Ordem de Serviço (`PAID`, `PARTIALLY_PAID`, `PENDING`).
+* **Painel Executivo e Controle de Inadimplência (`ReceivablesPage.tsx`):**
+  - Indicadores em tempo real: Previsão de Receita Mensal, Total Efetivamente Liquidado, A Receber no Prazo e Taxa de Inadimplência com destaque visual para recebíveis vencidos (`OVERDUE`).
+  - Filtros instantâneos por texto (cliente, OS, documento), status de liquidação e mês de competência.
+  - Tabela para monitores de escritório e cards ergonômicos para visualização em smartphones.
+
+### 15.2. DRE Gerencial em Tempo Real (`DrePage.tsx` e `/financial/dre`)
+* **Estrutura Contábil Padronizada:**
+  1. **1.0 RECEITA OPERACIONAL BRUTA:** Faturamento total consolidado das Ordens de Serviço faturadas no período.
+  2. **1.1 (-) Deduções e Impostos sobre Vendas:** Aplicação paramétrica de alíquota tributária (padrão Simples Nacional 6,0%).
+  3. **2.0 (=) RECEITA OPERACIONAL LÍQUIDA:** Base líquida de geração de caixa.
+  4. **3.0 (-) CUSTO DOS PRODUTOS VENDIDOS (CPV):** Apuração detalhada de matérias-primas e insumos fabris:
+     - Papéis e substratos planos.
+     - Hora-máquina de impressão, tintas e setups.
+     - Acabamentos gráficos (plastificação, verniz, dobra, vinco, refile).
+  5. **4.0 (=) LUCRO BRUTO (MARGEM DE CONTRIBUIÇÃO):** Diferença entre a receita líquida e os custos diretos, revelando a rentabilidade pura dos serviços.
+  6. **5.0 (-) DESPESAS OPERACIONAIS (OPEX):** Confronto automático com os gastos fixos e variáveis lançados no módulo de Despesas Operacionais (Aluguel, Energia, Adobe/RIP, Administrativo, Comercial).
+  7. **6.0 (=) RESULTADO OPERACIONAL (EBITDA):** Geração operacional de lucro antes de juros e amortizações.
+* **Indicadores Estratégicos:**
+  - **Margem de Contribuição Percentual:** Mede quanto cada real faturado contribui para pagar a estrutura fixa.
+  - **Margem EBITDA Operacional:** Percentual de lucro retido pela operação fabril.
+  - **Ponto de Equilíbrio (Break-Even):** Montante mínimo em reais que a gráfica precisa faturar no mês para cobrir exatamente a soma de seus custos diretos e despesas operacionais.
+* **Interface Interativa:** Tabela sanfonada expansível para auditoria analítica dos componentes de CPV e OPEX, e barra multi-segmentada de distribuição de receitas.
+
+### 15.3. Ficha Técnica de Produção (Job Ticket) e Código de Barras Vetorial
+* **Emissão em Dois Formatos Oficiais (`JobTicketModal.tsx`):**
+  - **📄 Formato A4 Industrial:** Ficha completa de produção para pranchetas de máquinas, contendo dados do cliente, tiragem, formato aberto/fechado, tipo de papel e gramatura, cores (ex: 4x4, 4x0), previsão de entrega, notas de acabamento e checklist com vistos dos operadores por etapa fabril (CTP, Impressão, Dobra, Controle de Qualidade).
+  - **🧾 Formato Térmica 80mm:** Layout condensado de alta densidade para impressoras de recibo/etiquetas térmicas de balcão e caixas de expedição.
+* **Motor Nativo SVG Code-128 (`Code128Svg`):**
+  - Desenho vetorial matemático gerado internamente sem nenhuma dependência de bibliotecas pesadas de terceiros ou fontes TTF instaladas no SO do cliente.
+  - Cálculo de dígito verificador ponderado módulo 103 integrado, legível por qualquer leitor óptico USB ou câmera de smartphone.
+* **Acionamento Intuitivo:** Botão de ação rápida na tabela principal de Ordens de Serviço (`WorkOrdersPage.tsx`) e no modal de detalhes da OS (`OrderDetailsModal.tsx`).
+
+### 15.4. Catálogo de Modelos Rápidos de Balcão (1-Clique)
+* **Barra de Atalhos de Produtos Frequentes (`NewQuotePage.tsx`):**
+  - Cartões de Visita (90x50mm, Couchê 300g, 4x4).
+  - Panfletos Promocionais (100x140mm, Couchê 115g, 4x0).
+  - Folders 2 Dobras (210x297mm, Couchê 150g, 4x4).
+  - Banners Lona com Ilhós (600x900mm).
+  - Adesivos em Vinil com Meio-Corte (50x50mm).
+  - Pastas com Bolsa (220x310mm, Triplex 300g).
+* **Seleção Instantânea de Tiragens:**
+  - Pílulas de quantidade (`500`, `1.000`, `2.500`, `5.000` unidades) que pré-preenchem as especificações geométricas e acionam o motor de cálculo do `@erp/business-core` em milissegundos.
+* **Sementeira Automatizada no Banco de Dados (`ProductTemplatesService`):**
+  - Verificação de integridade no startup: caso a base de modelos esteja vazia, os 6 modelos padrão são automaticamente vinculados aos materiais e máquinas existentes.
+
+### 15.5. Garantia de Qualidade e Cobertura de Testes
+* **100% de Aprovação Automatizada:**
+  - **Frontend (`@erp/web`):** 20 arquivos de teste e 112 casos de teste aprovados com sucesso (`vitest run`).
+  - **Backend (`@erp/api`):** 4 arquivos de teste e 19 casos de teste aprovados com sucesso.
+  - **Build de Produção:** Compilação TypeScript (`tsc -b` e `tsc --noEmit`) e empacotamento Vite sem nenhum erro.
+
+
 
 
