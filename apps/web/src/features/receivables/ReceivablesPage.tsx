@@ -16,6 +16,12 @@ import {
   ArrowDownLeft,
   Calendar,
   Trash2,
+  Plus,
+  Edit2,
+  Printer,
+  Download,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import {
   ReceivableItem,
@@ -24,6 +30,8 @@ import {
 } from '@erp/shared-types';
 import { PaginatedResult } from '../../types';
 import { PayReceivableModal } from './PayReceivableModal';
+import { ReceivableFormModal } from './ReceivableFormModal';
+import { PaymentReceiptModal } from './PaymentReceiptModal';
 
 export const ReceivablesPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -33,9 +41,14 @@ export const ReceivablesPage: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonthStr);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [page, setPage] = useState<number>(1);
+  const limit = 50;
 
   // Modals state
   const [payingReceivable, setPayingReceivable] = useState<ReceivableItem | null>(null);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [receivableToEdit, setReceivableToEdit] = useState<ReceivableItem | null>(null);
+  const [receiptToShow, setReceiptToShow] = useState<ReceivableItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<ReceivableItem | null>(null);
 
   // Fetch summary
@@ -49,10 +62,11 @@ export const ReceivablesPage: React.FC = () => {
 
   // Fetch list
   const { data: listData, isLoading } = useQuery<PaginatedResult<ReceivableItem>>({
-    queryKey: ['receivables', selectedMonth, statusFilter, searchTerm],
+    queryKey: ['receivables', selectedMonth, statusFilter, searchTerm, page],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append('limit', '100');
+      params.append('page', String(page));
+      params.append('limit', String(limit));
       if (selectedMonth) params.append('month', selectedMonth);
       if (statusFilter !== 'ALL') params.append('status', statusFilter);
       if (searchTerm) params.append('search', searchTerm);
@@ -72,6 +86,7 @@ export const ReceivablesPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['receivables-summary'] });
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
       queryClient.invalidateQueries({ queryKey: ['financial-dre'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-flow'] });
       setItemToDelete(null);
     },
     onError: (err: any) => {
@@ -80,10 +95,57 @@ export const ReceivablesPage: React.FC = () => {
   });
 
   const receivables: ReceivableItem[] = listData?.data || [];
+  const totalPages = listData?.meta?.totalPages || 1;
+
+  const handleExportCsv = () => {
+    if (receivables.length === 0) {
+      alert('Nenhum recebível disponível para exportação com os filtros atuais.');
+      return;
+    }
+
+    const headers = [
+      'Descricao',
+      'Ordem_Servico',
+      'Cliente',
+      'Documento',
+      'Parcela',
+      'Vencimento',
+      'Status',
+      'Valor_R$',
+      'Data_Pagamento',
+      'Forma_Pagamento',
+      'Observacoes',
+    ];
+
+    const rows = receivables.map((r) => [
+      `"${r.description.replace(/"/g, '""')}"`,
+      r.workOrder ? `"${r.workOrder.orderNumber}"` : '""',
+      `"${(r.party?.name || 'Cliente Avulso').replace(/"/g, '""')}"`,
+      `"${r.party?.document || ''}"`,
+      `"${r.installmentNumber}/${r.totalInstallments}"`,
+      `"${r.dueDate.split('T')[0]}"`,
+      `"${r.status}"`,
+      r.amount.toFixed(2),
+      r.paidAt ? `"${r.paidAt.split('T')[0]}"` : '""',
+      `"${r.paymentMethod || ''}"`,
+      `"${(r.notes || '').replace(/"/g, '""')}"`,
+    ]);
+
+    const csvContent =
+      'data:text/csv;charset=utf-8,\uFEFF' +
+      [headers.join(';'), ...rows.map((row) => row.join(';'))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `contas_a_receber_${selectedMonth || 'todas'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-6">
-      {/* Page Title & Month Selector */}
+      {/* Page Title & Controls Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -95,17 +157,43 @@ export const ReceivablesPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl shadow-xs">
             <Calendar className="w-4 h-4 text-slate-400" />
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Vencimento:</span>
             <input
               type="month"
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                setPage(1);
+              }}
               className="text-xs font-semibold bg-transparent border-none focus:outline-hidden text-slate-800 dark:text-slate-200"
             />
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            className="text-xs h-9 px-3"
+            title="Exportar listagem em planilha CSV"
+          >
+            <Download className="w-3.5 h-3.5 mr-1 text-slate-500" />
+            CSV
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={() => {
+              setReceivableToEdit(null);
+              setIsFormModalOpen(true);
+            }}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-9"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Novo Recebível
+          </Button>
         </div>
       </div>
 
@@ -147,9 +235,12 @@ export const ReceivablesPage: React.FC = () => {
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
-              placeholder="Buscar por descrição, cliente, OS..."
+              placeholder="Buscar por descrição, cliente, OS, documento..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              }}
               className="pl-9 text-xs"
             />
           </div>
@@ -159,7 +250,10 @@ export const ReceivablesPage: React.FC = () => {
               {(['ALL', 'PENDING', 'PAID', 'OVERDUE'] as const).map((st) => (
                 <button
                   key={st}
-                  onClick={() => setStatusFilter(st)}
+                  onClick={() => {
+                    setStatusFilter(st);
+                    setPage(1);
+                  }}
                   className={`px-2.5 sm:px-3 py-1 rounded-lg font-medium whitespace-nowrap transition-colors ${
                     statusFilter === st
                       ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs'
@@ -261,8 +355,19 @@ export const ReceivablesPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {!isPaid && (
+                        <div className="flex items-center justify-end gap-1">
+                          {isPaid ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setReceiptToShow(item)}
+                              className="text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-xs h-7 px-2"
+                              title="Visualizar e imprimir recibo"
+                            >
+                              <Printer className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                              Recibo
+                            </Button>
+                          ) : (
                             <Button
                               size="sm"
                               variant="outline"
@@ -273,6 +378,20 @@ export const ReceivablesPage: React.FC = () => {
                               Receber
                             </Button>
                           )}
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setReceivableToEdit(item);
+                              setIsFormModalOpen(true);
+                            }}
+                            className="text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 h-7 w-7 p-0"
+                            title="Editar título"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </Button>
+
                           <Button
                             size="sm"
                             variant="ghost"
@@ -291,6 +410,35 @@ export const ReceivablesPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Desktop Pagination */}
+        {totalPages > 1 && (
+          <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+            <span>
+              Mostrando página <strong>{page}</strong> de <strong>{totalPages}</strong>
+            </span>
+            <div className="flex items-center gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="h-7 px-2"
+              >
+                <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Anterior
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="h-7 px-2"
+              >
+                Próxima <ChevronRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Receivables Cards (Mobile) */}
@@ -321,6 +469,11 @@ export const ReceivablesPage: React.FC = () => {
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       {item.party?.name || 'Cliente Avulso'}
                     </p>
+                    {item.workOrder && (
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                        {item.workOrder.orderNumber}
+                      </p>
+                    )}
                   </div>
                   <Badge variant={statusConfig.variant} className={statusConfig.bg}>
                     {statusConfig.label}
@@ -341,7 +494,17 @@ export const ReceivablesPage: React.FC = () => {
                     Parcela {item.installmentNumber} de {item.totalInstallments}
                   </span>
                   <div className="flex items-center gap-1.5">
-                    {!isPaid && (
+                    {isPaid ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setReceiptToShow(item)}
+                        className="text-xs h-8"
+                      >
+                        <Printer className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                        Recibo
+                      </Button>
+                    ) : (
                       <Button
                         size="sm"
                         onClick={() => setPayingReceivable(item)}
@@ -351,6 +514,19 @@ export const ReceivablesPage: React.FC = () => {
                         Receber
                       </Button>
                     )}
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setReceivableToEdit(item);
+                        setIsFormModalOpen(true);
+                      }}
+                      className="text-slate-400 hover:text-slate-800 h-8 w-8 p-0"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+
                     <Button
                       size="sm"
                       variant="ghost"
@@ -365,6 +541,33 @@ export const ReceivablesPage: React.FC = () => {
             );
           })
         )}
+
+        {/* Mobile Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between p-2 text-xs text-slate-500">
+            <span>Página {page} de {totalPages}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="h-8"
+              >
+                Anterior
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="h-8"
+              >
+                Próxima
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Pay Modal */}
@@ -372,6 +575,28 @@ export const ReceivablesPage: React.FC = () => {
         isOpen={Boolean(payingReceivable)}
         onClose={() => setPayingReceivable(null)}
         receivable={payingReceivable}
+        onSuccess={(paidItem) => {
+          if (paidItem) {
+            setReceiptToShow(paidItem);
+          }
+        }}
+      />
+
+      {/* Create / Edit Modal */}
+      <ReceivableFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => {
+          setIsFormModalOpen(false);
+          setReceivableToEdit(null);
+        }}
+        receivableToEdit={receivableToEdit}
+      />
+
+      {/* Payment Receipt Modal */}
+      <PaymentReceiptModal
+        isOpen={Boolean(receiptToShow)}
+        onClose={() => setReceiptToShow(null)}
+        receivable={receiptToShow}
       />
 
       {/* Confirm Delete Modal */}
@@ -402,3 +627,4 @@ export const ReceivablesPage: React.FC = () => {
     </div>
   );
 };
+

@@ -4,7 +4,10 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsNumber,
+  Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PaymentMethod } from '@erp/shared-types';
 
 export class PayReceivableDto {
@@ -19,4 +22,23 @@ export class PayReceivableDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'O valor do desconto deve ser numérico.' })
+  @Min(0, { message: 'O valor do desconto não pode ser negativo.' })
+  discountAmount?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'O valor do acréscimo/juros deve ser numérico.' })
+  @Min(0, { message: 'O valor do acréscimo/juros não pode ser negativo.' })
+  surchargeAmount?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'O valor pago deve ser numérico.' })
+  @Min(0.01, { message: 'O valor pago deve ser maior que zero.' })
+  paidAmount?: number;
 }
+

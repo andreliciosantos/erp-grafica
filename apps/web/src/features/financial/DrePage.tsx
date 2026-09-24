@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { StatCard } from '../../components/common/StatCard';
+import { Button } from '../../components/common/Button';
 import { formatCurrency } from '../../lib/utils';
 import {
   TrendingUp,
@@ -15,11 +16,15 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   PieChart,
+  Wallet,
+  Printer,
 } from 'lucide-react';
 import { DreMonthlyReportDto } from '@erp/shared-types';
+import { CashFlowTab } from './CashFlowTab';
 
 export const DrePage: React.FC = () => {
   const currentMonthStr = new Date().toISOString().substring(0, 7); // YYYY-MM
+  const [activeTab, setActiveTab] = useState<'DRE' | 'CASH_FLOW'>('DRE');
   const [selectedMonth, setSelectedMonth] = useState(currentMonthStr);
   const [taxRatePercent, setTaxRatePercent] = useState<number>(6.0);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -43,6 +48,7 @@ export const DrePage: React.FC = () => {
       );
       return res.data;
     },
+    enabled: activeTab === 'DRE',
   });
 
   const isProfitable = (dre?.ebitda || 0) >= 0;
@@ -61,27 +67,44 @@ export const DrePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Tax Rate Filter */}
-          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl shadow-xs">
-            <Percent className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Alíquota Impostos:</span>
-            <input
-              type="number"
-              step="0.5"
-              min="0"
-              max="30"
-              value={taxRatePercent}
-              onChange={(e) => setTaxRatePercent(parseFloat(e.target.value) || 0)}
-              className="w-14 text-xs font-bold text-slate-800 dark:text-slate-200 bg-transparent border-none focus:outline-hidden text-right"
-            />
-            <span className="text-xs font-semibold text-slate-400">%</span>
-          </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          {activeTab === 'DRE' && (
+            <>
+              {/* Tax Rate Filter */}
+              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl shadow-xs">
+                <Percent className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Alíquota:</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="30"
+                  value={taxRatePercent}
+                  onChange={(e) => setTaxRatePercent(parseFloat(e.target.value) || 0)}
+                  className="w-14 text-xs font-bold text-slate-800 dark:text-slate-200 bg-transparent border-none focus:outline-hidden text-right"
+                />
+                <span className="text-xs font-semibold text-slate-400">%</span>
+              </div>
+
+              {/* Print Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="text-xs h-9 px-3"
+                title="Imprimir relatório da DRE"
+              >
+                <Printer className="w-3.5 h-3.5 mr-1.5 text-slate-500" />
+                Imprimir DRE
+              </Button>
+            </>
+          )}
 
           {/* Month Selector */}
           <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl shadow-xs">
             <Calendar className="w-4 h-4 text-slate-400" />
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Competência:</span>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Mês:</span>
             <input
               type="month"
               value={selectedMonth}
@@ -91,6 +114,41 @@ export const DrePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Tabs Switcher */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+        <button
+          type="button"
+          onClick={() => setActiveTab('DRE')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+            activeTab === 'DRE'
+              ? 'bg-emerald-600 text-white shadow-xs shadow-emerald-950/20'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <PieChart className="w-4 h-4" />
+          DRE Gerencial (Competência)
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('CASH_FLOW')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+            activeTab === 'CASH_FLOW'
+              ? 'bg-emerald-600 text-white shadow-xs shadow-emerald-950/20'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Wallet className="w-4 h-4" />
+          Fluxo de Caixa (Caixa Diário)
+        </button>
+      </div>
+
+      {activeTab === 'CASH_FLOW' ? (
+        <CashFlowTab month={selectedMonth} />
+      ) : (
+        <>
+
 
       {/* Top Indicators Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -293,6 +351,9 @@ export const DrePage: React.FC = () => {
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };
+

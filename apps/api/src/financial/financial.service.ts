@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   ExpenseCategory,
+  WorkOrderStatus,
+  PaymentStatus,
   DreMonthlyReportDto,
   DreSectionItem,
   CashFlowSummaryDto,
@@ -28,12 +30,15 @@ export class FinancialService {
       ? taxRatePercentParam
       : 6.0;
 
-    // 1. Fetch Work Orders for the competence month
+    // 1. Fetch non-cancelled Work Orders for the competence month
     const workOrders = await this.prisma.workOrder.findMany({
       where: {
         createdAt: {
           gte: startOfMonth,
           lte: endOfMonth,
+        },
+        status: {
+          not: WorkOrderStatus.CANCELLED,
         },
       },
       include: {
@@ -62,12 +67,15 @@ export class FinancialService {
       }
     });
 
-    // 2. Fetch Operating Expenses for the competence month
+    // 2. Fetch non-cancelled Operating Expenses for the competence month
     const expenses = await this.prisma.operatingExpense.findMany({
       where: {
         competenceDate: {
           gte: startOfMonth,
           lte: endOfMonth,
+        },
+        status: {
+          not: PaymentStatus.CANCELLED,
         },
       },
     });
@@ -250,68 +258,135 @@ export class FinancialService {
     const endOfMonth = new Date(Date.UTC(year, monthNum, 0, 23, 59, 59, 999));
     const daysInMonth = new Date(year, monthNum, 0).getDate();
 
+    // Fetch non-cancelled receivables and operating expenses active for this month
     const [receivables, expenses] = await Promise.all([
       this.prisma.receivable.findMany({
         where: {
-          dueDate: { gte: startOfMonth, lte: endOfMonth },
+          status: { not: PaymentStatus.CANCELLED },
+          OR: [
+            {
+              status: PaymentStatus.PAID,
+              paidAt: { gte: startOfMonth, lte: endOfMonth },
+            },
+            {
+              status: { in: [PaymentStatus.PENDING, PaymentStatus.OVERDUE] },
+              dueDate: { gte: startOfMonth, lte: endOfMonth },
+            },
+          ],
         },
       }),
       this.prisma.operatingExpense.findMany({
         where: {
-          dueDate: { gte: startOfMonth, lte: endOfMonth },
+          status: { not: PaymentStatus.CANCELLED },
+          OR: [
+            {
+              status: PaymentStatus.PAID,
+              paidAt: { gte: startOfMonth, lte: endOfMonth },
+            },
+            {
+              status: { in: [PaymentStatus.PENDING, PaymentStatus.OVERDUE] },
+              dueDate: { gte: startOfMonth, lte: endOfMonth },
+            },
+          ],
         },
       }),
     ]);
 
-    const dailyInflows: Record<number, number> = {};
-    const dailyOutflows: Record<number, number> = {};
+    const dailyRealizedInflows: Record<number, number> = {};
+    const dailyProjectedInflows: Record<number, number> = {};
+    const dailyRealizedOutflows: Record<number, number> = {};
+    const dailyProjectedOutflows: Record<number, number> = {};
 
     for (let d = 1; d <= daysInMonth; d++) {
-      dailyInflows[d] = 0;
-      dailyOutflows[d] = 0;
+      dailyRealizedInflows[d] = 0;
+      dailyProjectedInflows[d] = 0;
+      dailyRealizedOutflows[d] = 0;
+      dailyProjectedOutflows[d] = 0;
     }
 
     receivables.forEach((r) => {
-      const day = new Date(r.dueDate).getUTCDate();
-      dailyInflows[day] = (dailyInflows[day] || 0) + Number(r.amount);
+      const val = Number(r.amount);
+      if (r.status === PaymentStatus.PAID && r.paidAt) {
+        const day = new Date(r.paidAt).getUTCDate();
+        if (day >= 1 && day <= daysInMonth) {
+          dailyRealizedInflows[day] = (dailyRealizedInflows[day] || 0) + val;
+        }
+      } else {
+        const day = new Date(r.dueDate).getUTCDate();
+        if (day >= 1 && day <= daysInMonth) {
+          dailyProjectedInflows[day] = (dailyProjectedInflows[day] || 0) + val;
+        }
+      }
     });
 
     expenses.forEach((e) => {
-      const day = new Date(e.dueDate).getUTCDate();
-      dailyOutflows[day] = (dailyOutflows[day] || 0) + Number(e.amount);
+      const val = Number(e.amount);
+      if (e.status === PaymentStatus.PAID && e.paidAt) {
+        const day = new Date(e.paidAt).getUTCDate();
+        if (day >= 1 && day <= daysInMonth) {
+          dailyRealizedOutflows[day] = (dailyRealizedOutflows[day] || 0) + val;
+        }
+      } else {
+        const day = new Date(e.dueDate).getUTCDate();
+        if (day >= 1 && day <= daysInMonth) {
+          dailyProjectedOutflows[day] = (dailyProjectedOutflows[day] || 0) + val;
+        }
+      }
     });
 
-    let totalInflows = 0;
-    let totalOutflows = 0;
+    let totalRealizedInflows = 0;
+    let totalProjectedInflows = 0;
+    let totalRealizedOutflows = 0;
+    let totalProjectedOutflows = 0;
     let accumulated = 0;
 
     const days: CashFlowDayDto[] = [];
 
     for (let d = 1; d <= daysInMonth; d++) {
-      const inf = dailyInflows[d] || 0;
-      const outf = dailyOutflows[d] || 0;
+      const rInf = dailyRealizedInflows[d] || 0;
+      const pInf = dailyProjectedInflows[d] || 0;
+      const inf = rInf + pInf;
+
+      const rOut = dailyRealizedOutflows[d] || 0;
+      const pOut = dailyProjectedOutflows[d] || 0;
+      const outf = rOut + pOut;
+
       const net = inf - outf;
       accumulated += net;
 
-      totalInflows += inf;
-      totalOutflows += outf;
+      totalRealizedInflows += rInf;
+      totalProjectedInflows += pInf;
+      totalRealizedOutflows += rOut;
+      totalProjectedOutflows += pOut;
 
       const dateStr = `${targetMonth}-${String(d).padStart(2, '0')}`;
       days.push({
         date: dateStr,
         inflows: Number(inf.toFixed(2)),
         outflows: Number(outf.toFixed(2)),
+        realizedInflows: Number(rInf.toFixed(2)),
+        projectedInflows: Number(pInf.toFixed(2)),
+        realizedOutflows: Number(rOut.toFixed(2)),
+        projectedOutflows: Number(pOut.toFixed(2)),
         netBalance: Number(net.toFixed(2)),
         accumulatedBalance: Number(accumulated.toFixed(2)),
       });
     }
 
+    const totalInflows = totalRealizedInflows + totalProjectedInflows;
+    const totalOutflows = totalRealizedOutflows + totalProjectedOutflows;
+
     return {
       month: targetMonth,
       totalInflows: Number(totalInflows.toFixed(2)),
       totalOutflows: Number(totalOutflows.toFixed(2)),
+      realizedInflows: Number(totalRealizedInflows.toFixed(2)),
+      projectedInflows: Number(totalProjectedInflows.toFixed(2)),
+      realizedOutflows: Number(totalRealizedOutflows.toFixed(2)),
+      projectedOutflows: Number(totalProjectedOutflows.toFixed(2)),
       netCashFlow: Number((totalInflows - totalOutflows).toFixed(2)),
       days,
     };
   }
 }
+

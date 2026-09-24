@@ -138,18 +138,36 @@ export class ReceivablesService {
     const limit = Math.max(1, Math.min(100, Number(params.limit) || 20));
     const skip = (page - 1) * limit;
 
-    const where: Prisma.ReceivableWhereInput = {};
+    const now = new Date();
+    const whereConditions: Prisma.ReceivableWhereInput[] = [];
 
     if (params.status) {
-      where.status = params.status;
+      if (params.status === PaymentStatus.OVERDUE) {
+        whereConditions.push({
+          OR: [
+            { status: PaymentStatus.OVERDUE },
+            {
+              status: PaymentStatus.PENDING,
+              dueDate: { lt: now },
+            },
+          ],
+        });
+      } else if (params.status === PaymentStatus.PENDING) {
+        whereConditions.push({
+          status: PaymentStatus.PENDING,
+          dueDate: { gte: now },
+        });
+      } else {
+        whereConditions.push({ status: params.status });
+      }
     }
 
     if (params.partyId) {
-      where.partyId = params.partyId;
+      whereConditions.push({ partyId: params.partyId });
     }
 
     if (params.workOrderId) {
-      where.workOrderId = params.workOrderId;
+      whereConditions.push({ workOrderId: params.workOrderId });
     }
 
     if (params.month) {
@@ -159,24 +177,31 @@ export class ReceivablesService {
       if (!isNaN(year) && !isNaN(month)) {
         const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
         const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
-        where.dueDate = {
-          gte: startOfMonth,
-          lte: endOfMonth,
-        };
+        whereConditions.push({
+          dueDate: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+        });
       }
     }
 
     if (params.search) {
       const term = params.search.trim();
-      where.OR = [
-        { description: { contains: term, mode: 'insensitive' } },
-        { documentNumber: { contains: term, mode: 'insensitive' } },
-        { barcode: { contains: term, mode: 'insensitive' } },
-        { party: { name: { contains: term, mode: 'insensitive' } } },
-        { party: { document: { contains: term, mode: 'insensitive' } } },
-        { workOrder: { orderNumber: { contains: term, mode: 'insensitive' } } },
-      ];
+      whereConditions.push({
+        OR: [
+          { description: { contains: term, mode: 'insensitive' } },
+          { documentNumber: { contains: term, mode: 'insensitive' } },
+          { barcode: { contains: term, mode: 'insensitive' } },
+          { party: { name: { contains: term, mode: 'insensitive' } } },
+          { party: { document: { contains: term, mode: 'insensitive' } } },
+          { workOrder: { orderNumber: { contains: term, mode: 'insensitive' } } },
+        ],
+      });
     }
+
+    const where: Prisma.ReceivableWhereInput =
+      whereConditions.length > 0 ? { AND: whereConditions } : {};
 
     const [total, records] = await Promise.all([
       this.prisma.receivable.count({ where }),
@@ -193,7 +218,6 @@ export class ReceivablesService {
     ]);
 
     // Dynamic overdue update for items past dueDate
-    const now = new Date();
     const updatedRecords = records.map((rec) => {
       if (rec.status === PaymentStatus.PENDING && new Date(rec.dueDate) < now) {
         return { ...rec, status: PaymentStatus.OVERDUE };
@@ -282,14 +306,42 @@ export class ReceivablesService {
     const existing = await this.findOne(id);
 
     const paidAtDate = new Date(dto.paidAt);
+    const nominalAmount = Number(existing.amount);
+
+    let finalAmount = nominalAmount;
+    const paymentNotesParts: string[] = [];
+    if (dto.notes) {
+      paymentNotesParts.push(dto.notes.trim());
+    }
+
+    if (dto.discountAmount && dto.discountAmount > 0) {
+      const discount = Number(dto.discountAmount);
+      finalAmount = Math.max(0, finalAmount - discount);
+      paymentNotesParts.push(`[Desconto: R$ ${discount.toFixed(2)}]`);
+    }
+
+    if (dto.surchargeAmount && dto.surchargeAmount > 0) {
+      const surcharge = Number(dto.surchargeAmount);
+      finalAmount = finalAmount + surcharge;
+      paymentNotesParts.push(`[Acréscimo: R$ ${surcharge.toFixed(2)}]`);
+    }
+
+    if (dto.paidAmount && dto.paidAmount > 0) {
+      finalAmount = Number(dto.paidAmount);
+    }
+
+    const updatedNotes = paymentNotesParts.length > 0
+      ? (existing.notes ? `${existing.notes} | ${paymentNotesParts.join(' ')}` : paymentNotesParts.join(' '))
+      : existing.notes;
 
     const updated = await this.prisma.receivable.update({
       where: { id },
       data: {
+        amount: new Prisma.Decimal(Number(finalAmount.toFixed(2))),
         status: PaymentStatus.PAID,
         paidAt: paidAtDate,
         paymentMethod: dto.paymentMethod,
-        notes: dto.notes ? dto.notes.trim() : existing.notes,
+        notes: updatedNotes,
       },
       include: {
         party: true,
@@ -307,7 +359,7 @@ export class ReceivablesService {
   async generateForOrder(dto: GenerateOrderInstallmentsDto): Promise<ReceivableItem[]> {
     const order = await this.prisma.workOrder.findUnique({
       where: { id: dto.workOrderId },
-      include: { party: true },
+      include: { party: true, receivables: true },
     });
 
     if (!order) {
@@ -317,6 +369,15 @@ export class ReceivablesService {
     const totalAmount = Number(order.totalAmount);
     if (totalAmount <= 0) {
       throw new BadRequestException('A ordem de serviço possui valor zerado ou inválido.');
+    }
+
+    // Check how much has already been paid for this order
+    const paidReceivables = (order.receivables || []).filter((r) => r.status === PaymentStatus.PAID);
+    const alreadyPaidAmount = paidReceivables.reduce((acc, r) => acc + Number(r.amount), 0);
+    const remainingAmount = Number((totalAmount - alreadyPaidAmount).toFixed(2));
+
+    if (remainingAmount <= 0) {
+      throw new BadRequestException('Esta ordem de serviço já está totalmente quitada.');
     }
 
     // Delete existing unpaid receivables for this workOrder to avoid duplicate plans
@@ -330,83 +391,136 @@ export class ReceivablesService {
     const createdItems: any[] = [];
     const baseDueDate = dto.firstDueDate ? new Date(dto.firstDueDate) : new Date();
 
-    if (dto.plan === 'FULL_ADVANCE') {
-      const rec = await this.prisma.receivable.create({
-        data: {
-          workOrderId: order.id,
-          partyId: order.partyId,
-          description: `Pagamento Integral (À Vista) - ${order.orderNumber}`,
-          installmentNumber: 1,
-          totalInstallments: 1,
-          amount: new Prisma.Decimal(totalAmount),
-          dueDate: baseDueDate,
-          status: PaymentStatus.PENDING,
-        },
-        include: { party: true, workOrder: true },
-      });
-      createdItems.push(rec);
-    } else if (dto.plan === 'HALF_DOWN_HALF_PICKUP') {
-      const downPercent = (dto.downPaymentPercent || 50) / 100;
-      const downAmount = Number((totalAmount * downPercent).toFixed(2));
-      const pickupAmount = Number((totalAmount - downAmount).toFixed(2));
+    if (alreadyPaidAmount > 0) {
+      // Order already has paid installments (e.g. advance deposit already received)
+      // Generate plan strictly for the remaining amount
+      const alreadyPaidCount = paidReceivables.length;
 
-      // 1. Sinal (hoje ou data informada)
-      const rec1 = await this.prisma.receivable.create({
-        data: {
-          workOrderId: order.id,
-          partyId: order.partyId,
-          description: `Sinal (${Math.round(downPercent * 100)}%) - ${order.orderNumber}`,
-          installmentNumber: 1,
-          totalInstallments: 2,
-          amount: new Prisma.Decimal(downAmount),
-          dueDate: baseDueDate,
-          status: PaymentStatus.PENDING,
-        },
-        include: { party: true, workOrder: true },
-      });
-      createdItems.push(rec1);
+      if (dto.plan === 'CUSTOM_INSTALLMENTS') {
+        const count = Math.max(1, Math.min(12, dto.installmentsCount || 2));
+        const intervalDays = dto.intervalDays || 30;
+        const totalInstallmentsCount = alreadyPaidCount + count;
+        const installmentVal = Number((remainingAmount / count).toFixed(2));
+        const remainder = Number((remainingAmount - installmentVal * count).toFixed(2));
 
-      // 2. Saldo na Retirada (data da entrega da OS)
-      const pickupDate = order.deliveryDate ? new Date(order.deliveryDate) : new Date(baseDueDate.getTime() + 7 * 86400000);
-      const rec2 = await this.prisma.receivable.create({
-        data: {
-          workOrderId: order.id,
-          partyId: order.partyId,
-          description: `Saldo na Retirada - ${order.orderNumber}`,
-          installmentNumber: 2,
-          totalInstallments: 2,
-          amount: new Prisma.Decimal(pickupAmount),
-          dueDate: pickupDate,
-          status: PaymentStatus.PENDING,
-        },
-        include: { party: true, workOrder: true },
-      });
-      createdItems.push(rec2);
-    } else {
-      // CUSTOM_INSTALLMENTS
-      const count = Math.max(1, Math.min(12, dto.installmentsCount || 3));
-      const intervalDays = dto.intervalDays || 30;
-      const installmentVal = Number((totalAmount / count).toFixed(2));
-      let remainder = Number((totalAmount - installmentVal * count).toFixed(2));
+        for (let i = 1; i <= count; i++) {
+          const val = i === 1 ? Number((installmentVal + remainder).toFixed(2)) : installmentVal;
+          const currentDueDate = new Date(baseDueDate.getTime() + (i - 1) * intervalDays * 86400000);
+          const currentInstallmentNum = alreadyPaidCount + i;
 
-      for (let i = 1; i <= count; i++) {
-        const val = i === 1 ? Number((installmentVal + remainder).toFixed(2)) : installmentVal;
-        const currentDueDate = new Date(baseDueDate.getTime() + (i - 1) * intervalDays * 86400000);
-
+          const rec = await this.prisma.receivable.create({
+            data: {
+              workOrderId: order.id,
+              partyId: order.partyId,
+              description: `Saldo Parcela ${currentInstallmentNum}/${totalInstallmentsCount} - ${order.orderNumber}`,
+              installmentNumber: currentInstallmentNum,
+              totalInstallments: totalInstallmentsCount,
+              amount: new Prisma.Decimal(val),
+              dueDate: currentDueDate,
+              status: PaymentStatus.PENDING,
+            },
+            include: { party: true, workOrder: true },
+          });
+          createdItems.push(rec);
+        }
+      } else {
+        // FULL_ADVANCE or HALF_DOWN_HALF_PICKUP when signal is already paid -> single final installment for the balance
+        const pickupDate = order.deliveryDate ? new Date(order.deliveryDate) : baseDueDate;
         const rec = await this.prisma.receivable.create({
           data: {
             workOrderId: order.id,
             partyId: order.partyId,
-            description: `Parcela ${i}/${count} - ${order.orderNumber}`,
-            installmentNumber: i,
-            totalInstallments: count,
-            amount: new Prisma.Decimal(val),
-            dueDate: currentDueDate,
+            description: `Saldo Restante na Retirada - ${order.orderNumber}`,
+            installmentNumber: alreadyPaidCount + 1,
+            totalInstallments: alreadyPaidCount + 1,
+            amount: new Prisma.Decimal(remainingAmount),
+            dueDate: pickupDate,
             status: PaymentStatus.PENDING,
           },
           include: { party: true, workOrder: true },
         });
         createdItems.push(rec);
+      }
+    } else {
+      // Brand new installment plan for the entire totalAmount
+      if (dto.plan === 'FULL_ADVANCE') {
+        const rec = await this.prisma.receivable.create({
+          data: {
+            workOrderId: order.id,
+            partyId: order.partyId,
+            description: `Pagamento Integral (À Vista) - ${order.orderNumber}`,
+            installmentNumber: 1,
+            totalInstallments: 1,
+            amount: new Prisma.Decimal(totalAmount),
+            dueDate: baseDueDate,
+            status: PaymentStatus.PENDING,
+          },
+          include: { party: true, workOrder: true },
+        });
+        createdItems.push(rec);
+      } else if (dto.plan === 'HALF_DOWN_HALF_PICKUP') {
+        const downPercent = (dto.downPaymentPercent || 50) / 100;
+        const downAmount = Number((totalAmount * downPercent).toFixed(2));
+        const pickupAmount = Number((totalAmount - downAmount).toFixed(2));
+
+        // 1. Sinal (hoje ou data informada)
+        const rec1 = await this.prisma.receivable.create({
+          data: {
+            workOrderId: order.id,
+            partyId: order.partyId,
+            description: `Sinal (${Math.round(downPercent * 100)}%) - ${order.orderNumber}`,
+            installmentNumber: 1,
+            totalInstallments: 2,
+            amount: new Prisma.Decimal(downAmount),
+            dueDate: baseDueDate,
+            status: PaymentStatus.PENDING,
+          },
+          include: { party: true, workOrder: true },
+        });
+        createdItems.push(rec1);
+
+        // 2. Saldo na Retirada (data da entrega da OS)
+        const pickupDate = order.deliveryDate ? new Date(order.deliveryDate) : new Date(baseDueDate.getTime() + 7 * 86400000);
+        const rec2 = await this.prisma.receivable.create({
+          data: {
+            workOrderId: order.id,
+            partyId: order.partyId,
+            description: `Saldo na Retirada - ${order.orderNumber}`,
+            installmentNumber: 2,
+            totalInstallments: 2,
+            amount: new Prisma.Decimal(pickupAmount),
+            dueDate: pickupDate,
+            status: PaymentStatus.PENDING,
+          },
+          include: { party: true, workOrder: true },
+        });
+        createdItems.push(rec2);
+      } else {
+        // CUSTOM_INSTALLMENTS
+        const count = Math.max(1, Math.min(12, dto.installmentsCount || 3));
+        const intervalDays = dto.intervalDays || 30;
+        const installmentVal = Number((totalAmount / count).toFixed(2));
+        const remainder = Number((totalAmount - installmentVal * count).toFixed(2));
+
+        for (let i = 1; i <= count; i++) {
+          const val = i === 1 ? Number((installmentVal + remainder).toFixed(2)) : installmentVal;
+          const currentDueDate = new Date(baseDueDate.getTime() + (i - 1) * intervalDays * 86400000);
+
+          const rec = await this.prisma.receivable.create({
+            data: {
+              workOrderId: order.id,
+              partyId: order.partyId,
+              description: `Parcela ${i}/${count} - ${order.orderNumber}`,
+              installmentNumber: i,
+              totalInstallments: count,
+              amount: new Prisma.Decimal(val),
+              dueDate: currentDueDate,
+              status: PaymentStatus.PENDING,
+            },
+            include: { party: true, workOrder: true },
+          });
+          createdItems.push(rec);
+        }
       }
     }
 
@@ -417,7 +531,10 @@ export class ReceivablesService {
 
   private async syncWorkOrderPaymentStatus(workOrderId: string): Promise<void> {
     const receivables = await this.prisma.receivable.findMany({
-      where: { workOrderId },
+      where: {
+        workOrderId,
+        status: { not: PaymentStatus.CANCELLED },
+      },
     });
 
     if (receivables.length === 0) return;
@@ -445,7 +562,9 @@ export class ReceivablesService {
   }
 
   async getSummary(month?: string): Promise<ReceivablesSummaryDto> {
-    const where: Prisma.ReceivableWhereInput = {};
+    const whereConditions: Prisma.ReceivableWhereInput[] = [
+      { status: { not: PaymentStatus.CANCELLED } },
+    ];
 
     if (month) {
       const [yearStr, monthStr] = month.split('-');
@@ -454,15 +573,17 @@ export class ReceivablesService {
       if (!isNaN(year) && !isNaN(monthNum)) {
         const startOfMonth = new Date(Date.UTC(year, monthNum - 1, 1, 0, 0, 0));
         const endOfMonth = new Date(Date.UTC(year, monthNum, 0, 23, 59, 59, 999));
-        where.dueDate = {
-          gte: startOfMonth,
-          lte: endOfMonth,
-        };
+        whereConditions.push({
+          dueDate: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+        });
       }
     }
 
     const items = await this.prisma.receivable.findMany({
-      where,
+      where: { AND: whereConditions },
     });
 
     const now = new Date();
@@ -471,7 +592,7 @@ export class ReceivablesService {
     let pendingAmount = 0;
     let overdueAmount = 0;
 
-    let totalCount = items.length;
+    const totalCount = items.length;
     let receivedCount = 0;
     let pendingCount = 0;
     let overdueCount = 0;

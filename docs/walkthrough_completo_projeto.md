@@ -368,10 +368,11 @@ Consolidando os alicerces operacionais da gráfica, a **Fase 1 do Roadmap** entr
   - Verificação de integridade no startup: caso a base de modelos esteja vazia, os 6 modelos padrão são automaticamente vinculados aos materiais e máquinas existentes.
 
 ### 15.5. Garantia de Qualidade e Cobertura de Testes
-* **100% de Aprovação Automatizada:**
-  - **Frontend (`@erp/web`):** 20 arquivos de teste e 112 casos de teste aprovados com sucesso (`vitest run`).
-  - **Backend (`@erp/api`):** 4 arquivos de teste e 19 casos de teste aprovados com sucesso.
-  - **Build de Produção:** Compilação TypeScript (`tsc -b` e `tsc --noEmit`) e empacotamento Vite sem nenhum erro.
+* **100% de Aprovação Automatizada (168 Testes em Todo o Monorepo):**
+  - **Frontend (`@erp/web`):** 23 arquivos de teste e 130 casos de teste aprovados com 100% de sucesso (`vitest run`).
+  - **Backend (`@erp/api`):** 6 arquivos de teste e 30 casos de teste aprovados com 100% de sucesso (`vitest run`).
+  - **Motor de Negócio (`@erp/business-core`):** 2 arquivos de teste e 8 casos de teste aprovados com 100% de sucesso (`vitest run`).
+  - **Build de Produção:** Compilação TypeScript (`tsc -b` e `tsc --noEmit`) e empacotamento Vite sem nenhum erro de tipagem.
 
 ---
 
@@ -435,6 +436,74 @@ Com o uso intensivo do sistema em smartphones e tablets no chão de fábrica e n
 ### 17.5. Modais e Barra Superior Touch-Friendly
 * **Modais com Ações Empilhadas:** O rodapé de modais críticos (`OrderDetailsModal` e `JobTicketModal`) agora adota `flex-col-reverse sm:flex-row`, permitindo que botões como "Imprimir Ficha Técnica", "Editar" e "Fechar" tenham alvos de toque com 100% da largura útil em celulares.
 * **Header Compacto:** O status de conexão WebSocket foi sintetizado para um badge inteligente com ícone e texto "Online/Offline" no mobile, preservando o espaço para o botão de saída e troca de tema.
+
+---
+
+## 18. Unificação do Fluxo Comercial e Produtivo: Geração Automática de Ordem de Serviço (OS)
+
+Antes desta atualização arquitetural, o sistema apresentava uma fragmentação no fluxo de trabalho:
+- Uma tela de cotação paramétrica na aba de Orçamentos;
+- Uma janela simplificada na aba de Chão de Fábrica para cadastrar ordens de serviço avulsas.
+
+Esse modelo permitia que uma OS fosse gerada sem ficha técnica de corte e sem discriminação de matérias-primas e margem de lucro. A nova arquitetura unificou o ciclo de vida do pedido:
+
+### 18.1. Transação Atômica ACID no Backend (`POST /quotes`)
+Ao cadastrar um orçamento com aproveitamento geométrico e precificação comercial via `POST /quotes`, o backend NestJS (`QuotesService`) agora executa uma transação atômica gerenciada pelo Prisma:
+1. Define o status do orçamento como `APPROVED` (com suporte opcional a rascunho com `autoApprove: false`).
+2. Gera o código sequencial único do orçamento (`quote.code`).
+3. Formata a numeração oficial da Ordem de Serviço no padrão industrial: `OS-YYYY-XXXXX`.
+4. Gera o código de barras padronizado Code-128: `OSYYYYXXXXX`.
+5. Cria a `WorkOrder` com status `PENDING` ("Liberação"), prazo de entrega, prioridade normal e vínculo relacional direto com o cliente e o orçamento pai.
+6. Instancia automaticamente as **5 etapas fabris padrão** (`WorkOrderStage`):
+   - **Etapa 1:** Pré-impressão (CTP / Matrizes)
+   - **Etapa 2:** Impressão (Offset / Digital)
+   - **Etapa 3:** Acabamento (Refile / Vinco / Dobra)
+   - **Etapa 4:** Controle de Qualidade
+   - **Etapa 5:** Expedição / Retirada
+7. Dispara o evento WebSocket `emitWorkOrderStatusChanged`, refletindo a nova OS instantaneamente nos quadros Kanban de todos os operadores da gráfica em tempo real.
+
+### 18.2. Redirecionamento Determinístico no Frontend
+- **Tela de Novo Orçamento (`NewQuotePage.tsx`):** Ao salvar um orçamento aprovado, o sistema invalida as consultas do React Query (`work-orders` e `quotes-list`) e redireciona automaticamente o usuário para a tela do Chão de Fábrica (`/work-orders`), eliminando cliques e atritos operacionais.
+- **Tela do Chão de Fábrica (`WorkOrdersPage.tsx`):** O botão principal do cabeçalho agora é unificado sob o título **"Novo Pedido / Orçamento"** (ou **"Novo Orçamento"** no mobile) e redireciona diretamente para `/quotes/new` via `useNavigate`. A janela simplificada anterior foi extirpada do fluxo de criação e mantida estritamente para a edição de ordens já existentes (`onEditOrder`).
+- **Lista de Orçamentos (`QuotesListPage.tsx`):** Todos os orçamentos que possuem Ordem de Serviço vinculada exibem o botão **"Ver no PCP"** com ícone Kanban, conectando o departamento comercial à produção fabril em 1 clique.
+
+---
+
+## 19. Experiência de Usuário In-App: Eliminação de Alertas Nativos do Navegador e Modais Customizados
+
+Para garantir uma interface profissional e desbloquear o laço de eventos (*Event Loop*) do JavaScript no navegador dos operadores, foram removidos todos os diálogos síncronos nativos (`window.alert`, `window.confirm`):
+
+### 19.1. Modal Personalizado de Confirmação de Baixa de Insumos (`WorkOrdersPage.tsx`)
+Quando uma Ordem de Serviço é avançada para a etapa de **IMPRESSÃO** (seja pelo botão de avanço rápido no cartão ou via *Drag and Drop* entre colunas do Kanban), o estoque de matéria-prima (folhas de papel calculadas na imposição geométrica) deve ser debitado.
+- Em substituição ao popup cinza e invasivo do navegador, o sistema abre um `<Modal>` in-app com identidade visual temática:
+  - Cabeçalho semântico com ícones `Layers` e `Printer` e badge âmbar de aviso operacional.
+  - Cartão detalhado com o número da OS, nome do cliente e valor total formatado em moeda corrente (`R$`).
+  - Alerta explicativo claro: *"Avançar esta OS para Impressão consumirá automaticamente as folhas de matéria-prima calculadas no orçamento deste pedido do estoque."*
+  - Botões ergonômicos e acessíveis: **"Cancelar"** e **"Confirmar e Baixar Insumos"**.
+
+### 19.2. Sistema de Notificações Flutuantes (Toasts Reativos)
+- Mensagens de sucesso ao mover ordens e eventuais alertas de erro de rede ou permissão agora utilizam um container de notificação flutuante com suporte a animação (`feedbackNotification`), ícones semânticos da Lucide (`CheckCircle2` para êxito e `AlertTriangle` para falhas) e botão de dispensa manual, sem interromper ou bloquear a digitação do operador.
+
+### 19.3. Coexistência de Drag & Drop e Rolagem Suave no Kanban Touch
+- A integração entre o motor de física `@hello-pangea/dnd` e a barra de rolagem suave com *CSS Scroll Snap* foi calibrada para prevenir conflitos de eventos de toque:
+  - O operador pode deslizar horizontalmente o carrossel de etapas do Kanban no celular sem disparar arrastos acidentais.
+  - Ao pressionar e arrastar especificamente o cartão de OS, o manipulador de arrasto (`dragHandleProps`) assume a translação vetorial com feedback visual de elevação (sombra e contorno colorido).
+
+---
+
+## 20. Infraestrutura de Execução e Acesso Remoto Seguro (Cloudflare Tunnel)
+
+O ecossistema está configurado para operar de forma 100% autônoma em qualquer máquina Windows/Linux de desenvolvimento ou servidor local de fábrica:
+
+1. **PostgreSQL Embarcado Local:**
+   - Instância nativa gerenciada via `embedded-postgres` operando na porta padrão `5432` com persistência em `./data/embedded-pg`.
+2. **API NestJS em Background:**
+   - Executada em `node.exe apps/api/dist/main.js` na porta `3000`, servindo a API REST, documentação Swagger interativa em `/docs` e o Gateway WebSocket em `/socket.io`.
+3. **Frontend Vite em Background:**
+   - Servido via `pnpm --filter web dev --host` na porta `5173`, com proxy reverso transparente para a API e WebSockets.
+4. **Túnel Seguro de Borda Cloudflare (`cloudflared`):**
+   - Túnel criptografado persistente baseado em protocolo QUIC (UDP) conectando a borda global da Cloudflare ao servidor Vite em `localhost:5173`.
+   - Permite acesso remoto instantâneo via HTTPS sem necessidade de IP público estático, abertura de portas no roteador de fábrica ou configuração de NAT/Dynamic DNS.
 
 
 

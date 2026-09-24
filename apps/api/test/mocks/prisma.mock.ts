@@ -68,6 +68,8 @@ export function createMockPrismaService() {
   let stockMovements: any[] = [];
   let stages: any[] = [];
   let stageLogs: any[] = [];
+  let receivables: any[] = [];
+  let operatingExpenses: any[] = [];
   let quoteCounter = 100;
 
   const mock = {
@@ -175,6 +177,21 @@ export function createMockPrismaService() {
       }),
     },
     workOrder: {
+      findUnique: vi.fn(async ({ where, include }: any) => {
+        const w = workOrders.find((item) => item.id === where.id);
+        if (!w) return null;
+        const res = { ...w };
+        if (include?.receivables) {
+          res.receivables = receivables.filter((r) => r.workOrderId === w.id);
+        }
+        if (include?.party && !res.party) {
+          res.party = parties.find((p) => p.id === w.partyId) || null;
+        }
+        if (include?.quote && !res.quote) {
+          res.quote = quotes.find((q) => q.id === w.quoteId) || null;
+        }
+        return res;
+      }),
       findFirst: vi.fn(async ({ where }: any) => {
         if (where.OR) {
           for (const cond of where.OR) {
@@ -187,18 +204,31 @@ export function createMockPrismaService() {
         return workOrders[0] || null;
       }),
       findMany: vi.fn(async ({ where }: any = {}) => {
+        let list = [...workOrders];
+        if (where?.status?.not) {
+          list = list.filter((w) => w.status !== where.status.not);
+        }
+        if (where?.createdAt?.gte && where?.createdAt?.lte) {
+          list = list.filter((w) => {
+            const d = new Date(w.createdAt);
+            return d >= where.createdAt.gte && d <= where.createdAt.lte;
+          });
+        }
         if (where?.party?.phone?.contains) {
-          return workOrders.filter((w) => w.party.phone.includes(where.party.phone.contains));
+          list = list.filter((w) => w.party?.phone?.includes(where.party.phone.contains));
         }
         if (where?.orderNumber?.contains) {
-          return workOrders.filter((w) => w.orderNumber.includes(where.orderNumber.contains));
+          list = list.filter((w) => w.orderNumber?.includes(where.orderNumber.contains));
         }
-        return workOrders;
+        return list;
       }),
       count: vi.fn(async () => workOrders.length),
       create: vi.fn(async ({ data }: any) => {
         const w = {
-          id: `wo-${Date.now()}`,
+          id: `wo-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          paymentStatus: PaymentStatus.PENDING,
           ...data,
           party: parties.find((p) => p.id === data.partyId) || { name: 'Cliente Teste', phone: '5511988887777' },
           stages: data.stages?.create?.map((s: any, idx: number) => ({
@@ -208,7 +238,7 @@ export function createMockPrismaService() {
             ...s,
           })) || [],
           stockMovements: [],
-          quote: quotes.find((q) => q.id === data.quoteId) || {
+          quote: data.quote || quotes.find((q) => q.id === data.quoteId) || {
             items: [{ rawMaterialId: 'rm-couche-1', sheetsRequired: 50 }],
           },
         };
@@ -217,7 +247,7 @@ export function createMockPrismaService() {
       }),
       update: vi.fn(async ({ where, data }: any) => {
         const w = workOrders.find((x) => x.id === where.id);
-        if (w) Object.assign(w, data);
+        if (w) Object.assign(w, data, { updatedAt: new Date() });
         return w;
       }),
     },
@@ -256,6 +286,165 @@ export function createMockPrismaService() {
         return m;
       }),
     },
+    receivable: {
+      findUnique: vi.fn(async ({ where }: any) => {
+        const r = receivables.find((item) => item.id === where.id);
+        if (!r) return null;
+        return {
+          ...r,
+          party: parties.find((p) => p.id === r.partyId) || null,
+          workOrder: workOrders.find((w) => w.id === r.workOrderId) || null,
+        };
+      }),
+      findMany: vi.fn(async ({ where }: any = {}) => {
+        let list = [...receivables];
+        if (where?.AND) {
+          for (const cond of where.AND) {
+            if (cond.status?.not) {
+              list = list.filter((r) => r.status !== cond.status.not);
+            }
+            if (cond.partyId) {
+              list = list.filter((r) => r.partyId === cond.partyId);
+            }
+            if (cond.workOrderId) {
+              list = list.filter((r) => r.workOrderId === cond.workOrderId);
+            }
+            if (cond.status && typeof cond.status === 'string') {
+              list = list.filter((r) => r.status === cond.status);
+            }
+            if (cond.OR) {
+              list = list.filter((r) => {
+                return cond.OR.some((subCond: any) => {
+                  if (subCond.status && subCond.dueDate?.lt) {
+                    return r.status === subCond.status && new Date(r.dueDate) < subCond.dueDate.lt;
+                  }
+                  if (subCond.status) return r.status === subCond.status;
+                  if (subCond.description?.contains) {
+                    return r.description?.toLowerCase().includes(subCond.description.contains.toLowerCase());
+                  }
+                  if (subCond.party?.name?.contains) {
+                    const party = parties.find((p) => p.id === r.partyId);
+                    return party?.name?.toLowerCase().includes(subCond.party.name.contains.toLowerCase());
+                  }
+                  return false;
+                });
+              });
+            }
+          }
+        }
+        if (where?.status?.not) {
+          list = list.filter((r) => r.status !== where.status.not);
+        }
+        if (where?.workOrderId) {
+          list = list.filter((r) => r.workOrderId === where.workOrderId);
+        }
+        if (where?.OR) {
+          list = list.filter((r) => {
+            return where.OR.some((subCond: any) => {
+              if (subCond.status === PaymentStatus.PAID && subCond.paidAt) {
+                return r.status === PaymentStatus.PAID && r.paidAt && new Date(r.paidAt) >= subCond.paidAt.gte && new Date(r.paidAt) <= subCond.paidAt.lte;
+              }
+              if (subCond.status?.in && subCond.dueDate) {
+                return subCond.status.in.includes(r.status) && new Date(r.dueDate) >= subCond.dueDate.gte && new Date(r.dueDate) <= subCond.dueDate.lte;
+              }
+              return false;
+            });
+          });
+        }
+        return list.map((r) => ({
+          ...r,
+          party: parties.find((p) => p.id === r.partyId) || null,
+          workOrder: workOrders.find((w) => w.id === r.workOrderId) || null,
+        }));
+      }),
+      count: vi.fn(async ({ where }: any = {}) => {
+        const res = await mock.receivable.findMany({ where });
+        return res.length;
+      }),
+      create: vi.fn(async ({ data }: any) => {
+        const r = {
+          id: `rec-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          paidAt: null,
+          notes: null,
+          barcode: null,
+          documentNumber: null,
+          paymentMethod: null,
+          ...data,
+          party: parties.find((p) => p.id === data.partyId) || null,
+          workOrder: workOrders.find((w) => w.id === data.workOrderId) || null,
+        };
+        receivables.push(r);
+        return r;
+      }),
+      update: vi.fn(async ({ where, data }: any) => {
+        const r = receivables.find((x) => x.id === where.id);
+        if (r) {
+          Object.assign(r, data, { updatedAt: new Date() });
+          r.party = parties.find((p) => p.id === r.partyId) || null;
+          r.workOrder = workOrders.find((w) => w.id === r.workOrderId) || null;
+        }
+        return r;
+      }),
+      delete: vi.fn(async ({ where }: any) => {
+        const idx = receivables.findIndex((x) => x.id === where.id);
+        if (idx >= 0) {
+          const [removed] = receivables.splice(idx, 1);
+          return removed;
+        }
+        return null;
+      }),
+      deleteMany: vi.fn(async ({ where }: any) => {
+        const before = receivables.length;
+        receivables = receivables.filter((r) => {
+          if (where.workOrderId && r.workOrderId === where.workOrderId) {
+            if (where.status?.in && where.status.in.includes(r.status)) return false;
+          }
+          return true;
+        });
+        return { count: before - receivables.length };
+      }),
+    },
+    operatingExpense: {
+      findMany: vi.fn(async ({ where }: any = {}) => {
+        let list = [...operatingExpenses];
+        if (where?.status?.not) {
+          list = list.filter((e) => e.status !== where.status.not);
+        }
+        if (where?.competenceDate?.gte && where?.competenceDate?.lte) {
+          list = list.filter((e) => {
+            const d = new Date(e.competenceDate);
+            return d >= where.competenceDate.gte && d <= where.competenceDate.lte;
+          });
+        }
+        if (where?.OR) {
+          list = list.filter((e) => {
+            return where.OR.some((subCond: any) => {
+              if (subCond.status === PaymentStatus.PAID && subCond.paidAt) {
+                return e.status === PaymentStatus.PAID && e.paidAt && new Date(e.paidAt) >= subCond.paidAt.gte && new Date(e.paidAt) <= subCond.paidAt.lte;
+              }
+              if (subCond.status?.in && subCond.dueDate) {
+                return subCond.status.in.includes(e.status) && new Date(e.dueDate) >= subCond.dueDate.gte && new Date(e.dueDate) <= subCond.dueDate.lte;
+              }
+              return false;
+            });
+          });
+        }
+        return list;
+      }),
+      create: vi.fn(async ({ data }: any) => {
+        const e = {
+          id: `opex-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ...data,
+        };
+        operatingExpenses.push(e);
+        return e;
+      }),
+      count: vi.fn(async () => operatingExpenses.length),
+    },
     $transaction: vi.fn(async (cb: any) => {
       return cb(mock);
     }),
@@ -269,6 +458,8 @@ export function createMockPrismaService() {
       stockMovements,
       stages,
       stageLogs,
+      receivables,
+      operatingExpenses,
     },
   };
 

@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import { ReceivableItem } from '@erp/shared-types';
 import { PaginatedResult } from '../../types';
+import { PayReceivableModal } from '../receivables/PayReceivableModal';
+import { PaymentReceiptModal } from '../receivables/PaymentReceiptModal';
 
 interface OrderDetailsModalProps {
   order: WorkOrderItem | null;
@@ -49,6 +51,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   onPrintJobTicket,
 }) => {
   const queryClient = useQueryClient();
+  const [payingReceivable, setPayingReceivable] = React.useState<ReceivableItem | null>(null);
+  const [receiptToShow, setReceiptToShow] = React.useState<ReceivableItem | null>(null);
 
   // Fetch receivables for this work order
   const { data: receivablesData } = useQuery<PaginatedResult<ReceivableItem>>({
@@ -60,6 +64,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     },
     enabled: isOpen && Boolean(order?.id),
   });
+
 
   const generateInstallmentsMutation = useMutation({
     mutationFn: async (plan: 'FULL_ADVANCE' | 'HALF_DOWN_HALF_PICKUP' | 'CUSTOM_INSTALLMENTS') => {
@@ -85,10 +90,18 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
   if (!order) return null;
 
+  const orderTotal = Number(order.totalAmount || 0);
+  const receivables: ReceivableItem[] = receivablesData?.data || [];
+  const alreadyPaidAmount = receivables
+    .filter((r) => r.status === 'PAID')
+    .reduce((acc, r) => acc + Number(r.amount), 0);
+  const remainingBalance = Math.max(0, Number((orderTotal - alreadyPaidAmount).toFixed(2)));
+  const paymentPercent = orderTotal > 0 ? Math.round((alreadyPaidAmount / orderTotal) * 100) : 0;
+
   const statusConfig = getStatusConfig(order.status);
   const priorityConfig = getPriorityConfig(order.priority);
   const paymentStatusConfig = getPaymentStatusConfig(order.paymentStatus || 'PENDING');
-  const receivables: ReceivableItem[] = receivablesData?.data || [];
+
 
   return (
     <Modal
@@ -198,24 +211,46 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
         {/* Financial / Receivables Section */}
         <div className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-              <Coins className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              Contas a Receber / Parcelamento da OS
-            </h4>
-            <span className="text-[11px] text-slate-500">
-              {receivables.length} parcela(s) registrada(s)
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                <Coins className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                Contas a Receber / Pagamento da OS
+              </h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {alreadyPaidAmount > 0
+                  ? `Quitado: ${formatCurrency(alreadyPaidAmount)} de ${formatCurrency(orderTotal)} (${paymentPercent}%)`
+                  : 'Nenhum pagamento registrado ainda'}
+              </p>
+            </div>
+
+            {remainingBalance > 0 && alreadyPaidAmount > 0 && (
+              <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800/60">
+                Saldo a receber: {formatCurrency(remainingBalance)}
+              </span>
+            )}
           </div>
+
+          {/* Payment Progress Bar */}
+          {orderTotal > 0 && (
+            <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+              <div
+                className="h-full bg-emerald-500 transition-all duration-300"
+                style={{ width: `${Math.min(100, Math.max(0, paymentPercent))}%` }}
+              />
+            </div>
+          )}
 
           {receivables.length > 0 ? (
             <div className="space-y-1.5">
               {receivables.map((rec) => {
                 const recStatus = getPaymentStatusConfig(rec.status);
+                const isPaid = rec.status === 'PAID';
+
                 return (
                   <div
                     key={rec.id}
-                    className="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs gap-2 sm:gap-0"
                   >
                     <div>
                       <span className="font-semibold text-slate-800 dark:text-slate-100">
@@ -224,18 +259,62 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       <span className="text-slate-400 text-[11px] ml-2">
                         Vencimento: {formatDate(rec.dueDate)}
                       </span>
+                      {isPaid && rec.paidAt && (
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 ml-2">
+                          (Pago em {formatDate(rec.paidAt)})
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between sm:justify-end gap-2.5">
                       <span className="font-bold text-slate-900 dark:text-slate-100">
                         {formatCurrency(rec.amount)}
                       </span>
                       <Badge variant={recStatus.variant} size="sm" className={recStatus.bg}>
                         {recStatus.label}
                       </Badge>
+                      <div className="flex items-center gap-1">
+                        {isPaid ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setReceiptToShow(rec)}
+                            className="h-7 px-2 text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-300 text-xs"
+                            title="Ver e imprimir recibo"
+                          >
+                            <Printer className="w-3.5 h-3.5 mr-1" />
+                            Recibo
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setPayingReceivable(rec)}
+                            className="h-7 px-2.5 text-xs text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-medium"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                            Receber
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
               })}
+
+              {remainingBalance > 0 && (
+                <div className="pt-2 flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => generateInstallmentsMutation.mutate('HALF_DOWN_HALF_PICKUP')}
+                    isLoading={generateInstallmentsMutation.isPending}
+                    className="text-[11px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 h-6"
+                    title="Gera cobrança para o saldo restante"
+                  >
+                    Gerar cobrança para saldo de {formatCurrency(remainingBalance)}
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="bg-white dark:bg-slate-900/80 p-3 rounded-lg border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
@@ -332,6 +411,30 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Inline Pay Modal for OS installment */}
+      <PayReceivableModal
+        isOpen={Boolean(payingReceivable)}
+        onClose={() => setPayingReceivable(null)}
+        receivable={payingReceivable}
+        onSuccess={(paidItem) => {
+          queryClient.invalidateQueries({ queryKey: ['order-receivables', order.id] });
+          queryClient.invalidateQueries({ queryKey: ['work-orders'] });
+          queryClient.invalidateQueries({ queryKey: ['receivables'] });
+          queryClient.invalidateQueries({ queryKey: ['receivables-summary'] });
+          if (paidItem) {
+            setReceiptToShow(paidItem);
+          }
+        }}
+      />
+
+      {/* Inline Receipt Modal */}
+      <PaymentReceiptModal
+        isOpen={Boolean(receiptToShow)}
+        onClose={() => setReceiptToShow(null)}
+        receivable={receiptToShow}
+      />
     </Modal>
   );
 };
+

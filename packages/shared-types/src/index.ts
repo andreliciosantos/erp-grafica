@@ -457,6 +457,9 @@ export interface PayReceivableDto {
   paidAt: string;
   paymentMethod: PaymentMethod;
   notes?: string;
+  discountAmount?: number;
+  surchargeAmount?: number;
+  paidAmount?: number;
 }
 
 export interface GenerateOrderInstallmentsDto {
@@ -525,8 +528,12 @@ export interface DreMonthlyReportDto {
 
 export interface CashFlowDayDto {
   date: string; // YYYY-MM-DD
-  inflows: number; // Recebimentos previstos/realizados
-  outflows: number; // Pagamentos de despesas previstos/realizados
+  inflows: number; // Recebimentos totais no dia (realizados + previstos)
+  outflows: number; // Pagamentos de despesas totais no dia
+  realizedInflows: number; // Recebimentos confirmados/liquidados
+  projectedInflows: number; // Recebimentos previstos (a vencer)
+  realizedOutflows: number; // Despesas pagas
+  projectedOutflows: number; // Despesas previstas (a vencer)
   netBalance: number; // inflows - outflows
   accumulatedBalance: number;
 }
@@ -535,6 +542,10 @@ export interface CashFlowSummaryDto {
   month: string;
   totalInflows: number;
   totalOutflows: number;
+  realizedInflows: number;
+  projectedInflows: number;
+  realizedOutflows: number;
+  projectedOutflows: number;
   netCashFlow: number;
   days: CashFlowDayDto[];
 }

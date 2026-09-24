@@ -166,4 +166,33 @@ describe('ReceivablesPage', () => {
       expect(screen.getAllByText('Confirmar Recebimento').length).toBeGreaterThan(0);
     });
   });
+
+  it('opens new receivable modal when clicking "+ Novo Recebível"', async () => {
+    renderWithProviders(<ReceivablesPage />);
+
+    const newBtn = screen.getByRole('button', { name: /Novo Recebível/i });
+    fireEvent.click(newBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('Nova Conta a Receber (Avulsa)')).toBeInTheDocument();
+      expect(screen.getByText('Cadastrar Recebível')).toBeInTheDocument();
+    });
+  });
+
+  it('opens receipt modal when clicking on "Recibo"', async () => {
+    renderWithProviders(<ReceivablesPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: /Recibo/i }).length).toBeGreaterThan(0);
+    });
+
+    const receiptBtn = screen.getAllByRole('button', { name: /Recibo/i })[0];
+    fireEvent.click(receiptBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('Recibo de Pagamento')).toBeInTheDocument();
+      expect(screen.getByText('PAGAMENTO CONFIRMADO')).toBeInTheDocument();
+    });
+  });
 });
+
