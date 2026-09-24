@@ -47,7 +47,10 @@ describe('Módulo de Orçamentos e Aprovação de OS (QuotesService)', () => {
       );
 
       expect(quote).toBeDefined();
-      expect(quote.status).toBe(QuoteStatus.DRAFT);
+      expect(quote.status).toBe(QuoteStatus.APPROVED);
+      expect(quote.workOrder).toBeDefined();
+      expect(quote.workOrder.orderNumber).toMatch(/^OS-\d{4}-\d{5}$/);
+      expect(quote.workOrder.stages.length).toBe(5);
       expect(quote.items.length).toBe(1);
 
       const item = quote.items[0];
@@ -102,16 +105,43 @@ describe('Módulo de Orçamentos e Aprovação de OS (QuotesService)', () => {
         ),
       ).rejects.toThrow(BadRequestException);
     });
+    it('deve permitir criar orçamento em rascunho com autoApprove: false sem gerar OS', async () => {
+      const draftQuote = await quotesService.create(
+        {
+          partyId: 'p-client-1',
+          origin: ChannelSource.WEB,
+          markupApplied: 0.35,
+          autoApprove: false,
+          items: [
+            {
+              productName: 'Folheto Simples',
+              quantity: 200,
+              widthMm: 150,
+              heightMm: 210,
+              colorsFront: 4,
+              colorsBack: 0,
+              finishingOptions: [],
+            },
+          ],
+        },
+        'u-admin-1',
+      );
+
+      expect(draftQuote).toBeDefined();
+      expect(draftQuote.status).toBe(QuoteStatus.DRAFT);
+      expect(draftQuote.workOrder).toBeNull();
+    });
   });
 
   describe('QuotesService.approve', () => {
     it('deve aprovar o orçamento e gerar automaticamente a Ordem de Serviço com as 5 etapas', async () => {
-      // Cria primeiro um orçamento no mock
+      // Cria primeiro um orçamento em rascunho no mock
       const createdQuote = await quotesService.create(
         {
           partyId: 'p-client-1',
           origin: ChannelSource.WEB,
           markupApplied: 0.35,
+          autoApprove: false,
           items: [
             {
               productName: 'Folder A4',

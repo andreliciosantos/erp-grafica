@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { calculateSheetCutting, calculateQuotePricing } from '@erp/business-core';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
@@ -16,6 +16,7 @@ import { ProductTemplateItem } from '@erp/shared-types';
 
 export const NewQuotePage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Form states
   const [partyId, setPartyId] = useState('');
@@ -175,8 +176,16 @@ export const NewQuotePage: React.FC = () => {
       const res = await api.post('/quotes', payload);
       return res.data;
     },
-    onSuccess: () => {
-      navigate('/quotes');
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['work-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['quotes-list'] });
+      const orderNumber = data?.workOrder?.orderNumber;
+      alert(
+        `Orçamento aprovado e salvo com sucesso! ${
+          orderNumber ? `Ordem de Serviço ${orderNumber} gerada e enviada para o Chão de Fábrica.` : 'Enviado para produção.'
+        }`
+      );
+      navigate('/work-orders');
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string | string[] } } };

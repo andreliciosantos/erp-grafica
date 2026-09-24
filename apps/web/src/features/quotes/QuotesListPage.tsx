@@ -7,7 +7,7 @@ import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Input } from '../../components/common/Input';
 import { formatCurrency, formatDate, getStatusConfig } from '../../lib/utils';
-import { Plus, Search, CheckCircle, Calculator, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Search, CheckCircle, Calculator, Trash2, AlertTriangle, KanbanSquare } from 'lucide-react';
 import { QuoteResponseDto, PaginatedResult } from '../../types';
 import { Modal } from '../../components/common/Modal';
 
@@ -190,6 +190,19 @@ export const QuotesListPage: React.FC = () => {
                           </Badge>
                         </td>
                         <td className="py-3.5 text-right space-x-2">
+                          {quote.status === 'APPROVED' && (
+                            <Link to="/work-orders">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                                title="Ver Ordem de Serviço no Chão de Fábrica"
+                              >
+                                <KanbanSquare className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Ver no PCP</span>
+                              </Button>
+                            </Link>
+                          )}
                           {quote.status === 'DRAFT' && (
                             <Button
                               size="sm"

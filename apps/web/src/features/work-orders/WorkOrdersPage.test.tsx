@@ -19,6 +19,15 @@ vi.mock('../../lib/socket', () => ({
   }),
 }));
 
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
 describe('WorkOrdersPage', () => {
   const mockOrders = [
     {
@@ -163,4 +172,18 @@ describe('WorkOrdersPage', () => {
       expect(api.patch).toHaveBeenCalledWith('/work-orders/wo-1/status', { status: 'PRE_PRESS' });
     });
   });
+
+  it('redirects to /quotes/new when clicking the new order / quote button', async () => {
+    renderWithProviders(<WorkOrdersPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Novo Pedido \/ Orçamento/i)).toBeInTheDocument();
+    });
+
+    const newBtn = screen.getByRole('button', { name: /Novo Pedido \/ Orçamento/i });
+    fireEvent.click(newBtn);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/quotes/new');
+  });
 });
+

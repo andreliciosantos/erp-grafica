@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { getSocket } from '../../lib/socket';
@@ -33,6 +34,7 @@ import { Modal } from '../../components/common/Modal';
 import { JobTicketModal } from './JobTicketModal';
 
 export const WorkOrdersPage: React.FC = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [viewMode, setViewMode] = useState<'KANBAN' | 'TABLE'>('KANBAN');
@@ -284,15 +286,12 @@ export const WorkOrdersPage: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => {
-              setOrderToEdit(null);
-              setIsCreateModalOpen(true);
-            }}
+            onClick={() => navigate('/quotes/new')}
             className="flex items-center gap-1.5 shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Novo Pedido / OS</span>
-            <span className="sm:hidden">Nova OS</span>
+            <span className="hidden sm:inline">Novo Pedido / Orçamento</span>
+            <span className="sm:hidden">Novo Orçamento</span>
           </Button>
 
           <div className="flex-1 sm:flex-initial min-w-[130px] sm:w-56">

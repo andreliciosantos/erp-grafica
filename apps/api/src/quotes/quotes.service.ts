@@ -23,6 +23,12 @@ import { EventsGateway } from '../events/events.gateway';
 export type QuoteWithDetails = Quote & {
   items: QuoteItem[];
   party?: { id: string; name: string; document: string; phone: string };
+  workOrder?: {
+    id: string;
+    orderNumber: string;
+    status: any;
+    stages?: any[];
+  } | any | null;
 };
 
 export interface PaginatedQuotesResponse {
@@ -64,7 +70,7 @@ export class QuotesService {
     let totalQuoteCost = new Decimal(0);
     let totalQuoteAmount = new Decimal(0);
 
-    const calculatedItems = [];
+    const calculatedItems: any[] = [];
 
     for (const itemDto of dto.items) {
       let rawMaterial = null;
@@ -129,26 +135,84 @@ export class QuotesService {
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + validDays);
 
-    return this.prisma.quote.create({
-      data: {
-        partyId: dto.partyId,
-        userId,
-        status: QuoteStatus.DRAFT,
-        origin: (dto.origin as ChannelSource) || ChannelSource.WEB,
-        totalCost: totalQuoteCost,
-        markupApplied: new Decimal(dto.markupApplied),
-        totalAmount: totalQuoteAmount,
-        validUntil,
-        notes: dto.notes,
-        items: {
-          create: calculatedItems,
+    const shouldAutoApprove = dto.autoApprove !== false;
+    const initialStatus = shouldAutoApprove ? QuoteStatus.APPROVED : QuoteStatus.DRAFT;
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const quote = await tx.quote.create({
+        data: {
+          partyId: dto.partyId,
+          userId,
+          status: initialStatus,
+          origin: (dto.origin as ChannelSource) || ChannelSource.WEB,
+          totalCost: totalQuoteCost,
+          markupApplied: new Decimal(dto.markupApplied),
+          totalAmount: totalQuoteAmount,
+          validUntil,
+          notes: dto.notes,
+          items: {
+            create: calculatedItems,
+          },
         },
-      },
-      include: {
-        items: true,
-        party: { select: { id: true, name: true, document: true, phone: true } },
-      },
+        include: {
+          items: true,
+          party: { select: { id: true, name: true, document: true, phone: true } },
+        },
+      });
+
+      let workOrder = null;
+      if (shouldAutoApprove) {
+        const currentYear = new Date().getFullYear();
+        const orderNumber = `OS-${currentYear}-${String(quote.code).padStart(5, '0')}`;
+        const barcode = `OS${currentYear}${String(quote.code).padStart(5, '0')}`;
+
+        workOrder = await tx.workOrder.create({
+          data: {
+            orderNumber,
+            barcode,
+            quoteId: quote.id,
+            partyId: quote.partyId,
+            userId,
+            origin: quote.origin,
+            status: WorkOrderStatus.PENDING,
+            priority: 2,
+            deliveryDate: quote.validUntil,
+            totalAmount: quote.totalAmount,
+            paymentStatus: PaymentStatus.PENDING,
+            stages: {
+              create: [
+                { stepOrder: 1, name: 'Pré-impressão', status: StageStatus.PENDING },
+                { stepOrder: 2, name: 'Impressão', status: StageStatus.PENDING },
+                { stepOrder: 3, name: 'Acabamento', status: StageStatus.PENDING },
+                { stepOrder: 4, name: 'Controle de Qualidade', status: StageStatus.PENDING },
+                { stepOrder: 5, name: 'Expedição / Retirada', status: StageStatus.PENDING },
+              ],
+            },
+          },
+          include: {
+            stages: { orderBy: { stepOrder: 'asc' } },
+            party: { select: { id: true, name: true, phone: true } },
+          },
+        });
+      }
+
+      return {
+        ...quote,
+        workOrder,
+      };
     });
+
+    if (shouldAutoApprove && result.workOrder) {
+      this.eventsGateway.emitWorkOrderStatusChanged({
+        workOrderId: result.workOrder.id,
+        orderNumber: result.workOrder.orderNumber,
+        previousStatus: WorkOrderStatus.PENDING,
+        newStatus: WorkOrderStatus.PENDING,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    return result as QuoteWithDetails;
   }
 
   async findAll(page = 1, limit = 20, status?: QuoteStatus): Promise<PaginatedQuotesResponse> {
@@ -165,6 +229,7 @@ export class QuotesService {
         include: {
           party: { select: { id: true, name: true, document: true, phone: true } },
           items: true,
+          workOrder: { select: { id: true, orderNumber: true, status: true } },
         },
       }),
     ]);
