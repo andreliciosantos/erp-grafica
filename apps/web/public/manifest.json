@@ -1,0 +1,31 @@
+{
+  "name": "ERP Gráfica Modular - Gestão Gráfica",
+  "short_name": "ERP Gráfica",
+  "description": "Sistema de Gestão Industrial para Gráficas, Comunicação Visual, Balcão e Chão de Fábrica",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#090e18",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

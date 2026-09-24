@@ -20,3 +20,18 @@ ReactDOM.createRoot(rootElement).render(
     <App />
   </React.StrictMode>
 );
+
+// Register PWA Service Worker in supporting environments
+if ('serviceWorker' in navigator && process.env.NODE_ENV !== 'test') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => {
+        console.log('[PWA] Service Worker registrado com escopo:', registration.scope);
+      })
+      .catch((error) => {
+        console.warn('[PWA] Falha ao registrar Service Worker:', error);
+      });
+  });
+}
+

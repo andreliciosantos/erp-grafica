@@ -18,6 +18,7 @@ import {
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../stores/authStore';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { PwaInstallButton } from '../common/PwaInstallButton';
 import { Role } from '../../types';
 
 interface NavItem {
@@ -186,6 +187,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Theme Toggle & Footer Info */}
         <div className="p-3 border-t border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <PwaInstallButton className="w-full justify-center" />
           <ThemeToggle />
 
           {/* Footer status */}

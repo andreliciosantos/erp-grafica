@@ -373,6 +373,39 @@ Consolidando os alicerces operacionais da gráfica, a **Fase 1 do Roadmap** entr
   - **Backend (`@erp/api`):** 4 arquivos de teste e 19 casos de teste aprovados com sucesso.
   - **Build de Produção:** Compilação TypeScript (`tsc -b` e `tsc --noEmit`) e empacotamento Vite sem nenhum erro.
 
+---
+
+## 16. Suporte a PWA: Instalação como Aplicativo Nativo no Balcão e Chão de Fábrica
+
+Com o objetivo de viabilizar uma operação veloz e independente de barras de navegação de navegadores no balcão de vendas e nos postos de trabalho fabris (impressoras, guilhotinas e expedição), o sistema foi transformado em um **Progressive Web App (PWA)** de padrão industrial:
+
+### 16.1. Web App Manifest Oficial (`manifest.webmanifest` e `manifest.json`)
+* **Experiência Imersiva em Modo `standalone`:** Quando instalado, o ERP roda em janela própria com remoção de barras de endereço e menus de browser, simulando um aplicativo nativo desktop ou mobile com 100% do espaço de tela disponível para o Kanban fabril e a calculadora de orçamentos.
+* **Atalhos Rápidos de Aplicativo (*App Shortcuts*):** Ao pressionar e segurar o ícone do ERP no celular ou clicar com botão direito no ícone da barra de tarefas do Windows, o sistema oferece acesso direto a:
+  - Novo Orçamento (`/quotes/new`);
+  - Ordens de Serviço (`/work-orders`);
+  - Contas a Receber (`/receivables`);
+  - Despesas Operacionais (`/expenses`);
+  - DRE Gerencial (`/financial/dre`).
+* **Identidade Visual e Ícones Vetoriais:** Ícone oficial de impressora com gradiente esmeralda/teal e registro CMYK (`/pwa-icon.svg`), compatível com máscaras circulares do Android (`purpose: maskable`) e padrão do iOS (`/apple-touch-icon.svg`).
+
+### 16.2. Service Worker Inteligente com Arquitetura Híbrida de Cache (`sw.js`)
+* **Pré-cacheamento do App Shell:** Na instalação, o Service Worker efetua cache automático do HTML raiz, manifesto e ícones fundamentais, permitindo inicialização imediata.
+* **Estratégia Stale-While-Revalidate (Ativos Estáticos):** Para scripts JS, folhas de estilo CSS, fontes web e imagens, o Service Worker entrega instantaneamente a versão em cache e consulta a rede em background para atualizar ativos, eliminando lentidões causadas por oscilações no sinal de Wi-Fi do galpão industrial.
+* **Estratégia Network-First (API e Dados em Tempo Real):** Todas as chamadas para a API REST (`/api/v1/*`) e conexões WebSocket são direcionadas prioritariamente à rede para garantir sincronismo bancário, de estoques e de OSs. Em caso de falha de conexão, uma resposta JSON amigável com status de offline é retornada.
+* **Ciclo de Vida Limpo (`activate`):** Limpeza automatizada de versões defasadas de cache e controle imediato via `clients.claim()`.
+
+### 16.3. Hook Reativo de Instalação e Interface do Usuário (`usePWAInstall` e `PwaInstallButton`)
+* **Hook Especializado (`usePWAInstall.ts`):**
+  - Monitora o evento nativo `beforeinstallprompt` do navegador.
+  - Detecta se o aplicativo já está sendo executado em modo standalone via CSS media query `(display-mode: standalone)` ou propriedade `window.navigator.standalone`.
+  - Dispara a janela nativa de instalação do Chrome/Edge através de `promptInstall()`.
+* **Botão Integrado na Barra Lateral (`PwaInstallButton.tsx`):**
+  - Posicionado estrategicamente no rodapé do menu lateral.
+  - Altera de forma dinâmica entre **"Instalar App"** (com badge "PWA") e **"App Instalado"** (com ícone de validação verde).
+  - Em dispositivos Apple (iPhone e iPad), abre automaticamente um modal com instruções visuais guiadas para instalação via botão *Compartilhar* > *"Adicionar à Tela de Início"*.
+
+
 
 
 

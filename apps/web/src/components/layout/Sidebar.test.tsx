@@ -30,6 +30,11 @@ describe('Sidebar component', () => {
     expect(screen.getByText('DRE Gerencial')).toBeInTheDocument();
   });
 
+  it('should render PWA install button in the sidebar footer', () => {
+    renderWithProviders(<Sidebar />);
+    expect(screen.getByText('Instalar App')).toBeInTheDocument();
+  });
+
   it('should render theme toggle selector at the bottom of sidebar', () => {
     renderWithProviders(<Sidebar />);
     const themeToggle = screen.getByTestId('theme-toggle-btn');

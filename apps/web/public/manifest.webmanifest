@@ -1,0 +1,100 @@
+{
+  "name": "ERP Gráfica Modular - Gestão Gráfica",
+  "short_name": "ERP Gráfica",
+  "description": "Sistema de Gestão Industrial para Gráficas, Comunicação Visual, Balcão e Chão de Fábrica",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#090e18",
+  "theme_color": "#059669",
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Novo Orçamento",
+      "short_name": "Orçamento",
+      "description": "Calculadora técnica de orçamentos rápidos",
+      "url": "/quotes/new",
+      "icons": [
+        {
+          "src": "/pwa-icon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "Ordens de Serviço",
+      "short_name": "OS",
+      "description": "Quadro Kanban de produção e chão de fábrica",
+      "url": "/work-orders",
+      "icons": [
+        {
+          "src": "/pwa-icon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "Contas a Receber",
+      "short_name": "Recebíveis",
+      "description": "Gestão de parcelas e liquidação de OS",
+      "url": "/receivables",
+      "icons": [
+        {
+          "src": "/pwa-icon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "Despesas (OPEX)",
+      "short_name": "Despesas",
+      "description": "Controle de despesas operacionais da gráfica",
+      "url": "/expenses",
+      "icons": [
+        {
+          "src": "/pwa-icon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "DRE Gerencial",
+      "short_name": "DRE",
+      "description": "Demonstrativo de resultado e EBITDA em tempo real",
+      "url": "/financial/dre",
+      "icons": [
+        {
+          "src": "/pwa-icon.svg",
+          "sizes": "any"
+        }
+      ]
+    }
+  ]
+}
