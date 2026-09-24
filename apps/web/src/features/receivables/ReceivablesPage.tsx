@@ -143,24 +143,24 @@ export const ReceivablesPage: React.FC = () => {
 
       {/* Filters Bar */}
       <Card>
-        <CardContent className="p-4 flex flex-col md:flex-row items-center gap-3">
+        <CardContent className="p-3.5 sm:p-4 flex flex-col md:flex-row items-center gap-3">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
-              placeholder="Buscar por descrição, cliente, documento ou número da OS..."
+              placeholder="Buscar por descrição, cliente, OS..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 text-xs"
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto scrollbar-none pb-0.5">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shrink-0">
               {(['ALL', 'PENDING', 'PAID', 'OVERDUE'] as const).map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1 rounded-lg font-medium transition-colors ${
+                  className={`px-2.5 sm:px-3 py-1 rounded-lg font-medium whitespace-nowrap transition-colors ${
                     statusFilter === st
                       ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'

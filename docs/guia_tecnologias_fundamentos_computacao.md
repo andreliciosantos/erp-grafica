@@ -594,9 +594,40 @@ O arquivo `manifest.webmanifest` declara ao sistema operacional móvel que a apl
 
 ---
 
+## 21. Ergonomia Cognitiva, Lei de Fitts e Física de Rolagem Suave em Interfaces Industriais Touch
+
+A adaptação de um ERP industrial para telas de smartphones e tablets de chão de fábrica exige fundamentos matemáticos e biomecânicos de **Interação Humano-Computador (IHC)**:
+
+### 21.1. Lei de Fitts e o Dimensionamento de Alvos Motores Industriais
+A **Lei de Fitts** modela o tempo motor $MT$ (*Movement Time*) necessário para um operador humano mover seu polegar de uma posição inicial até atingir um alvo na tela com largura $W$ situado a uma distância $D$:
+$$MT = a + b \log_2\left( \frac{2D}{W} \right) = a + b \cdot ID$$
+onde $ID$ é o **Índice de Dificuldade** em bits, e $a, b$ são constantes empíricas da mão humana.
+
+Em um ambiente fabril com vibração de máquinas e uso de luvas de proteção, um botão pequeno de altura $W \approx 20\text{px}$ eleva drasticamente o $ID$, gerando lentidão e toques acidentais (*miss clicks*). A elevação de $W$ para $\ge 34\text{px}$ com padding generoso e cantos arredondados reduz o índice de dificuldade, aproximando a operação motora de um reflexo biomecânico instantâneo. Além disso, a adição da propriedade CSS `touch-manipulation` suprime o atraso artificial de 300ms que navegadores móveis introduzem para detecção de duplo-toque (*double-tap zoom*).
+
+### 21.2. Cinemática de Rolagem Suave (*Smooth Scrolling*) e CSS Scroll Snap
+Em sistemas Kanban tradicionais, a rolagem horizontal de 7 colunas em telas de 360px impõe uma carga cognitiva excessiva ao operador. A implementação de uma **Barra Deslizante de Etapas (*Stage Carousel*)** aliada à **Rolagem Suave Automática** baseia-se em interpolação de física suave:
+$$x(t) = x_0 + (x_{\text{target}} - x_0) \cdot f_{\text{ease}}(t)$$
+onde a invocação de `element.scrollIntoView({ behavior: 'smooth', inline: 'start' })` guia a câmera do navegador até o elemento `<div id="kanban-col-{id}">`.
+
+Simultaneamente, a regra de CSS `snap-x snap-mandatory` no container e `snap-start` com largura adaptativa de $86\text{vw}$ na coluna assegura que a tela descanse sempre perfeitamente alinhada à borda esquerda de uma etapa, mantendo ~14% da coluna subsequente visível como **affordance perceptual** indicando continuidade do fluxo de valor.
+
+### 21.3. O Princípio da Imutabilidade Numérica (*Tabular Figures & Min-Width Constraint*)
+Em tipografia digital, fontes proporcionais atribuem larguras variáveis para dígitos (ex: o dígito "1" é muito mais estreito que o "8"). Quando valores monetários de ordens de serviço variam em tempo real por WebSockets, fontes proporcionais causam tremulação lateral (*layout jitter*). A adoção de `font-variant-numeric: tabular-nums` (ou classe Tailwind `tabular-nums`) força todos os numerais a ocuparem caixas retangulares de largura idêntica, estabilizando visualmente a leitura.
+
+Adicionalmente, a regra `min-w-0 flex-1` no container flex resolve o comportamento padrão do CSS (onde elementos flex possuem `min-width: auto`), impedindo que textos longos forcem a quebra indevida do símbolo monetário (`R$`) ou esmaguem elementos irmãos com `shrink-0`.
+
+### 21.4. Arquitetura de Layouts Empilhados Bimodais (*Two-Tier Adaptive Hierarchy*)
+Tabelas contábeis complexas como a DRE possuem uma taxa de ocupação espacial de alta densidade no eixo horizontal ($X$). Em telas mobile com largura $< 640\text{px}$, a preservação forçada de colunas lado a lado degrada o espaço para menos de $100\text{px}$, induzindo hifenizações bizarras. A transformação para uma **Hierarquia Empilhada Bimodal** preserva a densidade informacional sem comprometer a legibilidade:
+- **Eixo Semântico (Linha 1):** Código contábil + Descrição da conta (100% da largura útil);
+- **Eixo Quantitativo (Linha 2):** Proporção percentual da receita + Grandeza monetária formatada em moeda corrente nacional.
+
+---
+
 ## Conclusão da Aula Magistral
 
-> *"Como pudemos constatar ao longo desta análise, o ERP Gráfica Modular não é uma coleção fortuita de bibliotecas da moda. Cada tecnologia — do rigor aritmético do `Decimal.js` à eficiência de grafos do `Turborepo`, da integridade relacional do `PostgreSQL` à reatividade funcional do `React 18`, da ergonomia biomecânica de Fitts na adaptação Mobile-First à fotometria cromática de acessibilidade WCAG em tons pastel, dos autômatos formais de formatação léxica à consistência transacional e idempotência matemática nas operações universais de atualização, da engenharia anti-FOUC ao controle de color-scheme, da separação contábil rigorosa entre custos diretos (CPV) e operacionais (OPEX), da álgebra em cascata da DRE em tempo real, da geometria vetorial nativa do Code-128, até a resiliência assíncrona do Service Worker PWA no chão de fábrica — foi selecionada para responder a um desafio rigoroso de computação e física industrial. Arquitetura de software de excelência consiste exatamente nisto: a harmonização elegante entre a teoria da ciência da computação e a resolução pragmática de problemas de negócio no mundo real."*
+> *"Como pudemos constatar ao longo desta análise, o ERP Gráfica Modular não é uma coleção fortuita de bibliotecas da moda. Cada tecnologia — do rigor aritmético do `Decimal.js` à eficiência de grafos do `Turborepo`, da integridade relacional do `PostgreSQL` à reatividade funcional do `React 18`, da ergonomia biomecânica da Lei de Fitts na adaptação Mobile-First com rolagem suave à fotometria cromática de acessibilidade WCAG em tons pastel, dos autômatos formais de formatação léxica à consistência transacional e idempotência matemática nas operações universais de atualização, da engenharia anti-FOUC ao controle de color-scheme, da separação contábil rigorosa entre custos diretos (CPV) e operacionais (OPEX), da álgebra em cascata da DRE em tempo real, da geometria vetorial nativa do Code-128, até a resiliência assíncrona do Service Worker PWA no chão de fábrica — foi selecionada para responder a um desafio rigoroso de computação e física industrial. Arquitetura de software de excelência consiste exatamente nisto: a harmonização elegante entre a teoria da ciência da computação e a resolução pragmática de problemas de negócio no mundo real."*
+
 
 
 

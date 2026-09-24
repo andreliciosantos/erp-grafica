@@ -177,6 +177,7 @@ export const WorkOrdersPage: React.FC = () => {
       id: 'PENDING',
       stepNumber: 1,
       title: 'Aguardando Liberação',
+      shortTitle: 'Liberação',
       badgeBg: 'bg-amber-400',
       icon: <Clock className="w-3.5 h-3.5 text-amber-400" />,
       description: 'Análise comercial, validação financeira e liberação técnica para fila do PCP.',
@@ -185,6 +186,7 @@ export const WorkOrdersPage: React.FC = () => {
       id: 'PRE_PRESS',
       stepNumber: 2,
       title: 'Pré-Impressão (CTP)',
+      shortTitle: 'CTP / Pré',
       badgeBg: 'bg-blue-400',
       icon: <Layers className="w-3.5 h-3.5 text-blue-400" />,
       description: 'Fechamento de arquivo, imposição, sangrias, trapping e gravação de chapas offset.',
@@ -193,6 +195,7 @@ export const WorkOrdersPage: React.FC = () => {
       id: 'PRINTING',
       stepNumber: 3,
       title: 'Impressão',
+      shortTitle: 'Impressão',
       badgeBg: 'bg-indigo-400',
       icon: <Printer className="w-3.5 h-3.5 text-indigo-400" />,
       description: 'Tiragem em máquina offset/digital. Acerto de registro, carga de tinta e acerto de papel.',
@@ -201,6 +204,7 @@ export const WorkOrdersPage: React.FC = () => {
       id: 'FINISHING',
       stepNumber: 4,
       title: 'Acabamento Gráfico',
+      shortTitle: 'Acabamento',
       badgeBg: 'bg-purple-400',
       icon: <Scissors className="w-3.5 h-3.5 text-purple-400" />,
       description: 'Refile em guilhotina, laminação BOPP, verniz UV, dobra, vinco e encadernação.',
@@ -209,6 +213,7 @@ export const WorkOrdersPage: React.FC = () => {
       id: 'QUALITY_CONTROL',
       stepNumber: 5,
       title: 'Controle de Qualidade',
+      shortTitle: 'Qualidade',
       badgeBg: 'bg-cyan-400',
       icon: <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />,
       description: 'Inspeção dimensional, contagem, conferência densitométrica e aprovação de lote.',
@@ -217,6 +222,7 @@ export const WorkOrdersPage: React.FC = () => {
       id: 'READY_FOR_PICKUP',
       stepNumber: 6,
       title: 'Pronto p/ Retirada',
+      shortTitle: 'Retirada',
       badgeBg: 'bg-emerald-400',
       icon: <PackageCheck className="w-3.5 h-3.5 text-emerald-400" />,
       description: 'Embalado e etiquetado com código de barras, aguardando expedição ou cliente.',
@@ -225,22 +231,30 @@ export const WorkOrdersPage: React.FC = () => {
       id: 'DELIVERED',
       stepNumber: 7,
       title: 'Entregue / Concluído',
+      shortTitle: 'Entregue',
       badgeBg: 'bg-green-500',
       icon: <Award className="w-3.5 h-3.5 text-green-400" />,
       description: 'Material entregue ao cliente e processo de produção concluído com sucesso.',
     },
   ];
 
+  const scrollToColumn = (stageId: string) => {
+    const colElement = document.getElementById(`kanban-col-${stageId}`);
+    if (colElement) {
+      colElement.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+    }
+  };
+
   return (
-    <div className="space-y-4 sm:space-y-6 flex flex-col h-[calc(100vh-5.5rem)] sm:h-[calc(100vh-6.5rem)]">
+    <div className="space-y-3 sm:space-y-6 flex flex-col h-[calc(100vh-5.5rem)] sm:h-[calc(100vh-6.5rem)]">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4 flex-shrink-0">
         <div>
           <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <KanbanSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            Chão de Fábrica & Gestão de Produção (PCP)
+            <KanbanSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="truncate">Chão de Fábrica & PCP</span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 hidden sm:block">
             Máquina de estados industrial e apontamento de produção com sincronização em tempo real
           </p>
         </div>
@@ -257,10 +271,11 @@ export const WorkOrdersPage: React.FC = () => {
             className="flex items-center gap-1.5 shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            <span>Novo Pedido / OS</span>
+            <span className="hidden sm:inline">Novo Pedido / OS</span>
+            <span className="sm:hidden">Nova OS</span>
           </Button>
 
-          <div className="w-44 sm:w-56">
+          <div className="flex-1 sm:flex-initial min-w-[130px] sm:w-56">
             <Input
               placeholder="Buscar OS, cliente..."
               value={searchTerm}
@@ -298,9 +313,32 @@ export const WorkOrdersPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Mobile Stage Carousel Pills Bar */}
+      {viewMode === 'KANBAN' && (
+        <div className="flex md:hidden items-center gap-1.5 overflow-x-auto pb-1.5 -mt-1 scrollbar-none shrink-0 touch-pan-x">
+          {kanbanColumns.map((col) => {
+            const count = filteredOrders.filter((o) => o.status === col.id).length;
+            return (
+              <button
+                key={col.id}
+                type="button"
+                onClick={() => scrollToColumn(col.id)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 active:scale-95 active:bg-emerald-50 dark:active:bg-slate-800 transition-all shadow-xs shrink-0"
+              >
+                <span className={`w-2 h-2 rounded-full ${col.badgeBg} shrink-0`} />
+                <span>{col.shortTitle}</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Main View Area */}
       {viewMode === 'KANBAN' ? (
-        <div className="flex-1 overflow-x-auto pb-4 flex gap-4 min-h-0 snap-x snap-mandatory">
+        <div className="flex-1 overflow-x-auto pb-4 flex gap-3 sm:gap-4 min-h-0 snap-x snap-mandatory scroll-smooth">
           {kanbanColumns.map((col) => {
             const colOrders = filteredOrders.filter((o) => o.status === col.id);
             return (

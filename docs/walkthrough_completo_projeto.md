@@ -405,6 +405,38 @@ Com o objetivo de viabilizar uma operação veloz e independente de barras de na
   - Altera de forma dinâmica entre **"Instalar App"** (com badge "PWA") e **"App Instalado"** (com ícone de validação verde).
   - Em dispositivos Apple (iPhone e iPad), abre automaticamente um modal com instruções visuais guiadas para instalação via botão *Compartilhar* > *"Adicionar à Tela de Início"*.
 
+---
+
+## 17. Otimização de Design Mobile, Tipografia e Usabilidade Touch
+
+Com o uso intensivo do sistema em smartphones e tablets no chão de fábrica e no atendimento de balcão, foi realizada uma revisão profunda de design para telas compactas (360px a 412px), eliminando gargalos de usabilidade, textos espremidos e atritos no fluxo produtivo:
+
+### 17.1. Reformulação do Kanban de Produção (PCP Mobile)
+* **Barra Deslizante de Etapas (*Stage Carousel Pills*):** No topo do Kanban em telas mobile, o operador conta com uma barra horizontal deslizante com pílulas de cada etapa fabril (`Liberação`, `CTP / Pré`, `Impressão`, `Acabamento`, `Qualidade`, `Retirada`, `Entregue`), com contadores de OS em tempo real. Ao tocar em qualquer pílula, a tela realiza uma **rolagem suave automática (*smooth scroll*)** diretamente para a coluna correspondente (`kanban-col-{id}`).
+* **Largura Adaptativa com *CSS Scroll Snap*:** As colunas agora utilizam `w-[86vw] sm:w-[320px] max-w-[350px] snap-start`. Isso faz com que cada etapa ocupe a visão principal do operador no smartphone, deixando uma margem de ~14% da coluna seguinte visível para orientação espacial e navegação intuitiva.
+* **Ergonomia no Card e Toque Seguro (*Fitts' Law*):**
+  - Botão de avançar etapa ampliado para altura mínima de **34px**, padding generoso e classe `touch-manipulation`, facilitando o acionamento veloz com o polegar.
+  - Truncamento inteligente de código de barras e números de OS, evitando quebras visuais desagradáveis.
+
+### 17.2. Tipografia e Proximidade em Cards de Indicadores (`StatCard.tsx`)
+* **Eliminação de Colisão com Ícones:** O container de texto foi blindado com `min-w-0 flex-1`, e o container do ícone recebeu `shrink-0`. Isso garante que o ícone nunca seja empurrado para fora da tela ou espremido.
+* **Números Tabulares e Responsividade:** Os valores monetários agora utilizam `tabular-nums truncate` e dimensionamento responsivo (`text-xl sm:text-2xl`), prevenindo que o símbolo monetário (`R$`) quebre isolado em uma linha e o número em outra.
+
+### 17.3. DRE Gerencial com Estrutura Empilhada Adaptativa (`DrePage.tsx`)
+* **Layout Adaptativo de Duas Linhas:** Em telas móveis (`< sm`), cada linha da DRE é renderizada em dois níveis confortáveis:
+  - **Nível 1 (100% da largura):** Ícone expansor, código contábil e nome completo da seção (sem corte ou quebras de 5 linhas).
+  - **Nível 2:** Linha inferior com a porcentagem da receita à esquerda e o valor monetário formatado à direita.
+* **Cards de Distribuição de Receitas:** A legenda horizontal da barra de destinação foi convertida em um grid de cards com bordas suaves, exibindo CPV, OPEX e EBITDA de forma legível em qualquer dispositivo.
+
+### 17.4. Calculadora Técnica de Orçamentos Responsiva (`NewQuotePage.tsx`)
+* **Grade Flexível:** Campos de Tiragem, Largura Aberta, Altura Aberta e Markup Comercial foram ajustados de `grid-cols-3` rígido para `grid-cols-1 sm:grid-cols-3 gap-3`, permitindo que operadores digitem medidas sem cortes em telas menores que 640px.
+* **Pílulas de Tiragens Rápidas:** O container de opções rápidas (500 un, 1.000 un, 2.500 un, etc.) agora possui `flex-wrap gap-1.5`, quebrando linhas de maneira orgânica sem vazar do container.
+
+### 17.5. Modais e Barra Superior Touch-Friendly
+* **Modais com Ações Empilhadas:** O rodapé de modais críticos (`OrderDetailsModal` e `JobTicketModal`) agora adota `flex-col-reverse sm:flex-row`, permitindo que botões como "Imprimir Ficha Técnica", "Editar" e "Fechar" tenham alvos de toque com 100% da largura útil em celulares.
+* **Header Compacto:** O status de conexão WebSocket foi sintetizado para um badge inteligente com ícone e texto "Online/Offline" no mobile, preservando o espaço para o botão de saída e troca de tema.
+
+
 
 
 

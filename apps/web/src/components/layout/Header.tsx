@@ -52,27 +52,27 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
         <div className="flex items-center gap-2 text-xs font-medium">
           {wsConnected ? (
             <span className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200/80 dark:border-emerald-500/20 text-[11px] sm:text-xs">
-              <Wifi className="w-3.5 h-3.5" />
+              <Wifi className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden sm:inline">Chão de Fábrica Conectado (Real-Time)</span>
-              <span className="sm:hidden">Conectado</span>
+              <span className="sm:hidden font-semibold">Online</span>
             </span>
           ) : (
             <span className="flex items-center gap-1.5 text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full text-[11px] sm:text-xs border border-slate-200/80 dark:border-slate-700/60">
-              <WifiOff className="w-3.5 h-3.5" />
+              <WifiOff className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden sm:inline">Reconectando WebSocket...</span>
-              <span className="sm:hidden">Offline</span>
+              <span className="sm:hidden font-semibold">Offline</span>
             </span>
           )}
         </div>
       </div>
 
       {/* Right User & Logout */}
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         <div className="text-right">
-          <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[120px] sm:max-w-none">
+          <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[90px] sm:max-w-none">
             {user?.name || 'Usuário'}
           </p>
-          <Badge variant="primary" size="sm" className="mt-0.5">
+          <Badge variant="primary" size="sm" className="mt-0.5 hidden sm:inline-flex">
             {user?.role || 'OPERATOR'}
           </Badge>
         </div>
@@ -84,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
           variant="outline"
           size="sm"
           onClick={logout}
-          className="text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-500/30"
+          className="text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-500/30 px-2 sm:px-3"
           title="Sair do sistema"
         >
           <LogOut className="w-4 h-4" />

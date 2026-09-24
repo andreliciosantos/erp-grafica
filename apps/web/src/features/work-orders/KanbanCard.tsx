@@ -95,10 +95,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ order, onClick, onAdvanc
       </div>
 
       {/* Barcode & Quick Advance */}
-      <div className="flex items-center justify-between pt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+      <div className="flex items-center justify-between pt-1 text-[11px] sm:text-[10px] text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-1 font-mono">
-          <Barcode className="w-3.5 h-3.5 text-slate-400" />
-          <span className="truncate max-w-[85px]">{order.barcode || order.orderNumber}</span>
+          <Barcode className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span className="truncate max-w-[105px] sm:max-w-[85px]">{order.barcode || order.orderNumber}</span>
         </div>
 
         {onAdvance && order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
@@ -108,11 +108,11 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ order, onClick, onAdvanc
               e.stopPropagation();
               onAdvance(order);
             }}
-            className="flex items-center gap-0.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-medium px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+            className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-semibold px-3 sm:px-2 py-1.5 sm:py-0.5 rounded-xl sm:rounded-lg bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 active:scale-95 transition-all min-h-[34px] sm:min-h-0 touch-manipulation cursor-pointer border border-emerald-200/60 dark:border-emerald-500/20"
             title="Avançar para próxima etapa"
           >
             <span>Avançar</span>
-            <ChevronRight className="w-3 h-3" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         )}
       </div>

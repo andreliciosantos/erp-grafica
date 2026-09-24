@@ -132,14 +132,14 @@ export const JobTicketModal: React.FC<JobTicketModalProps> = ({
     >
       <div className="space-y-4">
         {/* Format Selector Bar */}
-        <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-800/60 p-2 rounded-xl">
-          <div className="flex items-center gap-1.5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-slate-100 dark:bg-slate-800/60 p-2 sm:p-2.5 rounded-xl gap-2.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 mr-1">
-              Formato de Impressão:
+              Formato:
             </span>
             <button
               onClick={() => setPrintFormat('A4')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 printFormat === 'A4'
                   ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-xs'
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
@@ -149,7 +149,7 @@ export const JobTicketModal: React.FC<JobTicketModalProps> = ({
             </button>
             <button
               onClick={() => setPrintFormat('THERMAL')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 printFormat === 'THERMAL'
                   ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-xs'
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
@@ -162,7 +162,7 @@ export const JobTicketModal: React.FC<JobTicketModalProps> = ({
           <Button
             size="sm"
             onClick={handlePrint}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold w-full sm:w-auto justify-center"
           >
             <Printer className="w-4 h-4 mr-1.5" />
             Imprimir Agora

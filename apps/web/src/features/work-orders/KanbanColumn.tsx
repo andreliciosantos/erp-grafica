@@ -61,11 +61,12 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
 
   return (
     <div
+      id={`kanban-col-${id}`}
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`w-[280px] sm:w-[320px] flex-shrink-0 flex flex-col rounded-2xl border transition-all duration-200 max-h-full snap-center ${
+      className={`w-[86vw] sm:w-[320px] max-w-[350px] flex-shrink-0 flex flex-col rounded-2xl border transition-all duration-200 max-h-full snap-start ${
         isDragOver
           ? 'bg-emerald-50/70 dark:bg-slate-900/90 border-emerald-500/80 ring-2 ring-emerald-500/40 shadow-xl scale-[1.01]'
           : 'bg-slate-100/70 dark:bg-slate-900/60 border-slate-200/90 dark:border-slate-800/80'

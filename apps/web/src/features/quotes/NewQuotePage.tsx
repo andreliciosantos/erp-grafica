@@ -224,10 +224,10 @@ export const NewQuotePage: React.FC = () => {
       {templates.length > 0 && (
         <Card className="border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20">
           <CardContent className="p-3.5 space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
-                <Bookmark className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                Modelos Rápidos de Balcão (1-Clique)
+                <Bookmark className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Modelos Rápidos de Balcão (1-Clique)</span>
               </span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400">
                 Preenchimento instantâneo de formato e especificações
@@ -273,7 +273,7 @@ export const NewQuotePage: React.FC = () => {
                 placeholder="Ex: Folder A4 4x4 Couché 150g"
               />
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <NumberInput
                   label="Tiragem"
                   suffix="un"
@@ -301,17 +301,17 @@ export const NewQuotePage: React.FC = () => {
               </div>
 
               {/* Quick Quantity Pills */}
-              <div className="flex items-center gap-1.5 pt-1">
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
                 <span className="text-[11px] font-medium text-slate-400">Tiragens comuns:</span>
                 {[500, 1000, 2500, 5000].map((qty) => (
                   <button
                     key={qty}
                     type="button"
                     onClick={() => setQuantity(qty)}
-                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border transition-all ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all active:scale-95 ${
                       quantity === qty
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     {qty.toLocaleString('pt-BR')} un
@@ -350,7 +350,7 @@ export const NewQuotePage: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Select
                   label="Cores Frente"
                   value={colorsFront}

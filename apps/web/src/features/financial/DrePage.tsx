@@ -162,18 +162,18 @@ export const DrePage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex flex-wrap items-center justify-between text-xs text-slate-600 dark:text-slate-400 gap-3 pt-1">
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-amber-500" />
-                <span>Custos Diretos (CPV): <strong>{formatCurrency(dre.cpvTotal)}</strong> ({Math.round((dre.cpvTotal / dre.netRevenue) * 100)}%)</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 text-xs text-slate-600 dark:text-slate-400 gap-2.5 pt-1">
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
+                <span className="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
+                <span className="truncate">Custos Diretos (CPV): <strong className="text-slate-800 dark:text-slate-200">{formatCurrency(dre.cpvTotal)}</strong> ({Math.round((dre.cpvTotal / dre.netRevenue) * 100)}%)</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-purple-500" />
-                <span>Despesas Fixas/Variáveis (OPEX): <strong>{formatCurrency(dre.opexTotal)}</strong> ({Math.round((dre.opexTotal / dre.netRevenue) * 100)}%)</span>
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
+                <span className="w-3 h-3 rounded-full bg-purple-500 shrink-0" />
+                <span className="truncate">Despesas (OPEX): <strong className="text-slate-800 dark:text-slate-200">{formatCurrency(dre.opexTotal)}</strong> ({Math.round((dre.opexTotal / dre.netRevenue) * 100)}%)</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span>EBITDA / Lucro: <strong>{formatCurrency(dre.ebitda)}</strong> ({dre.ebitdaMarginPercent}%)</span>
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
+                <span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
+                <span className="truncate">EBITDA / Lucro: <strong className="text-slate-800 dark:text-slate-200">{formatCurrency(dre.ebitda)}</strong> ({dre.ebitdaMarginPercent}%)</span>
               </div>
             </div>
           </CardContent>
@@ -182,7 +182,7 @@ export const DrePage: React.FC = () => {
 
       {/* Accounting Statement Table (Estrutura DRE) */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xs overflow-hidden">
-        <div className="p-4 bg-slate-50/80 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-3.5 sm:p-4 bg-slate-50/80 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
               Demonstração do Resultado — {selectedMonth}
@@ -191,7 +191,7 @@ export const DrePage: React.FC = () => {
               Valores calculados em regime de competência industrial
             </p>
           </div>
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 hidden sm:inline">
             % s/ Receita Líquida
           </span>
         </div>
@@ -236,13 +236,13 @@ export const DrePage: React.FC = () => {
                 <div key={sec.code} className="transition-colors">
                   <div
                     onClick={() => hasChildren && toggleSection(sec.code)}
-                    className={`flex items-center justify-between py-3.5 px-4 text-xs ${rowBg} ${
+                    className={`flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 px-3.5 sm:py-3.5 sm:px-4 text-xs ${rowBg} ${
                       hasChildren ? 'cursor-pointer select-none' : ''
                     }`}
                   >
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       {hasChildren ? (
-                        <span className="p-0.5 text-slate-400">
+                        <span className="p-0.5 text-slate-400 shrink-0">
                           {isExpanded ? (
                             <ChevronDown className="w-4 h-4" />
                           ) : (
@@ -250,17 +250,17 @@ export const DrePage: React.FC = () => {
                           )}
                         </span>
                       ) : (
-                        <span className="w-5" />
+                        <span className="w-5 shrink-0" />
                       )}
-                      <span className="text-[11px] font-mono text-slate-400">{sec.code}</span>
-                      <span className={textStyle}>{sec.name}</span>
+                      <span className="text-[11px] font-mono text-slate-400 shrink-0">{sec.code}</span>
+                      <span className={`${textStyle} break-words`}>{sec.name}</span>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                      <span className="w-16 text-right font-mono text-slate-400 text-[11px]">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 mt-1.5 sm:mt-0 pt-1.5 sm:pt-0 border-t border-slate-100/80 sm:border-0 dark:border-slate-800/60 pl-7 sm:pl-0 shrink-0">
+                      <span className="font-mono text-slate-400 text-[11px] sm:w-16 sm:text-right">
                         {sec.percentageOfRevenue.toFixed(1)}%
                       </span>
-                      <span className={`w-32 text-right ${amountStyle}`}>
+                      <span className={`sm:w-32 text-right tabular-nums ${amountStyle}`}>
                         {formatCurrency(sec.amount)}
                       </span>
                     </div>
@@ -268,18 +268,18 @@ export const DrePage: React.FC = () => {
 
                   {/* Child Items */}
                   {hasChildren && isExpanded && (
-                    <div className="bg-slate-50/40 dark:bg-slate-950/20 divide-y divide-slate-100/60 dark:divide-slate-800/40 pl-11 pr-4">
+                    <div className="bg-slate-50/40 dark:bg-slate-950/20 divide-y divide-slate-100/60 dark:divide-slate-800/40 pl-6 sm:pl-11 pr-3.5 sm:pr-4">
                       {sec.children!.map((child, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between py-2 text-xs text-slate-600 dark:text-slate-400"
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 text-xs text-slate-600 dark:text-slate-400 gap-1 sm:gap-0"
                         >
-                          <span className="truncate pr-4">• {child.name}</span>
-                          <div className="flex items-center gap-6 shrink-0">
-                            <span className="w-16 text-right font-mono text-[10px] text-slate-400">
+                          <span className="truncate pr-2">• {child.name}</span>
+                          <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 shrink-0 pl-3 sm:pl-0">
+                            <span className="font-mono text-[10px] text-slate-400 sm:w-16 sm:text-right">
                               {child.percentage.toFixed(1)}%
                             </span>
-                            <span className="w-32 text-right font-mono font-medium text-slate-700 dark:text-slate-300">
+                            <span className="font-mono font-medium text-slate-700 dark:text-slate-300 sm:w-32 text-right tabular-nums">
                               {formatCurrency(child.amount)}
                             </span>
                           </div>

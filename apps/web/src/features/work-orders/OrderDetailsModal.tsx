@@ -98,8 +98,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       description="Acompanhamento do histórico de produção e apontamentos de máquina"
       maxWidth="3xl"
       footer={
-        <div className="flex flex-wrap items-center justify-between w-full gap-2">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between w-full gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
             {onPrintJobTicket && (
               <Button
                 variant="outline"
@@ -108,7 +108,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   onClose();
                   onPrintJobTicket(order);
                 }}
-                className="bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100"
+                className="bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 justify-center w-full sm:w-auto"
               >
                 <Printer className="w-3.5 h-3.5 mr-1.5" />
                 Ficha Técnica (A4 / 80mm)
@@ -122,7 +122,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   onClose();
                   onEditOrder(order);
                 }}
-                className="text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border-slate-300 dark:border-slate-700"
+                className="text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border-slate-300 dark:border-slate-700 justify-center w-full sm:w-auto"
               >
                 <Edit2 className="w-3.5 h-3.5 mr-1.5" />
                 Editar OS
@@ -133,14 +133,14 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => onDeleteOrder(order)}
-                className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-500/30"
+                className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-500/30 justify-center w-full sm:w-auto"
               >
                 <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                 Excluir
               </Button>
             )}
           </div>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose} className="w-full sm:w-auto justify-center">
             Fechar
           </Button>
         </div>
