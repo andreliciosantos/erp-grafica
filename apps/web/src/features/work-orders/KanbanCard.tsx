@@ -7,42 +7,71 @@ interface KanbanCardProps {
   order: WorkOrderItem;
   onClick: () => void;
   onAdvance?: (order: WorkOrderItem) => void;
+  onDragStart?: (order: WorkOrderItem) => void;
+  onDragEnd?: () => void;
 }
 
-export const KanbanCard: React.FC<KanbanCardProps> = ({ order, onClick, onAdvance }) => {
+export const KanbanCard: React.FC<KanbanCardProps> = ({
+  order,
+  onClick,
+  onAdvance,
+  onDragStart,
+  onDragEnd,
+}) => {
   const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = React.useRef(false);
   const priority = getPriorityConfig(order.priority);
 
   const completedStages = order.stages?.filter((s) => s.status === 'COMPLETED').length || 0;
   const totalStages = order.stages?.length || 5;
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    isDraggingRef.current = true;
     setIsDragging(true);
     e.dataTransfer.setData('text/plain', order.id);
+    e.dataTransfer.setData('text', order.id);
     e.dataTransfer.setData('application/json', JSON.stringify({ id: order.id, status: order.status }));
     e.dataTransfer.effectAllowed = 'move';
+    onDragStart?.(order);
   };
 
   const handleDragEnd = () => {
     setIsDragging(false);
+    onDragEnd?.();
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 150);
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (isDraggingRef.current) {
+      e.stopPropagation();
+      return;
+    }
+    onClick();
   };
 
   return (
     <div
-      draggable
+      draggable={true}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onClick={onClick}
-      className={`group relative rounded-2xl border bg-white dark:bg-slate-900/90 p-3.5 shadow-sm transition-all cursor-grab active:cursor-grabbing space-y-2.5 ${
+      onDragOver={(e) => {
+        // Allow dropping over existing cards in column
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      }}
+      onClick={handleCardClick}
+      className={`group relative rounded-2xl border bg-white dark:bg-slate-900/90 p-3.5 shadow-sm transition-colors select-none cursor-grab active:cursor-grabbing space-y-2.5 ${
         isDragging
-          ? 'opacity-40 scale-95 border-emerald-500 ring-2 ring-emerald-500/40 shadow-xl bg-emerald-50/50 dark:bg-emerald-950/30'
+          ? 'opacity-40 border-emerald-500 ring-2 ring-emerald-500/40 shadow-xl bg-emerald-50/50 dark:bg-emerald-950/30'
           : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md'
       }`}
     >
       {/* Header with Drag Handle, OS Number and Priority */}
       <div className="flex items-start justify-between gap-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
-          <GripVertical className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 flex-shrink-0 transition-colors" />
+          <GripVertical className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 flex-shrink-0 transition-colors pointer-events-none" />
           <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400 group-hover:text-emerald-800 dark:group-hover:text-emerald-300 transition-colors truncate">
             {order.orderNumber}
           </span>

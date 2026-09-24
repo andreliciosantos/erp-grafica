@@ -126,4 +126,41 @@ describe('WorkOrdersPage', () => {
       expect(screen.getByText(/Ordens de Serviço \(2\)/i)).toBeInTheDocument();
     });
   });
+
+  it('supports drag and drop of order card to advance status to another column', async () => {
+    (api.patch as any).mockResolvedValue({ data: { ...mockOrders[0], status: 'PRE_PRESS' } });
+
+    renderWithProviders(<WorkOrdersPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('OS-2026-0001')).toBeInTheDocument();
+    });
+
+    const card = screen.getByText('OS-2026-0001').closest('div[draggable="true"]');
+    expect(card).toBeInTheDocument();
+
+    const targetColumn = document.getElementById('kanban-col-PRE_PRESS');
+    expect(targetColumn).toBeInTheDocument();
+
+    const dataTransfer = {
+      setData: vi.fn(),
+      getData: vi.fn((format: string) => {
+        if (format === 'text/plain' || format === 'text') return 'wo-1';
+        return '';
+      }),
+      effectAllowed: 'move',
+      dropEffect: 'none',
+    };
+
+    if (card && targetColumn) {
+      fireEvent.dragStart(card, { dataTransfer });
+      fireEvent.dragEnter(targetColumn, { dataTransfer });
+      fireEvent.dragOver(targetColumn, { dataTransfer });
+      fireEvent.drop(targetColumn, { dataTransfer });
+    }
+
+    await waitFor(() => {
+      expect(api.patch).toHaveBeenCalledWith('/work-orders/wo-1/status', { status: 'PRE_PRESS' });
+    });
+  });
 });

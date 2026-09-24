@@ -42,6 +42,7 @@ export const WorkOrdersPage: React.FC = () => {
   const [orderToEdit, setOrderToEdit] = useState<WorkOrderItem | null>(null);
   const [orderToDelete, setOrderToDelete] = useState<WorkOrderItem | null>(null);
   const [ticketOrder, setTicketOrder] = useState<WorkOrderItem | null>(null);
+  const [draggedOrderId, setDraggedOrderId] = useState<string | null>(null);
 
   // Stage Action Modal State
   const [stageModalData, setStageModalData] = useState<{
@@ -98,18 +99,36 @@ export const WorkOrdersPage: React.FC = () => {
     };
   }, [queryClient]);
 
-  // Mutation to advance status
+  // Mutation to advance status with optimistic UI update
   const advanceMutation = useMutation({
     mutationFn: async ({ orderId, nextStatus }: { orderId: string; nextStatus: string }) => {
       const res = await api.patch(`/work-orders/${orderId}/status`, { status: nextStatus });
       return res.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['work-orders'] });
+    onMutate: async ({ orderId, nextStatus }) => {
+      await queryClient.cancelQueries({ queryKey: ['work-orders'] });
+      const previousData = queryClient.getQueryData<PaginatedResult<WorkOrderItem>>(['work-orders']);
+
+      if (previousData) {
+        queryClient.setQueryData<PaginatedResult<WorkOrderItem>>(['work-orders'], {
+          ...previousData,
+          data: previousData.data.map((order) =>
+            order.id === orderId ? { ...order, status: nextStatus } : order
+          ),
+        });
+      }
+
+      return { previousData };
     },
-    onError: (err: unknown) => {
+    onError: (err: unknown, _vars, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['work-orders'], context.previousData);
+      }
       const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || 'Transição de etapa não permitida.');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['work-orders'] });
     },
   });
 
@@ -149,6 +168,7 @@ export const WorkOrdersPage: React.FC = () => {
   const orders = data?.data || [];
 
   const handleDropOrder = (orderId: string, targetStatus: string) => {
+    setDraggedOrderId(null);
     const currentOrder = orders.find((o) => o.id === orderId);
     if (!currentOrder || currentOrder.status === targetStatus) return;
 
@@ -338,7 +358,7 @@ export const WorkOrdersPage: React.FC = () => {
 
       {/* Main View Area */}
       {viewMode === 'KANBAN' ? (
-        <div className="flex-1 overflow-x-auto pb-4 flex gap-3 sm:gap-4 min-h-0 snap-x snap-mandatory scroll-smooth">
+        <div className="flex-1 overflow-x-auto pb-4 flex gap-3 sm:gap-4 min-h-0 snap-x sm:snap-none snap-mandatory sm:snap-normal scroll-smooth">
           {kanbanColumns.map((col) => {
             const colOrders = filteredOrders.filter((o) => o.status === col.id);
             return (
@@ -351,6 +371,9 @@ export const WorkOrdersPage: React.FC = () => {
                 icon={col.icon}
                 description={col.description}
                 orders={colOrders}
+                draggedOrderId={draggedOrderId}
+                onDragStartOrder={(order) => setDraggedOrderId(order.id)}
+                onDragEndOrder={() => setDraggedOrderId(null)}
                 onSelectOrder={(order) => setSelectedOrder(order)}
                 onAdvanceOrder={handleAdvance}
                 onDropOrder={handleDropOrder}

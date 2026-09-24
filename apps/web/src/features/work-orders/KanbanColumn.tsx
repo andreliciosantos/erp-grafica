@@ -12,6 +12,9 @@ interface KanbanColumnProps {
   icon?: React.ReactNode;
   description?: string;
   orders: WorkOrderItem[];
+  draggedOrderId?: string | null;
+  onDragStartOrder?: (order: WorkOrderItem) => void;
+  onDragEndOrder?: () => void;
   onSelectOrder: (order: WorkOrderItem) => void;
   onAdvanceOrder: (order: WorkOrderItem) => void;
   onDropOrder: (orderId: string, targetStatus: string) => void;
@@ -25,35 +28,47 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   icon,
   description,
   orders,
+  draggedOrderId,
+  onDragStartOrder,
+  onDragEndOrder,
   onSelectOrder,
   onAdvanceOrder,
   onDropOrder,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounter = React.useRef(0);
 
   const totalValue = orders.reduce((acc, o) => acc + Number(o.totalAmount || 0), 0);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
   };
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current += 1;
     setIsDragOver(true);
   };
 
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    // Only deactivate if leaving the container itself
-    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-    setIsDragOver(false);
+    e.stopPropagation();
+    dragCounter.current -= 1;
+    if (dragCounter.current <= 0) {
+      dragCounter.current = 0;
+      setIsDragOver(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current = 0;
     setIsDragOver(false);
-    const orderId = e.dataTransfer.getData('text/plain');
+    const orderId = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text') || draggedOrderId;
     if (orderId) {
       onDropOrder(orderId, id);
     }
@@ -66,9 +81,9 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`w-[86vw] sm:w-[320px] max-w-[350px] flex-shrink-0 flex flex-col rounded-2xl border transition-all duration-200 max-h-full snap-start ${
+      className={`w-[86vw] sm:w-[320px] max-w-[350px] flex-shrink-0 flex flex-col rounded-2xl border transition-colors duration-150 max-h-full snap-start ${
         isDragOver
-          ? 'bg-emerald-50/70 dark:bg-slate-900/90 border-emerald-500/80 ring-2 ring-emerald-500/40 shadow-xl scale-[1.01]'
+          ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/50 shadow-xl'
           : 'bg-slate-100/70 dark:bg-slate-900/60 border-slate-200/90 dark:border-slate-800/80'
       }`}
     >
@@ -107,10 +122,14 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       </div>
 
       {/* Cards Container */}
-      <div className="p-3 space-y-2.5 overflow-y-auto flex-1 min-h-[350px]">
+      <div
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        className="p-3 space-y-2.5 overflow-y-auto flex-1 min-h-[350px]"
+      >
         {/* Drop zone banner when dragging over */}
         {isDragOver && (
-          <div className="p-3 rounded-xl border-2 border-dashed border-emerald-500/80 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2 animate-pulse">
+          <div className="p-3 rounded-xl border-2 border-dashed border-emerald-500/80 bg-emerald-50/90 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2 pointer-events-none animate-pulse">
             <ArrowDownToLine className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Mover OS para {title}</span>
           </div>
@@ -128,6 +147,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
               order={order}
               onClick={() => onSelectOrder(order)}
               onAdvance={onAdvanceOrder}
+              onDragStart={onDragStartOrder}
+              onDragEnd={onDragEndOrder}
             />
           ))
         )}
