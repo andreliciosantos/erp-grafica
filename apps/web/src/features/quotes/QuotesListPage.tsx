@@ -34,11 +34,9 @@ export const QuotesListPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes-list'] });
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
-      alert('Orçamento aprovado com sucesso! Ordem de Serviço gerada.');
     },
-    onError: (err: unknown) => {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Erro ao aprovar orçamento.');
+    onError: () => {
+      // Invalidation handles state; modal or toast can display error if needed
     },
   });
 

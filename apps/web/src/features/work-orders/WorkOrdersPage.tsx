@@ -27,6 +27,8 @@ import {
   PackageCheck,
   Award,
   Edit2,
+  CheckCircle2,
+  X,
 } from 'lucide-react';
 import { WorkOrderItem, PaginatedResult } from '../../types';
 import { CreateOrderModal } from './CreateOrderModal';
@@ -59,6 +61,21 @@ export const WorkOrdersPage: React.FC = () => {
     orderNumber: null,
   });
 
+  const [confirmDeductionModal, setConfirmDeductionModal] = useState<{
+    isOpen: boolean;
+    order: WorkOrderItem | null;
+    targetStatus: string;
+  }>({
+    isOpen: false,
+    order: null,
+    targetStatus: 'PRINTING',
+  });
+
+  const [feedbackNotification, setFeedbackNotification] = useState<{
+    type: 'success' | 'error' | 'info';
+    message: string;
+  } | null>(null);
+
   // Delete Mutation
   const deleteMutation = useMutation({
     mutationFn: async (orderId: string) => {
@@ -69,10 +86,19 @@ export const WorkOrdersPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
       setOrderToDelete(null);
       setSelectedOrder(null);
+      setFeedbackNotification({
+        type: 'success',
+        message: 'Ordem de serviço excluída com sucesso.',
+      });
+      setTimeout(() => setFeedbackNotification(null), 3500);
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Falha ao excluir ordem de serviço.');
+      setFeedbackNotification({
+        type: 'error',
+        message: error.response?.data?.message || 'Falha ao excluir ordem de serviço.',
+      });
+      setTimeout(() => setFeedbackNotification(null), 4000);
     },
   });
 
@@ -127,7 +153,11 @@ export const WorkOrdersPage: React.FC = () => {
         queryClient.setQueryData(['work-orders'], context.previousData);
       }
       const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Transição de etapa não permitida.');
+      setFeedbackNotification({
+        type: 'error',
+        message: error.response?.data?.message || 'Transição de etapa não permitida.',
+      });
+      setTimeout(() => setFeedbackNotification(null), 4000);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
@@ -158,10 +188,12 @@ export const WorkOrdersPage: React.FC = () => {
     if (!nextStatus) return;
 
     if (nextStatus === 'PRINTING') {
-      const confirmPrint = window.confirm(
-        `Avançar para IMPRESSÃO baixará automaticamente os insumos do estoque previstos nesta OS. Deseja prosseguir?`
-      );
-      if (!confirmPrint) return;
+      setConfirmDeductionModal({
+        isOpen: true,
+        order,
+        targetStatus: 'PRINTING',
+      });
+      return;
     }
 
     advanceMutation.mutate({ orderId: order.id, nextStatus });
@@ -175,13 +207,25 @@ export const WorkOrdersPage: React.FC = () => {
     if (!currentOrder || currentOrder.status === targetStatus) return;
 
     if (targetStatus === 'PRINTING' && currentOrder.status === 'PRE_PRESS') {
-      const confirmPrint = window.confirm(
-        `Mover a OS ${currentOrder.orderNumber} para IMPRESSÃO baixará automaticamente os insumos do estoque. Deseja prosseguir?`
-      );
-      if (!confirmPrint) return;
+      setConfirmDeductionModal({
+        isOpen: true,
+        order: currentOrder,
+        targetStatus: 'PRINTING',
+      });
+      return;
     }
 
     advanceMutation.mutate({ orderId, nextStatus: targetStatus });
+  };
+
+  const handleConfirmDeduction = () => {
+    if (confirmDeductionModal.order) {
+      advanceMutation.mutate({
+        orderId: confirmDeductionModal.order.id,
+        nextStatus: confirmDeductionModal.targetStatus,
+      });
+    }
+    setConfirmDeductionModal({ isOpen: false, order: null, targetStatus: 'PRINTING' });
   };
 
   const filteredOrders = orders.filter((o) => {
@@ -573,6 +617,79 @@ export const WorkOrdersPage: React.FC = () => {
         onClose={() => setTicketOrder(null)}
         order={ticketOrder}
       />
+
+      {/* Modal Personalizado de Confirmação de Baixa de Insumos no Chão de Fábrica */}
+      <Modal
+        isOpen={confirmDeductionModal.isOpen}
+        onClose={() => setConfirmDeductionModal({ isOpen: false, order: null, targetStatus: 'PRINTING' })}
+        title="Confirmar Baixa de Insumos & Impressão"
+        description="Movimentação para etapa de impressão no Chão de Fábrica"
+        footer={
+          <div className="flex items-center justify-end gap-2.5 w-full">
+            <Button
+              variant="secondary"
+              onClick={() => setConfirmDeductionModal({ isOpen: false, order: null, targetStatus: 'PRINTING' })}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5"
+              onClick={handleConfirmDeduction}
+              isLoading={advanceMutation.isPending}
+            >
+              <Printer className="w-4 h-4" />
+              Confirmar e Baixar Insumos
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3.5">
+          <div className="flex items-start gap-3 p-3.5 bg-amber-500/10 border border-amber-500/25 rounded-2xl text-amber-800 dark:text-amber-300 text-xs">
+            <Layers className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+            <div className="space-y-1">
+              <p className="font-bold text-amber-900 dark:text-amber-200 text-sm">
+                Avançar OS {confirmDeductionModal.order?.orderNumber} para Impressão?
+              </p>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                Esta ação consumirá automaticamente do estoque as folhas de papel e insumos calculados para este pedido.
+              </p>
+            </div>
+          </div>
+
+          {confirmDeductionModal.order && (
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/60 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Cliente:</span>
+                <strong className="text-slate-800 dark:text-slate-200">{confirmDeductionModal.order.party?.name || 'Cliente'}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Valor da Ordem:</span>
+                <strong className="text-slate-800 dark:text-slate-200">{formatCurrency(confirmDeductionModal.order.totalAmount)}</strong>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Floating In-App Toast Notification */}
+      {feedbackNotification && (
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-semibold animate-in fade-in slide-in-from-bottom-3 duration-200 max-w-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100">
+          {feedbackNotification.type === 'error' ? (
+            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          )}
+          <span className="flex-1">{feedbackNotification.message}</span>
+          <button
+            type="button"
+            onClick={() => setFeedbackNotification(null)}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

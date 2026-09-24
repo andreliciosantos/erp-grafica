@@ -176,15 +176,9 @@ export const NewQuotePage: React.FC = () => {
       const res = await api.post('/quotes', payload);
       return res.data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
       queryClient.invalidateQueries({ queryKey: ['quotes-list'] });
-      const orderNumber = data?.workOrder?.orderNumber;
-      alert(
-        `Orçamento aprovado e salvo com sucesso! ${
-          orderNumber ? `Ordem de Serviço ${orderNumber} gerada e enviada para o Chão de Fábrica.` : 'Enviado para produção.'
-        }`
-      );
       navigate('/work-orders');
     },
     onError: (err: unknown) => {
