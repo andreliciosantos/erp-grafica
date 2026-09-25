@@ -8,7 +8,7 @@ import { Select } from '../../components/common/Select';
 import { Input } from '../../components/common/Input';
 import { NumberInput } from '../../components/common/NumberInput';
 import { MachineItem } from '../../types';
-import { Play, Pause, CheckCircle } from 'lucide-react';
+import { Play, Pause, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface StageActionModalProps {
   isOpen: boolean;
@@ -33,6 +33,8 @@ export const StageActionModal: React.FC<StageActionModalProps> = ({
   const [wasteQuantity, setWasteQuantity] = useState(0);
   const [notes, setNotes] = useState('');
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   // Fetch Machines
   const { data: machinesData } = useQuery<MachineItem[]>({
     queryKey: ['machines-stage-action'],
@@ -45,9 +47,15 @@ export const StageActionModal: React.FC<StageActionModalProps> = ({
 
   const machines = machinesData || [];
 
+  const handleClose = () => {
+    setErrorMessage(null);
+    onClose();
+  };
+
   const mutation = useMutation({
     mutationFn: async () => {
       if (!stageId) return;
+      setErrorMessage(null);
       const payload = {
         action,
         operatorId: user?.id,
@@ -60,25 +68,24 @@ export const StageActionModal: React.FC<StageActionModalProps> = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
-      alert('Apontamento de produção registrado com sucesso!');
-      onClose();
+      handleClose();
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Falha ao registrar apontamento.');
+      setErrorMessage(error.response?.data?.message || 'Falha ao registrar apontamento.');
     },
   });
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title={`Apontamento: ${stageName || 'Etapa'}`}
       description={`Ordem de Serviço: ${orderNumber || ''} | Operador: ${user?.name || ''}`}
       maxWidth="md"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={handleClose}>
             Cancelar
           </Button>
           <Button
@@ -92,6 +99,13 @@ export const StageActionModal: React.FC<StageActionModalProps> = ({
       }
     >
       <div className="space-y-4 text-xs">
+        {errorMessage && (
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
         {/* Action Type Picker */}
         <div>
           <label className="block text-xs font-medium text-slate-300 mb-1.5">

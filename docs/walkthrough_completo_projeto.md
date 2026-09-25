@@ -368,8 +368,8 @@ Consolidando os alicerces operacionais da gráfica, a **Fase 1 do Roadmap** entr
   - Verificação de integridade no startup: caso a base de modelos esteja vazia, os 6 modelos padrão são automaticamente vinculados aos materiais e máquinas existentes.
 
 ### 15.5. Garantia de Qualidade e Cobertura de Testes
-* **100% de Aprovação Automatizada (168 Testes em Todo o Monorepo):**
-  - **Frontend (`@erp/web`):** 23 arquivos de teste e 130 casos de teste aprovados com 100% de sucesso (`vitest run`).
+* **100% de Aprovação Automatizada (170 Testes em Todo o Monorepo):**
+  - **Frontend (`@erp/web`):** 24 arquivos de teste e 132 casos de teste aprovados com 100% de sucesso (`vitest run`).
   - **Backend (`@erp/api`):** 6 arquivos de teste e 30 casos de teste aprovados com 100% de sucesso (`vitest run`).
   - **Motor de Negócio (`@erp/business-core`):** 2 arquivos de teste e 8 casos de teste aprovados com 100% de sucesso (`vitest run`).
   - **Build de Produção:** Compilação TypeScript (`tsc -b` e `tsc --noEmit`) e empacotamento Vite sem nenhum erro de tipagem.
@@ -488,6 +488,17 @@ Quando uma Ordem de Serviço é avançada para a etapa de **IMPRESSÃO** (seja p
 - A integração entre o motor de física `@hello-pangea/dnd` e a barra de rolagem suave com *CSS Scroll Snap* foi calibrada para prevenir conflitos de eventos de toque:
   - O operador pode deslizar horizontalmente o carrossel de etapas do Kanban no celular sem disparar arrastos acidentais.
   - Ao pressionar e arrastar especificamente o cartão de OS, o manipulador de arrasto (`dragHandleProps`) assume a translação vetorial com feedback visual de elevação (sombra e contorno colorido).
+
+### 19.4. Supressão de Alertas Nativos no Apontamento de Produção (`StageActionModal.tsx`)
+- Ao registrar início, pausa ou conclusão de etapa fabril, o sistema não dispara mais `window.alert` de confirmação.
+- O fechamento da janela é instantâneo e a lista é revalidada via WebSocket e React Query.
+- Se houver qualquer falha ou validação incorreta, o erro é exibido dentro do próprio modal em um badge de erro sem travar a thread de execução do navegador.
+
+### 19.5. Divulgação Progressiva das Informações de Pagamento na OS (`OrderDetailsModal.tsx`)
+- No modal de detalhes da Ordem de Serviço acionado pelo Kanban:
+  - As **Etapas Industriais do Chão de Fábrica** agora são apresentadas com destaque imediatamente após o cabeçalho técnico e cliente.
+  - A seção de **Contas a Receber e Parcelamento** foi deslocada para o **final do popup** e inicia **recolhida/escondida por padrão**.
+  - O operador ou gestor pode revelar o cronograma financeiro completo e os botões de recebimento ("Receber" / "Recibo") clicando no botão/seta de alternância (`ChevronDown` / `ChevronUp`), preservando o foco operacional na produção.
 
 ---
 

@@ -25,6 +25,9 @@ import {
   Coins,
   CreditCard,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
 } from 'lucide-react';
 import { ReceivableItem } from '@erp/shared-types';
 import { PaginatedResult } from '../../types';
@@ -53,6 +56,14 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   const queryClient = useQueryClient();
   const [payingReceivable, setPayingReceivable] = React.useState<ReceivableItem | null>(null);
   const [receiptToShow, setReceiptToShow] = React.useState<ReceivableItem | null>(null);
+  const [isPaymentExpanded, setIsPaymentExpanded] = React.useState(false);
+  const [paymentError, setPaymentError] = React.useState<string | null>(null);
+
+  // Redefinir colapso das informações de pagamento ao alternar de OS ou fechar
+  React.useEffect(() => {
+    setIsPaymentExpanded(false);
+    setPaymentError(null);
+  }, [order?.id, isOpen]);
 
   // Fetch receivables for this work order
   const { data: receivablesData } = useQuery<PaginatedResult<ReceivableItem>>({
@@ -65,10 +76,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     enabled: isOpen && Boolean(order?.id),
   });
 
-
   const generateInstallmentsMutation = useMutation({
     mutationFn: async (plan: 'FULL_ADVANCE' | 'HALF_DOWN_HALF_PICKUP' | 'CUSTOM_INSTALLMENTS') => {
       if (!order?.id) return;
+      setPaymentError(null);
       const res = await api.post('/receivables/generate-for-order', {
         workOrderId: order.id,
         plan,
@@ -78,13 +89,14 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       return res.data;
     },
     onSuccess: () => {
+      setPaymentError(null);
       queryClient.invalidateQueries({ queryKey: ['order-receivables', order?.id] });
       queryClient.invalidateQueries({ queryKey: ['receivables'] });
       queryClient.invalidateQueries({ queryKey: ['receivables-summary'] });
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
     },
     onError: (err: any) => {
-      alert(err.response?.data?.message || 'Erro ao gerar parcelas de recebimento.');
+      setPaymentError(err.response?.data?.message || 'Erro ao gerar parcelas de recebimento.');
     },
   });
 
@@ -209,154 +221,6 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           </div>
         </div>
 
-        {/* Financial / Receivables Section */}
-        <div className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                <Coins className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                Contas a Receber / Pagamento da OS
-              </h4>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                {alreadyPaidAmount > 0
-                  ? `Quitado: ${formatCurrency(alreadyPaidAmount)} de ${formatCurrency(orderTotal)} (${paymentPercent}%)`
-                  : 'Nenhum pagamento registrado ainda'}
-              </p>
-            </div>
-
-            {remainingBalance > 0 && alreadyPaidAmount > 0 && (
-              <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800/60">
-                Saldo a receber: {formatCurrency(remainingBalance)}
-              </span>
-            )}
-          </div>
-
-          {/* Payment Progress Bar */}
-          {orderTotal > 0 && (
-            <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 transition-all duration-300"
-                style={{ width: `${Math.min(100, Math.max(0, paymentPercent))}%` }}
-              />
-            </div>
-          )}
-
-          {receivables.length > 0 ? (
-            <div className="space-y-1.5">
-              {receivables.map((rec) => {
-                const recStatus = getPaymentStatusConfig(rec.status);
-                const isPaid = rec.status === 'PAID';
-
-                return (
-                  <div
-                    key={rec.id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs gap-2 sm:gap-0"
-                  >
-                    <div>
-                      <span className="font-semibold text-slate-800 dark:text-slate-100">
-                        {rec.description}
-                      </span>
-                      <span className="text-slate-400 text-[11px] ml-2">
-                        Vencimento: {formatDate(rec.dueDate)}
-                      </span>
-                      {isPaid && rec.paidAt && (
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 ml-2">
-                          (Pago em {formatDate(rec.paidAt)})
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-2.5">
-                      <span className="font-bold text-slate-900 dark:text-slate-100">
-                        {formatCurrency(rec.amount)}
-                      </span>
-                      <Badge variant={recStatus.variant} size="sm" className={recStatus.bg}>
-                        {recStatus.label}
-                      </Badge>
-                      <div className="flex items-center gap-1">
-                        {isPaid ? (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setReceiptToShow(rec)}
-                            className="h-7 px-2 text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-300 text-xs"
-                            title="Ver e imprimir recibo"
-                          >
-                            <Printer className="w-3.5 h-3.5 mr-1" />
-                            Recibo
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setPayingReceivable(rec)}
-                            className="h-7 px-2.5 text-xs text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-medium"
-                          >
-                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                            Receber
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {remainingBalance > 0 && (
-                <div className="pt-2 flex justify-end">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => generateInstallmentsMutation.mutate('HALF_DOWN_HALF_PICKUP')}
-                    isLoading={generateInstallmentsMutation.isPending}
-                    className="text-[11px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 h-6"
-                    title="Gera cobrança para o saldo restante"
-                  >
-                    Gerar cobrança para saldo de {formatCurrency(remainingBalance)}
-                  </Button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-slate-900/80 p-3 rounded-lg border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
-              <p className="text-xs text-slate-500">
-                Nenhum cronograma de parcelas gerado para esta OS ainda.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => generateInstallmentsMutation.mutate('HALF_DOWN_HALF_PICKUP')}
-                  isLoading={generateInstallmentsMutation.isPending}
-                  className="text-xs h-7"
-                >
-                  <Coins className="w-3 h-3 mr-1 text-emerald-600" />
-                  Sinal 50% + 50% Retirada
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => generateInstallmentsMutation.mutate('FULL_ADVANCE')}
-                  isLoading={generateInstallmentsMutation.isPending}
-                  className="text-xs h-7"
-                >
-                  <CheckCircle2 className="w-3 h-3 mr-1 text-teal-600" />
-                  À Vista (100%)
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => generateInstallmentsMutation.mutate('CUSTOM_INSTALLMENTS')}
-                  isLoading={generateInstallmentsMutation.isPending}
-                  className="text-xs h-7"
-                >
-                  <CreditCard className="w-3 h-3 mr-1 text-indigo-600" />
-                  3x a Prazo
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Stages Timeline */}
         <div className="space-y-2.5">
           <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
@@ -409,6 +273,186 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               );
             })}
           </div>
+        </div>
+
+        {/* Financial / Receivables Section (Colapsável / No final do popup) */}
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/80 dark:bg-slate-950/60 transition-all">
+          {/* Botão / Seta de Revelação das Informações de Pagamento */}
+          <button
+            type="button"
+            onClick={() => setIsPaymentExpanded((prev) => !prev)}
+            className="w-full flex items-center justify-between p-3.5 text-left hover:bg-slate-100/80 dark:hover:bg-slate-900/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer"
+            aria-expanded={isPaymentExpanded}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+                <Coins className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                  Informações de Pagamento e Cobrança
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {alreadyPaidAmount > 0
+                    ? `Quitado: ${formatCurrency(alreadyPaidAmount)} de ${formatCurrency(orderTotal)} (${paymentPercent}%)`
+                    : `Valor Total: ${formatCurrency(orderTotal)} • Pagamento ${paymentStatusConfig.label}`}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {remainingBalance > 0 && alreadyPaidAmount > 0 && (
+                <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800/60">
+                  Saldo: {formatCurrency(remainingBalance)}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/60">
+                {isPaymentExpanded ? 'Ocultar' : 'Exibir'}
+                {isPaymentExpanded ? (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
+              </span>
+            </div>
+          </button>
+
+          {/* Conteúdo Revelado Apenas Quando Clicado */}
+          {isPaymentExpanded && (
+            <div className="p-3.5 pt-2 border-t border-slate-200 dark:border-slate-800 space-y-3">
+              {paymentError && (
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+                  <span>{paymentError}</span>
+                </div>
+              )}
+
+              {/* Payment Progress Bar */}
+              {orderTotal > 0 && (
+                <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 transition-all duration-300"
+                    style={{ width: `${Math.min(100, Math.max(0, paymentPercent))}%` }}
+                  />
+                </div>
+              )}
+
+              {receivables.length > 0 ? (
+                <div className="space-y-1.5">
+                  {receivables.map((rec) => {
+                    const recStatus = getPaymentStatusConfig(rec.status);
+                    const isPaid = rec.status === 'PAID';
+
+                    return (
+                      <div
+                        key={rec.id}
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs gap-2 sm:gap-0"
+                      >
+                        <div>
+                          <span className="font-semibold text-slate-800 dark:text-slate-100">
+                            {rec.description}
+                          </span>
+                          <span className="text-slate-400 text-[11px] ml-2">
+                            Vencimento: {formatDate(rec.dueDate)}
+                          </span>
+                          {isPaid && rec.paidAt && (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 ml-2">
+                              (Pago em {formatDate(rec.paidAt)})
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between sm:justify-end gap-2.5">
+                          <span className="font-bold text-slate-900 dark:text-slate-100">
+                            {formatCurrency(rec.amount)}
+                          </span>
+                          <Badge variant={recStatus.variant} size="sm" className={recStatus.bg}>
+                            {recStatus.label}
+                          </Badge>
+                          <div className="flex items-center gap-1">
+                            {isPaid ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setReceiptToShow(rec)}
+                                className="h-7 px-2 text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-300 text-xs"
+                                title="Ver e imprimir recibo"
+                              >
+                                <Printer className="w-3.5 h-3.5 mr-1" />
+                                Recibo
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setPayingReceivable(rec)}
+                                className="h-7 px-2.5 text-xs text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-medium"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                                Receber
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {remainingBalance > 0 && (
+                    <div className="pt-2 flex justify-end">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => generateInstallmentsMutation.mutate('HALF_DOWN_HALF_PICKUP')}
+                        isLoading={generateInstallmentsMutation.isPending}
+                        className="text-[11px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 h-6"
+                        title="Gera cobrança para o saldo restante"
+                      >
+                        Gerar cobrança para saldo de {formatCurrency(remainingBalance)}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-white dark:bg-slate-900/80 p-3 rounded-lg border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
+                  <p className="text-xs text-slate-500">
+                    Nenhum cronograma de parcelas gerado para esta OS ainda.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateInstallmentsMutation.mutate('HALF_DOWN_HALF_PICKUP')}
+                      isLoading={generateInstallmentsMutation.isPending}
+                      className="text-xs h-7"
+                    >
+                      <Coins className="w-3 h-3 mr-1 text-emerald-600" />
+                      Sinal 50% + 50% Retirada
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateInstallmentsMutation.mutate('FULL_ADVANCE')}
+                      isLoading={generateInstallmentsMutation.isPending}
+                      className="text-xs h-7"
+                    >
+                      <CheckCircle2 className="w-3 h-3 mr-1 text-teal-600" />
+                      À Vista (100%)
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateInstallmentsMutation.mutate('CUSTOM_INSTALLMENTS')}
+                      isLoading={generateInstallmentsMutation.isPending}
+                      className="text-xs h-7"
+                    >
+                      <CreditCard className="w-3 h-3 mr-1 text-indigo-600" />
+                      3x a Prazo
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
