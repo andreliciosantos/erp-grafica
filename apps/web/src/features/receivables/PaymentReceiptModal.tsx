@@ -45,6 +45,14 @@ function cleanPhoneForWhatsApp(phone?: string | null): string {
   return digits;
 }
 
+function isMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return (
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '') ||
+    (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent || ''))
+  );
+}
+
 /**
  * Renderizador de emergência em HTML5 Canvas caso o ambiente não suporte foreignObject / html-to-image
  */
@@ -183,6 +191,10 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
     type: 'success' | 'info' | 'error';
     message: string;
   } | null>(null);
+  const [activeWhatsAppLinks, setActiveWhatsAppLinks] = useState<{
+    web: string;
+    app: string;
+  } | null>(null);
 
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -256,21 +268,50 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
 
   /**
    * Envia o comprovante como imagem para o cliente no WhatsApp
-   * Suporta compartilhamento nativo de arquivo (Mobile/PWA) e fluxo integrado com área de transferência e download (Desktop)
+   * No celular: Aciona Web Share nativo com arquivo de imagem anexado
+   * No computador: Abre WhatsApp Web de forma síncrona (anti-bloqueador de pop-ups), copia imagem para o clipboard e baixa o arquivo
    */
   const handleSendWhatsAppImage = async (customPhone?: string) => {
     setIsSharing(true);
     setShareFeedback(null);
+    setActiveWhatsAppLinks(null);
 
+    const isMobile = isMobileDevice();
     const shareText = buildWhatsAppText();
+    const targetPhone = customPhone || '';
     const fileName = `comprovante-REC-${receivable.id.substring(0, 8).toUpperCase()}.png`;
+
+    // URLs para WhatsApp
+    const waWebUrl = targetPhone
+      ? `https://web.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(shareText)}`
+      : `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+
+    const waAppProtocol = targetPhone
+      ? `whatsapp://send?phone=${targetPhone}&text=${encodeURIComponent(shareText)}`
+      : `whatsapp://send?text=${encodeURIComponent(shareText)}`;
+
+    const waApiUrl = targetPhone
+      ? `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(shareText)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+
+    // CRÍTICO PARA DESKTOP:
+    // Navegadores desktop (Chrome/Edge/Firefox) bloqueiam window.open se chamado após operações assíncronas (await).
+    // Para contornar 100% dos bloqueadores de pop-up no computador, abrimos a janela síncronamente no clique:
+    let desktopWindow: Window | null = null;
+    if (!isMobile && typeof window !== 'undefined') {
+      try {
+        desktopWindow = window.open('about:blank', '_blank');
+      } catch (popErr) {
+        console.warn('Janela prévia bloqueada pelo navegador:', popErr);
+      }
+    }
 
     try {
       const blob = await generateReceiptBlob();
       const file = new File([blob], fileName, { type: 'image/png' });
 
-      // 1. Tentar compartilhamento nativo de arquivo com WhatsApp se suportado pelo navegador/sistema
-      if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+      // 1. FLUXO MOBILE: Utiliza Web Share nativo com imagem anexada
+      if (isMobile && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: 'Comprovante de Pagamento',
           text: shareText,
@@ -284,7 +325,7 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
         return;
       }
 
-      // 2. Fluxo Desktop / WhatsApp Web:
+      // 2. FLUXO DESKTOP / WHATSAPP WEB:
       // a) Copia a imagem renderizada diretamente para a área de transferência do sistema (Ctrl+V)
       let imageCopiedToClipboard = false;
       if (typeof navigator !== 'undefined' && navigator.clipboard && typeof ClipboardItem !== 'undefined') {
@@ -314,35 +355,42 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
         }
       }
 
-      // c) Redireciona para o WhatsApp (específico do telefone ou aberto para escolher o cliente)
-      const targetPhone = customPhone || '';
-      const waUrl = targetPhone
-        ? `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(shareText)}`
-        : `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+      // c) Redireciona a janela aberta para o WhatsApp
+      if (desktopWindow && !desktopWindow.closed) {
+        desktopWindow.location.href = waWebUrl;
+      } else {
+        // Fallback caso a janela não tenha sido pré-aberta
+        try {
+          window.open(waWebUrl, '_blank', 'noopener,noreferrer');
+        } catch (e) {
+          window.location.href = waWebUrl;
+        }
+      }
 
-      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      setActiveWhatsAppLinks({ web: waWebUrl, app: waAppProtocol });
 
       setShareFeedback({
         type: 'info',
         message: imageCopiedToClipboard
-          ? 'WhatsApp aberto! A imagem do comprovante foi copiada para sua área de transferência (basta pressionar Ctrl+V na conversa) e o arquivo PNG foi baixado.'
-          : 'WhatsApp aberto! O arquivo PNG do comprovante foi baixado para envio ao cliente escolhido.',
+          ? 'WhatsApp Web aberto! A imagem foi copiada para sua área de transferência (basta pressionar Ctrl+V na conversa) e o arquivo PNG foi baixado.'
+          : 'WhatsApp Web aberto! O arquivo PNG do comprovante foi baixado para envio ao cliente escolhido.',
       });
-      setTimeout(() => setShareFeedback(null), 8000);
     } catch (err) {
       console.error('Erro ao preparar comprovante para WhatsApp:', err);
-      // Fallback gracioso com texto e abertura do WhatsApp
+      // Fallback garantido: navega para WhatsApp mesmo se houver erro gráfico
+      if (desktopWindow && !desktopWindow.closed) {
+        desktopWindow.location.href = waApiUrl;
+      } else {
+        window.open(waApiUrl, '_blank', 'noopener,noreferrer');
+      }
+
       navigator.clipboard?.writeText?.(shareText);
-      const targetPhone = customPhone || '';
-      const waUrl = targetPhone
-        ? `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(shareText)}`
-        : `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
-      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      setActiveWhatsAppLinks({ web: waWebUrl, app: waAppProtocol });
+
       setShareFeedback({
         type: 'info',
         message: 'WhatsApp aberto! O texto do comprovante foi copiado para a área de transferência.',
       });
-      setTimeout(() => setShareFeedback(null), 5000);
     } finally {
       setIsSharing(false);
     }
@@ -521,11 +569,11 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
           </div>
         )}
 
-        {/* Notificação / Feedback de Envio */}
+        {/* Notificação / Feedback de Envio com Links de Resgate Direto */}
         {shareFeedback && (
           <div
             className={cn(
-              'p-3 rounded-xl text-xs flex items-start gap-2.5 transition-all',
+              'p-3.5 rounded-xl text-xs flex flex-col gap-2.5 transition-all',
               shareFeedback.type === 'success' &&
                 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300',
               shareFeedback.type === 'info' &&
@@ -534,23 +582,48 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
                 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
             )}
           >
-            {shareFeedback.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
-            ) : shareFeedback.type === 'info' ? (
-              <Share2 className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
-            ) : (
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
-            )}
-            <div className="flex-1 leading-snug">
-              <p className="font-semibold">{shareFeedback.message}</p>
+            <div className="flex items-start gap-2.5">
+              {shareFeedback.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+              ) : shareFeedback.type === 'info' ? (
+                <Share2 className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+              )}
+              <div className="flex-1 leading-snug">
+                <p className="font-semibold">{shareFeedback.message}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShareFeedback(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setShareFeedback(null)}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+
+            {/* Links Diretos para Desktop caso o pop-up tenha sido bloqueado ou o usuário prefira o app */}
+            {activeWhatsAppLinks && (
+              <div className="flex items-center gap-2 pt-1.5 border-t border-blue-200/60 dark:border-blue-800/60 flex-wrap">
+                <a
+                  href={activeWhatsAppLinks.web}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Abrir WhatsApp Web
+                </a>
+                <a
+                  href={activeWhatsAppLinks.app}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium text-xs transition-colors"
+                  title="Abrir no aplicativo WhatsApp instalado no Windows/Mac"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                  Abrir no App Desktop
+                </a>
+              </div>
+            )}
           </div>
         )}
 

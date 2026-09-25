@@ -828,7 +828,26 @@ Sob o capô:
 Em ambientes desktop ou navegadores em que a Web Share API não suporta arquivos locais, o ERP executa uma estratégia híbrida não-bloqueante:
 1. **Injeção no Buffer do Sistema:** Utilizando a **Async Clipboard API**, o blob de imagem é gravado diretamente na memória de transferência do SO via `new ClipboardItem({ 'image/png': blob })`.
 2. **Despacho Assíncrono de Download:** O blob é disponibilizado localmente através de um `ObjectURL` efêmero com expiração programada (`URL.revokeObjectURL`), garantindo a posse do arquivo físico pelo usuário.
-3. **Handshake com o WhatsApp Web / Desktop:** O navegador dispara a navegação para o endpoint `https://api.whatsapp.com/send`, abrindo o cliente no modo de seleção de contatos. Ao ingressar na conversa com o cliente escolhido, basta ao operador pressionar `Ctrl+V` para que a imagem do comprovante seja transmitida instantaneamente.
+3. **Handshake com o WhatsApp Web / Desktop:** O navegador dispara a navegação para o endpoint `https://web.whatsapp.com/send`, abrindo o cliente no modo de seleção de contatos. Ao ingressar na conversa com o cliente escolhido, basta ao operador pressionar `Ctrl+V` para que a imagem do comprovante seja transmitida instantaneamente.
+
+### 27.4. Ativação Transiente do Usuário (Transient User Activation) e Bypass de Bloqueador de Pop-ups no Desktop
+Um dos desafios mais sutis e fundamentais da engenharia de navegadores modernos reside na política de segurança de **User Activation** (W3C HTML Specification §7.2):
+- **O Ciclo de Vida do Token de Ativação:** Quando o usuário clica em um botão, o motor do browser concede uma permissão efêmera denominada *transient activation token* (com tempo de expiração na ordem de milissegundos). Chamadas síncronas a `window.open()` dentro desse ciclo são autorizadas livremente.
+- **A Degradação Assíncrona:** A renderização rasterizada do recibo exige a execução de tarefas assíncronas no Event Loop (`htmlToImage.toBlob()` -> criação de SVG -> carregamento de imagens -> rasterização em canvas offscreen). Quando a Promise é resolvida via Macrotask/Microtask, a pilha de ativação original do usuário já expirou. Disparar `window.open()` neste momento tardio faz com que o navegador classifique a nova janela como um "pop-up não solicitado", bloqueando-a silenciosamente.
+- **A Solução por Pré-Alocação Síncrona de Janela:**
+  ```typescript
+  // 1. Fase Síncrona (com token de ativação válido):
+  const desktopWindow = window.open('about:blank', '_blank');
+
+  // 2. Fase Assíncrona (pipeline gráfico pesado):
+  const blob = await generateReceiptBlob();
+
+  // 3. Mutação de Destino Pós-Renderização:
+  if (desktopWindow && !desktopWindow.closed) {
+    desktopWindow.location.href = waWebUrl;
+  }
+  ```
+- **Divergência de Broker (Mobile vs. Desktop):** Em sistemas desktop como o Windows 10/11 com Chromium (Chrome/Edge), a chamada a `navigator.canShare({ files: [file] })` retorna `true` porque o SO possui um broker de compartilhamento genérico (`DataTransferManager`). No entanto, esse broker abre o painel cinza do sistema operacional sem integração direta com o WhatsApp Web, interrompendo a jornada do operador. Por essa razão, o ERP segrega deterministicamente os ambientes (`isMobileDevice()`): dispositivos móveis usam o Web Share nativo com imagem acoplada, enquanto desktops utilizam o pipeline de pré-abertura de janela, injeção no clipboard via `ClipboardItem`, download automático do PNG e botões de resgate direto (`WhatsApp Web` e protocolo `whatsapp://send`).
 
 ---
 

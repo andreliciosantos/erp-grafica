@@ -78,7 +78,14 @@ describe('PaymentReceiptModal component', () => {
     expect(screen.getByRole('button', { name: /Imprimir/i })).toBeInTheDocument();
   });
 
-  it('invokes native navigator.share when supported with file attachment', async () => {
+  it('on Mobile: invokes native navigator.share with file attachment', async () => {
+    const originalUserAgent = navigator.userAgent;
+    Object.defineProperty(navigator, 'userAgent', {
+      value: 'Mozilla/5.0 (Linux; Android 13; SM-G998B) AppleWebKit/537.36 Mobile Safari/537.36',
+      writable: true,
+      configurable: true,
+    });
+
     const mockShare = vi.fn().mockResolvedValue(undefined);
     const mockCanShare = vi.fn().mockReturnValue(true);
 
@@ -105,13 +112,21 @@ describe('PaymentReceiptModal component', () => {
     expect(shareCall.files).toBeDefined();
     expect(shareCall.files.length).toBe(1);
     expect(shareCall.files[0].name).toContain('comprovante-REC-');
+
+    // Restore userAgent
+    Object.defineProperty(navigator, 'userAgent', { value: originalUserAgent, configurable: true });
   });
 
-  it('falls back to opening WhatsApp URL and copying to clipboard when navigator.share is not supported', async () => {
-    Object.defineProperty(navigator, 'share', { value: undefined, writable: true, configurable: true });
-    Object.defineProperty(navigator, 'canShare', { value: undefined, writable: true, configurable: true });
+  it('on Desktop: opens WhatsApp Web synchronously to avoid pop-up blockers, copies to clipboard and reveals direct links', async () => {
+    const originalUserAgent = navigator.userAgent;
+    Object.defineProperty(navigator, 'userAgent', {
+      value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      writable: true,
+      configurable: true,
+    });
 
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const fakeWindow = { location: { href: '' }, closed: false };
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(fakeWindow as any);
 
     render(
       <PaymentReceiptModal
@@ -124,20 +139,30 @@ describe('PaymentReceiptModal component', () => {
     const shareBtn = screen.getByRole('button', { name: /Enviar Imagem no WhatsApp/i });
     fireEvent.click(shareBtn);
 
+    // Initial synchronous open to prevent pop-up blocker
+    expect(openSpy).toHaveBeenCalledWith('about:blank', '_blank');
+
     await waitFor(() => {
-      expect(openSpy).toHaveBeenCalledWith(
-        expect.stringContaining('https://api.whatsapp.com/send?text='),
-        '_blank',
-        'noopener,noreferrer'
-      );
+      expect(fakeWindow.location.href).toContain('web.whatsapp.com/send?text=');
     });
+
+    // Displays direct links in feedback
+    expect(screen.getByRole('link', { name: /Abrir WhatsApp Web/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Abrir no App Desktop/i })).toBeInTheDocument();
+
+    Object.defineProperty(navigator, 'userAgent', { value: originalUserAgent, configurable: true });
   });
 
-  it('redirects to specific client phone when clicking "Enviar direto para este nº"', async () => {
-    Object.defineProperty(navigator, 'share', { value: undefined, writable: true, configurable: true });
-    Object.defineProperty(navigator, 'canShare', { value: undefined, writable: true, configurable: true });
+  it('on Desktop with phone: navigates to client WhatsApp Web number directly', async () => {
+    const originalUserAgent = navigator.userAgent;
+    Object.defineProperty(navigator, 'userAgent', {
+      value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0',
+      writable: true,
+      configurable: true,
+    });
 
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const fakeWindow = { location: { href: '' }, closed: false };
+    vi.spyOn(window, 'open').mockReturnValue(fakeWindow as any);
 
     render(
       <PaymentReceiptModal
@@ -151,12 +176,10 @@ describe('PaymentReceiptModal component', () => {
     fireEvent.click(directBtn);
 
     await waitFor(() => {
-      expect(openSpy).toHaveBeenCalledWith(
-        expect.stringContaining('phone=5511987654321'),
-        '_blank',
-        'noopener,noreferrer'
-      );
+      expect(fakeWindow.location.href).toContain('phone=5511987654321');
     });
+
+    Object.defineProperty(navigator, 'userAgent', { value: originalUserAgent, configurable: true });
   });
 
   it('copies formatted text when clicking Copiar Texto button', async () => {

@@ -607,16 +607,18 @@ Para eliminar o atrito manual de cópia e colagem de texto cru e oferecer uma ex
 4. **Atalho Opcional para Telefone Cadastrado:**
    - Caso o cliente possua telefone registrado no cadastro (`receivable.party?.phone`), um atalho sutil *"Enviar direto para este nº"* é exibido, permitindo alternar entre escolher um contato livremente ou abrir diretamente a conversa com o número registrado.
 
-5. **Garantia de Qualidade e Testes:**
-   - Criada a suíte de testes unitários [`PaymentReceiptModal.test.tsx`](file:///c:/Users/Micro/Documents/Projetos/ERP_GRAFICA/apps/web/src/features/receivables/PaymentReceiptModal.test.tsx) com 6 testes cobrindo renderização, acionamento do Web Share, fallback com abertura de URL, atalho por telefone e cópia de texto.
-   - 100% dos testes aprovados e compilação de produção validada.
+5. **Resolução de Bloqueio no Desktop e Bypass de Bloqueador de Pop-ups:**
+   - **Diagnóstico do Problema:** No ambiente desktop (Windows/Mac/Linux), navegadores baseados em Chromium (Chrome, Edge) reportavam `navigator.canShare({ files: [file] })` como verdadeiro devido ao broker nativo do Windows (`DataTransferManager`). Isso acionava a janela cinza do Windows Share em vez do WhatsApp Web, e a execução assíncrona com `await generateReceiptBlob()` expirava o *User Activation Token* do navegador, fazendo com que qualquer chamada tardia a `window.open()` fosse bloqueada silenciosamente pelo bloqueador de pop-ups do navegador.
+   - **Arquitetura de Segregação Mobile vs. Desktop:**
+     - Introdução da verificação `isMobileDevice()` baseada em User-Agent e capacidades de toque (`navigator.maxTouchPoints`).
+     - **No Mobile:** Mantido o fluxo perfeito de Web Share nativo com arquivo PNG anexado diretamente para o app WhatsApp.
+     - **No Desktop:**
+       1. **Pré-Abertura Síncrona da Janela:** A janela é aberta de forma síncrona imediatamente no clique (`window.open('about:blank', '_blank')`), capturando o token de ativação do usuário antes de qualquer operação assíncrona e tornando o bloqueador de pop-ups inoperante.
+       2. **Redirecionamento Direto para o WhatsApp Web:** Concluída a geração do blob, a janela aberta é redirecionada para `https://web.whatsapp.com/send` (ou com telefone se preenchido), sem desvio para o Windows Share.
+       3. **Cópia para o Clipboard (`Ctrl+V`):** O blob PNG gerado é copiado para a área de transferência do sistema operacional (`navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])`), permitindo ao operador simplesmente colar a imagem no chat.
+       4. **Download do Arquivo PNG:** O arquivo físico é baixado automaticamente no computador como garantia extra.
+       5. **Links Diretos de Resgate no Modal:** Renderização de botões explícitos `[Abrir WhatsApp Web]` e `[Abrir no App Desktop]` (`whatsapp://send`) no alerta de feedback, garantindo que o usuário tenha um clique direto caso prefira alternar de cliente ou se uma extensão de navegador tiver impedido a nova aba.
 
-
-
-
-
-
-
-
-
-
+6. **Garantia de Qualidade e Testes:**
+   - Criada a suíte de testes unitários [`PaymentReceiptModal.test.tsx`](file:///c:/Users/Micro/Documents/Projetos/ERP_GRAFICA/apps/web/src/features/receivables/PaymentReceiptModal.test.tsx) cobrindo tanto o ambiente Mobile (Web Share nativo) quanto o Desktop (pré-abertura síncrona sem bloqueio de pop-up, injeção no clipboard e links de resgate).
+   - 100% dos testes aprovados (148 testes em `apps/web`) e compilação de produção validada.
