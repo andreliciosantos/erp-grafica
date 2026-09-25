@@ -11,6 +11,7 @@ import {
   getStatusConfig,
   getPriorityConfig,
   getPaymentStatusConfig,
+  getWorkOrderProductName,
 } from '../../lib/utils';
 import {
   User,
@@ -28,6 +29,7 @@ import {
   ChevronDown,
   ChevronUp,
   AlertTriangle,
+  Package,
 } from 'lucide-react';
 import { ReceivableItem } from '@erp/shared-types';
 import { PaginatedResult } from '../../types';
@@ -100,9 +102,26 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     },
   });
 
-  if (!order) return null;
+  // Fetch full details if needed
+  const { data: fullOrder } = useQuery<WorkOrderItem>({
+    queryKey: ['work-order-detail', order?.id],
+    queryFn: async () => {
+      if (!order?.id) return null as any;
+      const res = await api.get(`/work-orders/${order.id}`);
+      return res.data;
+    },
+    enabled: isOpen && Boolean(order?.id),
+    initialData: order || undefined,
+  });
 
-  const orderTotal = Number(order.totalAmount || 0);
+  const activeOrder = fullOrder || order;
+
+  if (!activeOrder) return null;
+
+  const productName = getWorkOrderProductName(activeOrder);
+  const primaryItem = activeOrder.quote?.items?.[0];
+
+  const orderTotal = Number(activeOrder.totalAmount || 0);
   const receivables: ReceivableItem[] = receivablesData?.data || [];
   const alreadyPaidAmount = receivables
     .filter((r) => r.status === 'PAID')
@@ -110,16 +129,15 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   const remainingBalance = Math.max(0, Number((orderTotal - alreadyPaidAmount).toFixed(2)));
   const paymentPercent = orderTotal > 0 ? Math.round((alreadyPaidAmount / orderTotal) * 100) : 0;
 
-  const statusConfig = getStatusConfig(order.status);
-  const priorityConfig = getPriorityConfig(order.priority);
-  const paymentStatusConfig = getPaymentStatusConfig(order.paymentStatus || 'PENDING');
-
+  const statusConfig = getStatusConfig(activeOrder.status);
+  const priorityConfig = getPriorityConfig(activeOrder.priority);
+  const paymentStatusConfig = getPaymentStatusConfig(activeOrder.paymentStatus || 'PENDING');
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Detalhes da Ordem de Serviço: ${order.orderNumber}`}
+      title={`Detalhes da Ordem de Serviço: ${activeOrder.orderNumber} - ${productName}`}
       description="Acompanhamento do histórico de produção e apontamentos de máquina"
       maxWidth="3xl"
       footer={
@@ -131,7 +149,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 size="sm"
                 onClick={() => {
                   onClose();
-                  onPrintJobTicket(order);
+                  onPrintJobTicket(activeOrder);
                 }}
                 className="bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 justify-center w-full sm:w-auto"
               >
@@ -145,7 +163,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 size="sm"
                 onClick={() => {
                   onClose();
-                  onEditOrder(order);
+                  onEditOrder(activeOrder);
                 }}
                 className="text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border-slate-300 dark:border-slate-700 justify-center w-full sm:w-auto"
               >
@@ -157,7 +175,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onDeleteOrder(order)}
+                onClick={() => onDeleteOrder(activeOrder)}
                 className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-500/30 justify-center w-full sm:w-auto"
               >
                 <Trash2 className="w-3.5 h-3.5 mr-1.5" />
@@ -172,6 +190,55 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       }
     >
       <div className="space-y-5 text-xs">
+        {/* Product / Job Specification Card */}
+        <div className="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/25 border border-emerald-200/80 dark:border-emerald-800/60 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300">
+                <Package className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block">
+                  Produto / Serviço Gráfico
+                </span>
+                <p className="text-sm font-bold text-slate-850 dark:text-slate-100">
+                  {productName}
+                </p>
+              </div>
+            </div>
+            {primaryItem?.quantity && (
+              <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-100/80 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 w-fit">
+                Tiragem: {primaryItem.quantity.toLocaleString('pt-BR')} un
+              </span>
+            )}
+          </div>
+
+          {(primaryItem?.widthMm || primaryItem?.rawMaterial?.name || activeOrder.quote?.notes) && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1.5 text-[11px] text-slate-600 dark:text-slate-300 border-t border-emerald-200/50 dark:border-emerald-800/40">
+              {primaryItem?.widthMm && primaryItem?.heightMm ? (
+                <span>
+                  Formato: <strong>{primaryItem.widthMm} × {primaryItem.heightMm} mm</strong>
+                </span>
+              ) : null}
+              {primaryItem?.rawMaterial?.name && (
+                <span>
+                  Papel/Substrato: <strong>{primaryItem.rawMaterial.name}</strong>
+                </span>
+              )}
+              {primaryItem?.colorsFront !== undefined && (
+                <span>
+                  Cores: <strong>{primaryItem.colorsFront}×{primaryItem.colorsBack || 0}</strong>
+                </span>
+              )}
+              {activeOrder.quote?.notes && (
+                <span className="text-slate-500 dark:text-slate-400 italic">
+                  Obs: {activeOrder.quote.notes}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Info Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-950/70 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
           <div>
@@ -190,13 +257,13 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             <span className="text-slate-500 dark:text-slate-400 font-medium block">Data de Entrega</span>
             <span className="text-slate-800 dark:text-slate-200 font-semibold mt-1 flex items-center gap-1">
               <Calendar className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-              {formatDate(order.deliveryDate)}
+              {formatDate(activeOrder.deliveryDate)}
             </span>
           </div>
           <div>
             <span className="text-slate-500 dark:text-slate-400 font-medium block">Valor Total</span>
             <span className="text-emerald-700 dark:text-emerald-400 font-bold mt-1 text-sm block">
-              {formatCurrency(order.totalAmount)}
+              {formatCurrency(activeOrder.totalAmount)}
             </span>
           </div>
         </div>
@@ -206,8 +273,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <div>
-              <p className="text-slate-800 dark:text-slate-200 font-semibold">{order.party?.name || 'Cliente Cadastrado'}</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">{order.party?.document || 'Documento'}</p>
+              <p className="text-slate-800 dark:text-slate-200 font-semibold">{activeOrder.party?.name || 'Cliente Cadastrado'}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">{activeOrder.party?.document || 'Documento'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -216,7 +283,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             </Badge>
             <div className="flex items-center gap-1.5 font-mono text-xs bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300">
               <Barcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{order.barcode}</span>
+              <span>{activeOrder.barcode}</span>
             </div>
           </div>
         </div>
@@ -229,9 +296,9 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           </h4>
 
           <div className="space-y-2">
-            {(order.stages || []).map((stage, idx) => {
+            {(activeOrder.stages || []).map((stage, idx) => {
               const stageStatus = getStatusConfig(stage.status);
-              const isActionable = order.status !== 'DELIVERED' && order.status !== 'CANCELLED';
+              const isActionable = activeOrder.status !== 'DELIVERED' && activeOrder.status !== 'CANCELLED';
 
               return (
                 <div
@@ -262,7 +329,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onOpenStageAction(order, stage.id, stage.name)}
+                        onClick={() => onOpenStageAction(activeOrder, stage.id, stage.name)}
                       >
                         <PlayCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         Apontar
@@ -462,7 +529,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
         onClose={() => setPayingReceivable(null)}
         receivable={payingReceivable}
         onSuccess={(paidItem) => {
-          queryClient.invalidateQueries({ queryKey: ['order-receivables', order.id] });
+          queryClient.invalidateQueries({ queryKey: ['order-receivables', activeOrder.id] });
           queryClient.invalidateQueries({ queryKey: ['work-orders'] });
           queryClient.invalidateQueries({ queryKey: ['receivables'] });
           queryClient.invalidateQueries({ queryKey: ['receivables-summary'] });

@@ -200,4 +200,36 @@ describe('Máquina de Estados e Chão de Fábrica (WorkOrdersService)', () => {
       );
     });
   });
+
+  describe('Exibição de Nome do Produto e Número da OS', () => {
+    it('deve retornar productName mapeado no findAll e findOne', async () => {
+      const wo = await prismaMock.workOrder.create({
+        data: {
+          orderNumber: 'OS-2026-00099',
+          barcode: 'OS202600099',
+          quoteId: 'q-99',
+          partyId: 'p-client-1',
+          userId: 'u-admin-1',
+          status: WorkOrderStatus.PENDING,
+          deliveryDate: new Date(),
+          totalAmount: 950,
+          quote: {
+            items: [{ productName: 'Folders Institucionais 2 Dobras' }],
+          },
+        },
+      });
+
+      const listResult = await workOrdersService.findAll();
+      expect(listResult.data.length).toBeGreaterThan(0);
+      const foundInList = listResult.data.find((o) => o.id === wo.id);
+      expect(foundInList).toBeDefined();
+      expect(foundInList?.productName).toBe('Folders Institucionais 2 Dobras');
+      expect(foundInList?.orderNumber).toBe('OS-2026-00099');
+
+      const singleResult = await workOrdersService.findOne(wo.id);
+      expect(singleResult.orderNumber).toBe('OS-2026-00099');
+      expect(singleResult.productName).toBe('Folders Institucionais 2 Dobras');
+    });
+  });
 });
+

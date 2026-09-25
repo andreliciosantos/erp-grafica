@@ -99,4 +99,25 @@ describe('OrderDetailsModal', () => {
     expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText(/Nenhum cronograma de parcelas gerado/i)).not.toBeInTheDocument();
   });
+
+  it('renders both order number and product name in modal title and product specification card', () => {
+    const orderWithProduct: WorkOrderItem = {
+      ...mockOrder,
+      productName: 'Revista Trimestral A4 Couché 150g',
+    };
+    renderWithProviders(
+      <OrderDetailsModal
+        order={orderWithProduct}
+        isOpen={true}
+        onClose={vi.fn()}
+        onOpenStageAction={vi.fn()}
+      />
+    );
+
+    // Title should contain both OS number and product name
+    expect(screen.getByText(/Detalhes da Ordem de Serviço: OS-2026-00042 - Revista Trimestral A4 Couché 150g/i)).toBeInTheDocument();
+    // Product specification section should display the product name
+    expect(screen.getAllByText('Revista Trimestral A4 Couché 150g').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Produto \/ Serviço Gráfico/i)).toBeInTheDocument();
+  });
 });

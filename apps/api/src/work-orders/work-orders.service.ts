@@ -81,9 +81,12 @@ const VALID_TRANSITIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
 export type WorkOrderWithDetails = WorkOrder & {
   party?: { id: string; name: string; phone: string };
   stages?: WorkOrderStage[];
+  productName?: string;
+  quote?: any;
 };
 
 export type WorkOrderFullDetails = WorkOrder & {
+  productName?: string;
   party: Party;
   user: { id: string; name: string; email: string };
   quote: Quote & {
@@ -140,10 +143,11 @@ export class WorkOrdersService {
         { barcode: { contains: search, mode: 'insensitive' } },
         { party: { name: { contains: search, mode: 'insensitive' } } },
         { party: { phone: { contains: search.replace(/\D/g, '') } } },
+        { quote: { items: { some: { productName: { contains: search, mode: 'insensitive' } } } } },
       ];
     }
 
-    const [total, data] = await Promise.all([
+    const [total, rawData] = await Promise.all([
       this.prisma.workOrder.count({ where }),
       this.prisma.workOrder.findMany({
         where,
@@ -153,9 +157,39 @@ export class WorkOrdersService {
         include: {
           party: { select: { id: true, name: true, phone: true } },
           stages: { orderBy: { stepOrder: 'asc' } },
+          quote: {
+            select: {
+              id: true,
+              notes: true,
+              items: {
+                select: {
+                  id: true,
+                  productName: true,
+                  quantity: true,
+                  widthMm: true,
+                  heightMm: true,
+                  colorsFront: true,
+                  colorsBack: true,
+                  sheetsRequired: true,
+                  itemsPerSheet: true,
+                  rawMaterial: {
+                    select: { id: true, name: true },
+                  },
+                },
+              },
+            },
+          },
         },
       }),
     ]);
+
+    const data: WorkOrderWithDetails[] = rawData.map((order) => {
+      const primaryItem = (order as any).quote?.items?.[0];
+      return {
+        ...order,
+        productName: primaryItem?.productName || (order as any).quote?.notes || 'Material Gráfico',
+      };
+    });
 
     return {
       data,
@@ -206,7 +240,11 @@ export class WorkOrdersService {
       throw new NotFoundException(`Ordem de Serviço ${id} não encontrada.`);
     }
 
-    return workOrder;
+    const primaryItem = workOrder.quote?.items?.[0];
+    return {
+      ...workOrder,
+      productName: primaryItem?.productName || workOrder.quote?.notes || 'Material Gráfico',
+    };
   }
 
   async updateStatus(id: string, newStatus: WorkOrderStatus): Promise<WorkOrder> {

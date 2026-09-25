@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { WorkOrderItem } from '../../types';
-import { formatCurrency, formatDate, getPriorityConfig } from '../../lib/utils';
+import { formatCurrency, formatDate, getPriorityConfig, getWorkOrderProductName } from '../../lib/utils';
 import { Calendar, User, Barcode, ChevronRight, GripVertical, CheckCircle2 } from 'lucide-react';
 
 interface KanbanCardProps {
@@ -21,6 +21,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const isDraggingRef = React.useRef(false);
   const priority = getPriorityConfig(order.priority);
+  const productName = getWorkOrderProductName(order);
 
   const completedStages = order.stages?.filter((s) => s.status === 'COMPLETED').length || 0;
   const totalStages = order.stages?.length || 5;
@@ -62,7 +63,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
         e.dataTransfer.dropEffect = 'move';
       }}
       onClick={handleCardClick}
-      className={`group relative rounded-2xl border bg-white dark:bg-slate-900/90 p-3.5 shadow-sm transition-colors select-none cursor-grab active:cursor-grabbing space-y-2.5 ${
+      className={`group relative rounded-2xl border bg-white dark:bg-slate-900/90 p-3.5 shadow-sm transition-colors select-none cursor-grab active:cursor-grabbing space-y-2 ${
         isDragging
           ? 'opacity-40 border-emerald-500 ring-2 ring-emerald-500/40 shadow-xl bg-emerald-50/50 dark:bg-emerald-950/30'
           : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md'
@@ -81,8 +82,18 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
         </span>
       </div>
 
+      {/* Product / Job Name */}
+      <div className="min-w-0">
+        <p
+          className="font-bold text-xs text-slate-850 dark:text-slate-100 line-clamp-2 leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors"
+          title={productName}
+        >
+          {productName}
+        </p>
+      </div>
+
       {/* Customer */}
-      <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium truncate">
+      <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium truncate">
         <User className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
         <span className="truncate">{order.party?.name || 'Cliente'}</span>
       </div>

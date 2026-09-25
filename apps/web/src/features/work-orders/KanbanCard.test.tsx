@@ -39,6 +39,17 @@ describe('KanbanCard component', () => {
     expect(screen.getByText('7891234567890')).toBeInTheDocument();
   });
 
+  it('should render both OS number and product name together on the card', () => {
+    const orderWithProduct = {
+      ...mockOrder,
+      productName: 'Catálogo de Produtos 2026 - A4 Couché',
+    };
+    render(<KanbanCard order={orderWithProduct} onClick={() => {}} />);
+
+    expect(screen.getByText('OS-2026-0042')).toBeInTheDocument();
+    expect(screen.getByText('Catálogo de Produtos 2026 - A4 Couché')).toBeInTheDocument();
+  });
+
   it('should render priority badge with Urgente for priority 4', () => {
     render(<KanbanCard order={mockOrder} onClick={() => {}} />);
 

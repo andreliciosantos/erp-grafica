@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/commo
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
-import { formatCurrency, formatDate, getStatusConfig, getPriorityConfig } from '../../lib/utils';
+import { formatCurrency, formatDate, getStatusConfig, getPriorityConfig, getWorkOrderProductName } from '../../lib/utils';
 import {
   KanbanSquare,
   List,
@@ -231,8 +231,10 @@ export const WorkOrdersPage: React.FC = () => {
   const filteredOrders = orders.filter((o) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
+    const prodName = getWorkOrderProductName(o).toLowerCase();
     return (
       o.orderNumber.toLowerCase().includes(term) ||
+      prodName.includes(term) ||
       o.party?.name?.toLowerCase().includes(term) ||
       o.barcode?.toLowerCase().includes(term)
     );
@@ -444,6 +446,7 @@ export const WorkOrdersPage: React.FC = () => {
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
                       <th className="pb-3 font-medium">Número OS</th>
+                      <th className="pb-3 font-medium">Produto / Descrição</th>
                       <th className="pb-3 font-medium">Cliente</th>
                       <th className="pb-3 font-medium">Prioridade</th>
                       <th className="pb-3 font-medium">Status Atual</th>
@@ -456,10 +459,14 @@ export const WorkOrdersPage: React.FC = () => {
                     {filteredOrders.map((order) => {
                       const statusConfig = getStatusConfig(order.status);
                       const priorityConfig = getPriorityConfig(order.priority);
+                      const productName = getWorkOrderProductName(order);
                       return (
                         <tr key={order.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
-                          <td className="py-3.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                          <td className="py-3.5 font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             {order.orderNumber}
+                          </td>
+                          <td className="py-3.5 font-semibold text-slate-900 dark:text-slate-100 max-w-[240px] truncate" title={productName}>
+                            {productName}
                           </td>
                           <td className="py-3.5 text-slate-800 dark:text-slate-200 font-medium">
                             {order.party?.name || 'Cliente'}

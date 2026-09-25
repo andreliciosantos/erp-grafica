@@ -545,6 +545,41 @@ Para acelerar drasticamente o atendimento no balcão de vendas e no comercial da
    - Suíte unitária e de integração em `QuickQuotesTemplatesModal.test.tsx` e `QuotesListPage.test.tsx` cobrindo listagem, filtragem, seleção de gabarito, atalhos de dimensão e exclusão in-app.
    - 100% dos testes aprovados e compilação de produção validada.
 
+---
+
+## 22. Identificação Dupla de Produção no Chão de Fábrica: Número da OS e Nome do Produto
+
+Para assegurar identificação visual imediata no chão de fábrica e evitar erros de manuseio de pilhas de papel, matrizes CTP e ordens de acabamento, o sistema agora exibe **concomitantemente o Número da OS e o Nome do Produto/Serviço** em todas as interfaces operacionais:
+
+1. **Cartões do Quadro Kanban (`KanbanCard.tsx`):**
+   - O cartão agora apresenta com destaque tipográfico o número da OS (ex.: `OS-2026-0042`) no cabeçalho com o badge de prioridade, e logo abaixo o **Nome do Produto** (ex.: *"Cartão de Visita Couché 300g 4x4"* ou *"Folder Institucional A4 2 Dobras"*).
+   - O título conta com clamp de 2 linhas (`line-clamp-2`), tooltip nativo com o nome completo e transição de cor em hover para máxima legibilidade.
+
+2. **Modal de Detalhes da Ordem de Serviço (`OrderDetailsModal.tsx`):**
+   - **Título do Modal:** Atualizado para o formato `Detalhes da Ordem de Serviço: {orderNumber} - {productName}`.
+   - **Card Técnico de Especificação Gráfica:** Novo bloco de destaque no topo do modal detalhando:
+     - Nome do produto ou serviço gráfico;
+     - Badge de tiragem produzida (`{runQuantity} un`);
+     - Formato do trabalho (Largura $\times$ Altura em mm);
+     - Substrato e gramatura (matéria-prima vinculada);
+     - Configuração de cores (4x4, 4x0, etc.);
+     - Observações técnicas comerciais para a equipe de produção.
+
+3. **Visão em Tabela & Pesquisa em Tempo Real (`WorkOrdersPage.tsx`):**
+   - Adicionada a coluna dedicada *"Produto / Descrição"* na tabela de Ordens de Serviço.
+   - A barra de busca no topo do PCP agora filtra instantaneamente tanto pelo número da OS, cliente, código de barras quanto pelo **nome do produto**.
+
+4. **Camada de Dados & Backend NestJS (`WorkOrdersService`):**
+   - Consultas `findAll` e `findOne` atualizadas no Prisma para carregar o orçamento e seus itens (`quote.items.rawMaterial`), expondo `productName` de nível superior no DTO de retorno.
+   - Busca no banco com filtro em profundidade (`quote.items.some.productName: { contains: search, mode: 'insensitive' }`).
+   - Helper universal `getWorkOrderProductName` no frontend para fallback seguro e consistente.
+
+5. **Garantia de Qualidade e Testes Automatizados:**
+   - Testes unitários dedicados em `KanbanCard.test.tsx` e `OrderDetailsModal.test.tsx` validando a renderização conjunta do número da OS e nome do produto.
+   - Teste de integração backend em `work-orders.spec.ts` validando a injeção e mapeamento do `productName`.
+   - 100% dos testes aprovados e compilação de produção TypeScript/Vite verificada.
+
+
 
 
 

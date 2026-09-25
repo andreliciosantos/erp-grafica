@@ -220,7 +220,12 @@ export function createMockPrismaService() {
         if (where?.orderNumber?.contains) {
           list = list.filter((w) => w.orderNumber?.includes(where.orderNumber.contains));
         }
-        return list;
+        return list.map((w) => ({
+          ...w,
+          quote: w.quote || quotes.find((q) => q.id === w.quoteId) || {
+            items: [{ productName: 'Material Gráfico Teste' }],
+          },
+        }));
       }),
       count: vi.fn(async () => workOrders.length),
       create: vi.fn(async ({ data }: any) => {

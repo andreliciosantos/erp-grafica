@@ -127,4 +127,19 @@ export function getPaymentStatusConfig(status: string) {
   }
 }
 
+export function getWorkOrderProductName(order?: any): string {
+  if (!order) return 'Material Gráfico';
+  if (order.productName && typeof order.productName === 'string' && order.productName.trim() !== '') {
+    return order.productName.trim();
+  }
+  const firstItem = order.quote?.items?.[0];
+  if (firstItem?.productName && typeof firstItem.productName === 'string' && firstItem.productName.trim() !== '') {
+    return firstItem.productName.trim();
+  }
+  if (order.quote?.notes && typeof order.quote.notes === 'string' && order.quote.notes.trim() !== '') {
+    return order.quote.notes.trim();
+  }
+  return 'Material Gráfico';
+}
+
 export * from './formatters';

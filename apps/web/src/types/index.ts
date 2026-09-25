@@ -84,6 +84,7 @@ export interface WorkOrderStageItem {
 export interface WorkOrderItem {
   id: string;
   orderNumber: string;
+  productName?: string;
   quoteId: string;
   partyId: string;
   userId: string;
