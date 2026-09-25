@@ -583,6 +583,35 @@ Para assegurar identificação visual imediata no chão de fábrica e evitar err
    - Substituição dos botões de ação com rótulos de texto extensos (*"Ver Detalhes"*, *"Ficha"*, *"Editar"*) que causavam quebra de linha por **botões compactos de ícones** (`32x32px` com cantos arredondados, bordas sutis e cores semânticas de hover).
    - Alinhamento horizontal em linha única (`inline-flex items-center justify-end gap-1.5` com `whitespace-nowrap`), garantindo layout limpo, simétrico e profissional com acessibilidade por `title` e `aria-label`.
 
+---
+
+## 23. Envio e Compartilhamento de Comprovante de Pagamento como Imagem no WhatsApp
+
+Para eliminar o atrito manual de cópia e colagem de texto cru e oferecer uma experiência comercial sofisticada ao cliente final da gráfica, foi implementado o fluxo de **geração e envio direto do comprovante como imagem PNG de alta definição no WhatsApp**:
+
+1. **Botão de Ação Direta no Modal de Recibo (`PaymentReceiptModal.tsx`):**
+   - Substituído o antigo botão simples de cópia de texto pelo botão de destaque **"Enviar Imagem no WhatsApp"** estilizado na cor oficial do WhatsApp (`#25D366`), com ícone `MessageSquare`.
+   - Ao ser acionado, o sistema rasteriza o cartão do recibo em tempo real em uma imagem PNG em escala retina ($2\times$ pixel ratio) com selo de quitação, número de recibo `REC-XXXXXXXX`, cliente, CPF/CNPJ, OS vinculada, parcela, forma de pagamento e data.
+
+2. **Fluxo de Compartilhamento Nativo com Seleção de Contato (Mobile / PWA / Android / iOS):**
+   - Utilização da **Web Share API nível 2** (`navigator.share` com suporte a `files: [File]`).
+   - O aplicativo redireciona o usuário diretamente para o seletor nativo de contatos do WhatsApp, onde o operador escolhe qualquer cliente de sua agenda e a imagem do comprovante é aberta já anexada à mensagem, pronta para disparo com 1 toque.
+
+3. **Fluxo Híbrido Resiliente para Desktop / WhatsApp Web:**
+   - Para ambientes de desktop ou navegadores sem suporte a compartilhamento nativo de arquivos:
+     - **Cópia Automática da Imagem para a Área de Transferência:** Utilização da **Async Clipboard API** com `ClipboardItem({ 'image/png': blob })`, permitindo que o usuário apenas pressione `Ctrl+V` dentro da conversa do cliente no WhatsApp para colar a imagem instantaneamente.
+     - **Download Automático do Arquivo PNG:** O arquivo `comprovante-REC-XXXXXXXX.png` é salvo no dispositivo para envio alternativo via arrastar-e-soltar.
+     - **Redirecionamento para o WhatsApp:** Abertura automática de `https://api.whatsapp.com/send` no navegador ou aplicativo desktop, posicionando o usuário na tela de seleção de contatos.
+     - **Feedback Visual Não-Intrusivo:** Alerta in-app orientando o operador com clareza sobre a cópia e download da imagem.
+
+4. **Atalho Opcional para Telefone Cadastrado:**
+   - Caso o cliente possua telefone registrado no cadastro (`receivable.party?.phone`), um atalho sutil *"Enviar direto para este nº"* é exibido, permitindo alternar entre escolher um contato livremente ou abrir diretamente a conversa com o número registrado.
+
+5. **Garantia de Qualidade e Testes:**
+   - Criada a suíte de testes unitários [`PaymentReceiptModal.test.tsx`](file:///c:/Users/Micro/Documents/Projetos/ERP_GRAFICA/apps/web/src/features/receivables/PaymentReceiptModal.test.tsx) com 6 testes cobrindo renderização, acionamento do Web Share, fallback com abertura de URL, atalho por telefone e cópia de texto.
+   - 100% dos testes aprovados e compilação de produção validada.
+
+
 
 
 
