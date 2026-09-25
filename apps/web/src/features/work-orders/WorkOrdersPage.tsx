@@ -487,43 +487,52 @@ export const WorkOrdersPage: React.FC = () => {
                           <td className="py-3.5 font-bold text-slate-800 dark:text-slate-100">
                             {formatCurrency(order.totalAmount)}
                           </td>
-                          <td className="py-3.5 text-right space-x-1.5">
-                            <Button size="sm" variant="outline" onClick={() => setSelectedOrder(order)}>
-                              <Eye className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">Ver Detalhes</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setTicketOrder(order)}
-                              className="text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-                              title="Imprimir Ficha Técnica de Produção"
-                            >
-                              <Printer className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">Ficha</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setOrderToEdit(order);
-                                setIsCreateModalOpen(true);
-                              }}
-                              className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700"
-                              title="Editar Ordem de Serviço"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">Editar</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setOrderToDelete(order)}
-                              className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-500/30"
-                              title="Excluir Ordem de Serviço"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                          <td className="py-3.5 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center justify-end gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setSelectedOrder(order)}
+                                className="w-8 h-8 p-0 min-h-0 min-w-0 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                title="Ver Detalhes da Ordem de Serviço"
+                                aria-label="Ver Detalhes"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setTicketOrder(order)}
+                                className="w-8 h-8 p-0 min-h-0 min-w-0 rounded-lg text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                                title="Imprimir Ficha Técnica de Produção"
+                                aria-label="Imprimir Ficha Técnica"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setOrderToEdit(order);
+                                  setIsCreateModalOpen(true);
+                                }}
+                                className="w-8 h-8 p-0 min-h-0 min-w-0 rounded-lg text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 border-blue-200 dark:border-blue-700/50 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                                title="Editar Ordem de Serviço"
+                                aria-label="Editar Ordem de Serviço"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setOrderToDelete(order)}
+                                className="w-8 h-8 p-0 min-h-0 min-w-0 rounded-lg text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-500/30"
+                                title="Excluir Ordem de Serviço"
+                                aria-label="Excluir Ordem de Serviço"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       );

@@ -579,6 +579,11 @@ Para assegurar identificação visual imediata no chão de fábrica e evitar err
    - Teste de integração backend em `work-orders.spec.ts` validando a injeção e mapeamento do `productName`.
    - 100% dos testes aprovados e compilação de produção TypeScript/Vite verificada.
 
+6. **Refinamento Ergonômico dos Botões de Ação na Tabela:**
+   - Substituição dos botões de ação com rótulos de texto extensos (*"Ver Detalhes"*, *"Ficha"*, *"Editar"*) que causavam quebra de linha por **botões compactos de ícones** (`32x32px` com cantos arredondados, bordas sutis e cores semânticas de hover).
+   - Alinhamento horizontal em linha única (`inline-flex items-center justify-end gap-1.5` com `whitespace-nowrap`), garantindo layout limpo, simétrico e profissional com acessibilidade por `title` e `aria-label`.
+
+
 
 
 
