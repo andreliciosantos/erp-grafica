@@ -8,7 +8,24 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ProductTemplateItem } from '@erp/shared-types';
 import { CreateProductTemplateDto } from './dto/create-product-template.dto';
 import { UpdateProductTemplateDto } from './dto/update-product-template.dto';
-import { Prisma } from '@erp/database';
+import { Prisma, ProductTemplate } from '@erp/database';
+
+export type ProductTemplateWithRelations = ProductTemplate & {
+  rawMaterial?: {
+    id: string;
+    name: string;
+    costPerUnit: Prisma.Decimal | number;
+    sheetWidthMm?: number | null;
+    sheetHeightMm?: number | null;
+  } | null;
+  machine?: {
+    id: string;
+    name: string;
+    hourlyRate: Prisma.Decimal | number;
+    setupMinutes: number;
+    maxSheetsHour?: number | null;
+  } | null;
+};
 
 @Injectable()
 export class ProductTemplatesService implements OnModuleInit {
@@ -20,7 +37,7 @@ export class ProductTemplatesService implements OnModuleInit {
     await this.seedDefaultsIfEmpty();
   }
 
-  private mapToItem(tpl: any): ProductTemplateItem {
+  private mapToItem(tpl: ProductTemplateWithRelations): ProductTemplateItem {
     return {
       id: tpl.id,
       name: tpl.name,
@@ -30,11 +47,11 @@ export class ProductTemplatesService implements OnModuleInit {
       defaultHeightMm: tpl.defaultHeightMm,
       defaultColorsFront: tpl.defaultColorsFront,
       defaultColorsBack: tpl.defaultColorsBack,
-      defaultFinishing: Array.isArray(tpl.defaultFinishing) ? tpl.defaultFinishing : [],
+      defaultFinishing: Array.isArray(tpl.defaultFinishing) ? (tpl.defaultFinishing as unknown as string[]) : [],
       defaultRawMaterialId: tpl.defaultRawMaterialId,
       defaultMachineId: tpl.defaultMachineId,
       defaultMarkupPercent: Number(tpl.defaultMarkupPercent),
-      suggestedQuantities: Array.isArray(tpl.suggestedQuantities) ? tpl.suggestedQuantities : [500, 1000, 2000],
+      suggestedQuantities: Array.isArray(tpl.suggestedQuantities) ? (tpl.suggestedQuantities as unknown as number[]) : [500, 1000, 2000],
       isActive: tpl.isActive,
       createdAt: tpl.createdAt.toISOString(),
       updatedAt: tpl.updatedAt.toISOString(),

@@ -37,9 +37,27 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('ERP Gráfica Modular API')
     .setDescription(
-      'Documentação interativa e playground para testes de endpoints do ERP Gráfica Modular (Web & Mobile)'
+      'Documentação interativa e playground OpenAPI 3.0 para a API do ERP Gráfica Modular (Web, Mobile e Integrações).\n\n' +
+      '### Como Testar Rotas Protegidas:\n' +
+      '1. Faça login em `POST /api/v1/auth/login` com as credenciais (ex: admin@erpgrafica.com / admin123).\n' +
+      '2. Copie o `accessToken` retornado.\n' +
+      '3. Clique no botão verde **Authorize** no topo desta página e cole o token.\n' +
+      '4. Todos os endpoints autenticados passarão a responder normalmente com seus dados.',
     )
     .setVersion('1.0.0')
+    .addTag('Autenticação', 'Autenticação de usuários e emissão de tokens JWT')
+    .addTag('Usuários', 'Gestão administrativa de contas de acesso e perfis (RBAC)')
+    .addTag('Clientes e Fornecedores', 'Cadastro unificado de pessoas físicas e jurídicas (PF/PJ)')
+    .addTag('Matéria-Prima e Insumos', 'Gestão de papéis, chapas, tintas, consumíveis e estoque')
+    .addTag('Máquinas e Equipamentos', 'Parque fabril, custos/hora, tempos de setup e velocidades nominais')
+    .addTag('Modelos de Produtos', 'Gabaritos pré-definidos para orçamentação ágil')
+    .addTag('Orçamentos Técnicos', 'Cálculo de corte, aproveitamento de folha, consumo e markup')
+    .addTag('Ordens de Serviço', 'Controle da esteira produtiva, estados e baixa de estoque')
+    .addTag('Chão de Fábrica - Apontamentos', 'Apontamentos em tempo real de operadores, tempos e perdas nas etapas')
+    .addTag('Financeiro e DRE', 'Demonstração do Resultado do Exercício (DRE) gerencial e fluxo de caixa')
+    .addTag('Contas a Receber', 'Gestão de títulos, parcelamento automático de OSs e liquidações')
+    .addTag('Despesas Operacionais', 'Custos fixos e variáveis (OPEX) e duplicação mensal')
+    .addTag('Colaboradores e RH', 'Cadastro de funcionários, turnos, salários e rateio de custo homem/hora')
     .addBearerAuth(
       {
         type: 'http',

@@ -7,15 +7,18 @@ import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Input } from '../../components/common/Input';
 import { formatCurrency, formatDate, getStatusConfig } from '../../lib/utils';
-import { Plus, Search, CheckCircle, Calculator, Trash2, AlertTriangle, KanbanSquare } from 'lucide-react';
+import { Plus, Search, CheckCircle, Calculator, Trash2, AlertTriangle, KanbanSquare, Bookmark } from 'lucide-react';
 import { QuoteResponseDto, PaginatedResult } from '../../types';
 import { Modal } from '../../components/common/Modal';
+import { QuickQuotesTemplatesModal } from './QuickQuotesTemplatesModal';
 
 export const QuotesListPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [quoteToDelete, setQuoteToDelete] = useState<QuoteResponseDto | null>(null);
+  const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery<PaginatedResult<QuoteResponseDto>>({
     queryKey: ['quotes-list', statusFilter],
@@ -49,10 +52,11 @@ export const QuotesListPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['quotes-list'] });
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
       setQuoteToDelete(null);
+      setErrorMessage(null);
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Erro ao excluir orçamento.');
+      setErrorMessage(error.response?.data?.message || 'Erro ao excluir orçamento.');
     },
   });
 
@@ -80,13 +84,41 @@ export const QuotesListPage: React.FC = () => {
             Cálculos técnicos de aproveitamento de papel, margens e aprovação de produção
           </p>
         </div>
-        <Link to="/quotes/new">
-          <Button size="sm">
-            <Plus className="w-4 h-4" />
-            Novo Orçamento Técnico
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsTemplatesModalOpen(true)}
+            className="border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
+          >
+            <Bookmark className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            Modelos Rápidos Pré-definidos
           </Button>
-        </Link>
+          <Link to="/quotes/new">
+            <Button size="sm">
+              <Plus className="w-4 h-4" />
+              Novo Orçamento Técnico
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      {/* In-app Error Banner */}
+      {errorMessage && (
+        <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="text-rose-500 hover:text-rose-700 dark:hover:text-rose-200 text-xs font-semibold px-2 py-0.5"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
 
       {/* Filters Card */}
       <Card>
@@ -251,7 +283,7 @@ export const QuotesListPage: React.FC = () => {
               }}
               isLoading={deleteMutation.isPending}
             >
-              Excluir Orçamento
+              Confirmar Exclusão
             </Button>
           </div>
         }
@@ -276,6 +308,12 @@ export const QuotesListPage: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Quick Quotes Templates Management Modal */}
+      <QuickQuotesTemplatesModal
+        isOpen={isTemplatesModalOpen}
+        onClose={() => setIsTemplatesModalOpen(false)}
+      />
     </div>
   );
 };

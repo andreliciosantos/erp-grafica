@@ -516,6 +516,36 @@ O ecossistema está configurado para operar de forma 100% autônoma em qualquer 
    - Túnel criptografado persistente baseado em protocolo QUIC (UDP) conectando a borda global da Cloudflare ao servidor Vite em `localhost:5173`.
    - Permite acesso remoto instantâneo via HTTPS sem necessidade de IP público estático, abertura de portas no roteador de fábrica ou configuração de NAT/Dynamic DNS.
 
+---
+
+## 21. Catálogo e Interface de Gestão de Orçamentos Rápidos Pré-definidos (Gabaritos Paramétricos de Balcão)
+
+Para acelerar drasticamente o atendimento no balcão de vendas e no comercial da gráfica rápida, foi implementada uma interface completa de gerenciamento e aplicação de **Orçamentos Rápidos Pré-definidos**:
+
+1. **Acesso Unificado e Ergonômico:**
+   - **Na Listagem de Orçamentos (`QuotesListPage.tsx`):** Novo botão de destaque *"Modelos Rápidos Pré-definidos"* com ícone `Bookmark` no cabeçalho da página, permitindo consultar, cadastrar, editar e excluir gabaritos padrão a qualquer momento.
+   - **Na Calculadora Técnica (`NewQuotePage.tsx`):** Seção aprimorada de *"Modelos Rápidos de Balcão (1-Clique)"* com botão *"Gerenciar Modelos"*, atalhos instantâneos e suporte a carregamento automático via parâmetro de busca na URL (`?templateId=xyz`).
+
+2. **Interface Modal de Gestão Completa (`QuickQuotesTemplatesModal.tsx`):**
+   - **Modo Lista:**
+     - Barra de pesquisa em tempo real por nome do produto, formato ou matéria-prima vinculada.
+     - Filtros rápidos por pílulas de categorias (*"Todos"*, *"Papelaria"*, *"Promocional"*, *"Comunicação Visual"*, *"Editorial"*, *"Embalagens"*, *"Outros"*).
+     - Cards detalhados com badges técnicos: dimensões milimétricas, padrão de cores (frente/verso), insumo padrão, máquina, markup (%) e tiragens sugeridas.
+     - Ações de *"Usar Modelo"*, *"Editar"* e *"Excluir"*.
+   - **Modo Formulário (Criação e Edição):**
+     - Atalhos de dimensões padronizadas em 1-clique: Cartão (`9x5 cm`), Panfleto (`10x14 cm`), `A5`, `A4`, `A3`, Banner (`60x90 cm`).
+     - Seleção de insumo padrão e máquina conectada aos cadastros fabris.
+     - Matriz de acabamentos integrados (refile, vinco/dobra, laminação fosca/brilho, verniz UV, corte especial, ilhós).
+     - Configuração de markup padrão e tiragens sugeridas separadas por vírgula.
+   - **Experiência Sem Alertas Nativos:**
+     - Exclusão com modal in-app de confirmação personalizada (`Confirmar Exclusão`).
+     - Mensagens de feedback não-intrusivas (sucesso e erro) integradas à interface.
+
+3. **Validação de Testes Automatizados:**
+   - Suíte unitária e de integração em `QuickQuotesTemplatesModal.test.tsx` e `QuotesListPage.test.tsx` cobrindo listagem, filtragem, seleção de gabarito, atalhos de dimensão e exclusão in-app.
+   - 100% dos testes aprovados e compilação de produção validada.
+
+
 
 
 

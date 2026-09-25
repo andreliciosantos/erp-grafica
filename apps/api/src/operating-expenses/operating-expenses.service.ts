@@ -15,7 +15,16 @@ import {
 import { CreateOperatingExpenseDto } from './dto/create-operating-expense.dto';
 import { UpdateOperatingExpenseDto } from './dto/update-operating-expense.dto';
 import { PayExpenseDto } from './dto/pay-expense.dto';
-import { Prisma } from '@erp/database';
+import { Prisma, OperatingExpense } from '@erp/database';
+
+export type OperatingExpenseWithSupplier = OperatingExpense & {
+  supplier?: {
+    id: string;
+    name: string;
+    tradeName?: string | null;
+    document: string;
+  } | null;
+};
 
 export const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   RENT_FACILITIES: 'Aluguel & Estrutura',
@@ -42,7 +51,26 @@ export interface PaginatedExpensesResponse {
 export class OperatingExpensesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private mapToItem(expense: any): OperatingExpenseItem {
+  private addOneMonthPreservingDay(baseDate: Date): Date {
+    const result = new Date(baseDate.getTime());
+    const originalDay = result.getUTCDate();
+    result.setUTCDate(1);
+    result.setUTCMonth(result.getUTCMonth() + 1);
+    const lastDayOfTargetMonth = new Date(
+      Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0),
+    ).getUTCDate();
+    result.setUTCDate(Math.min(originalDay, lastDayOfTargetMonth));
+    return result;
+  }
+
+  private mapToItem(expense: OperatingExpenseWithSupplier): OperatingExpenseItem {
+    const now = new Date();
+    const dueDate = expense.dueDate instanceof Date ? expense.dueDate : new Date(expense.dueDate);
+    let computedStatus = expense.status as PaymentStatus;
+    if (computedStatus === PaymentStatus.PENDING && dueDate < now) {
+      computedStatus = PaymentStatus.OVERDUE;
+    }
+
     return {
       id: expense.id,
       description: expense.description,
@@ -51,7 +79,7 @@ export class OperatingExpensesService {
       amount: Number(expense.amount),
       dueDate: expense.dueDate.toISOString(),
       paidAt: expense.paidAt ? expense.paidAt.toISOString() : null,
-      status: expense.status as PaymentStatus,
+      status: computedStatus,
       paymentMethod: expense.paymentMethod ? (expense.paymentMethod as PaymentMethod) : null,
       competenceDate: expense.competenceDate.toISOString(),
       supplierId: expense.supplierId,
@@ -159,7 +187,16 @@ export class OperatingExpensesService {
       where.expenseType = expenseType;
     }
 
-    if (status) {
+    const now = new Date();
+    if (status === PaymentStatus.OVERDUE) {
+      where.OR = [
+        { status: PaymentStatus.OVERDUE },
+        { status: PaymentStatus.PENDING, dueDate: { lt: now } },
+      ];
+    } else if (status === PaymentStatus.PENDING) {
+      where.status = PaymentStatus.PENDING;
+      where.dueDate = { gte: now };
+    } else if (status) {
       where.status = status;
     }
 
@@ -381,14 +418,21 @@ export class OperatingExpensesService {
       paymentMethod: dto.paymentMethod,
     };
 
-    if (dto.paidAmount !== undefined && dto.paidAmount !== existing.amount) {
+    let finalNotes = existing.notes || '';
+
+    const hasDiff = dto.paidAmount !== undefined && Math.abs(dto.paidAmount - existing.amount) > 0.005;
+    if (hasDiff && dto.paidAmount !== undefined) {
       data.amount = new Prisma.Decimal(dto.paidAmount);
-      const noteAppend = `\n[Valor original: R$ ${existing.amount.toFixed(2)} - Liquidado: R$ ${dto.paidAmount.toFixed(2)}]`;
-      data.notes = existing.notes ? `${existing.notes} ${noteAppend}` : noteAppend;
+      const noteAppend = `[Valor original: R$ ${existing.amount.toFixed(2)} - Liquidado: R$ ${dto.paidAmount.toFixed(2)}]`;
+      finalNotes = finalNotes ? `${finalNotes}\n${noteAppend}` : noteAppend;
     }
 
-    if (dto.notes) {
-      data.notes = existing.notes ? `${existing.notes}\n${dto.notes}` : dto.notes;
+    if (dto.notes && dto.notes.trim()) {
+      finalNotes = finalNotes ? `${finalNotes}\n${dto.notes.trim()}` : dto.notes.trim();
+    }
+
+    if (finalNotes) {
+      data.notes = finalNotes;
     }
 
     const updated = await this.prisma.operatingExpense.update({
@@ -408,12 +452,10 @@ export class OperatingExpensesService {
     const existing = await this.findOne(id);
 
     const currentDue = new Date(existing.dueDate);
-    const nextDue = new Date(currentDue);
-    nextDue.setMonth(nextDue.getMonth() + 1);
+    const nextDue = this.addOneMonthPreservingDay(currentDue);
 
     const currentComp = new Date(existing.competenceDate);
-    const nextComp = new Date(currentComp);
-    nextComp.setMonth(nextComp.getMonth() + 1);
+    const nextComp = this.addOneMonthPreservingDay(currentComp);
 
     if (existing.recurrenceEndDate) {
       const endLimit = new Date(existing.recurrenceEndDate);
@@ -421,6 +463,18 @@ export class OperatingExpensesService {
         throw new BadRequestException('A data de vencimento da próxima parcela ultrapassa a data limite da recorrência.');
       }
     }
+
+    const now = new Date();
+    const initialStatus = nextDue < now ? PaymentStatus.OVERDUE : PaymentStatus.PENDING;
+
+    // Limpar anotações de liquidações passadas e múltiplos prefixos ao duplicar
+    let cleanNotes = existing.notes || '';
+    cleanNotes = cleanNotes
+      .replace(/\[Valor original:.*?Liquidado:.*?\]/g, '')
+      .replace(/\[Recorrência gerada\]\s*/g, '')
+      .trim();
+
+    const newNotes = cleanNotes ? `[Recorrência gerada] ${cleanNotes}` : '[Recorrência gerada]';
 
     const cloned = await this.prisma.operatingExpense.create({
       data: {
@@ -430,7 +484,7 @@ export class OperatingExpensesService {
         amount: new Prisma.Decimal(existing.amount),
         dueDate: nextDue,
         paidAt: null,
-        status: PaymentStatus.PENDING,
+        status: initialStatus,
         paymentMethod: existing.paymentMethod,
         competenceDate: nextComp,
         supplierId: existing.supplierId,
@@ -440,7 +494,7 @@ export class OperatingExpensesService {
         isRecurring: existing.isRecurring,
         recurrenceInterval: existing.recurrenceInterval,
         recurrenceEndDate: existing.recurrenceEndDate ? new Date(existing.recurrenceEndDate) : null,
-        notes: existing.notes ? `[Recorrência gerada] ${existing.notes}` : '[Recorrência gerada]',
+        notes: newNotes,
       },
       include: {
         supplier: {

@@ -8,12 +8,14 @@ Sistema de Gestão Empresarial (ERP) especializado para a indústria gráfica, d
 
 - **Monorepo:** [Turborepo](https://turbo.build/) + [pnpm Workspaces](https://pnpm.io/)
 - **Backend API:** [NestJS](https://nestjs.com/) v11 + TypeScript estrito
+- **Frontend Web:** [React](https://react.dev/) + [Vite](https://vitejs.dev/) + [Tailwind CSS](https://tailwindcss.com/) + TanStack Query
 - **Banco de Dados & ORM:** [PostgreSQL](https://www.postgresql.org/) + [Prisma ORM](https://www.prisma.io/)
 - **Documentação & Playground:** [Swagger OpenAPI](https://swagger.io/) (`@nestjs/swagger`)
+- **Documentação Humana:** Guias completos em Markdown na pasta [`documentacao_humana/`](./documentacao_humana/)
 - **Precisão Matemática:** [Decimal.js](https://mikemcl.github.io/decimal.js/) para cálculos financeiros e aproveitamento de corte
 - **Comunicação em Tempo Real:** [WebSocket](https://socket.io/) Gateway integrado para atualizações de chão de fábrica
 - **Padronização de Erros:** [RFC 7807 (Problem Details)](https://datatracker.ietf.org/doc/html/rfc7807)
-- **Testes Automatizados:** [Vitest](https://vitest.dev/)
+- **Testes Automatizados:** [Vitest](https://vitest.dev/) (174 testes unitários e de integração)
 
 ---
 
@@ -22,21 +24,41 @@ Sistema de Gestão Empresarial (ERP) especializado para a indústria gráfica, d
 ```text
 erp-grafica/
 ├── apps/
-│   └── api/                    # Backend NestJS (REST + WebSocket Gateway + Swagger)
+│   ├── api/                    # Backend NestJS (REST + WebSocket Gateway + Swagger)
+│   │   ├── src/
+│   │   │   ├── auth/           # JWT, Passport, Guards de permissão (RBAC)
+│   │   │   ├── common/         # Filtros globais RFC 7807 e interceptors
+│   │   │   ├── employees/      # Gestão de funcionários e cargos
+│   │   │   ├── events/         # Gateway WebSocket para produção em tempo real
+│   │   │   ├── financial/      # DRE Gerencial, indicadores e fluxo de caixa
+│   │   │   ├── machines/       # Cadastro de impressoras (Offset e Digital)
+│   │   │   ├── operating-expenses/ # Contas a Pagar / Despesas Operacionais e Recorrências
+│   │   │   ├── parties/        # Clientes e Fornecedores
+│   │   │   ├── prisma/         # Conexão resiliente com o banco PostgreSQL
+│   │   │   ├── product-templates/ # Modelos padrão e gabaritos pré-configurados
+│   │   │   ├── quotes/         # Orçamentos técnicos integrados ao business-core
+│   │   │   ├── raw-materials/  # Papéis, gramaturas, formatos e estoque
+│   │   │   ├── receivables/    # Contas a Receber, parcelamento e conciliação
+│   │   │   ├── users/          # Gestão de usuários e operadores
+│   │   │   ├── work-orders/    # Ordens de Serviço, máquina de estados e chão de fábrica
+│   │   │   ├── app.module.ts
+│   │   │   └── main.ts         # Inicialização e setup do Swagger
+│   │   └── test/               # Testes de integração da API
+│   └── web/                    # Frontend React SPA (Vite + Tailwind CSS + Lucide)
 │       ├── src/
-│       │   ├── auth/           # JWT, Passport, Guards de permissão (RBAC)
-│       │   ├── common/         # Filtros globais RFC 7807 e interceptors
-│       │   ├── events/         # Gateway WebSocket para produção em tempo real
-│       │   ├── machines/       # Cadastro de impressoras (Offset e Digital)
-│       │   ├── parties/        # Clientes e Fornecedores
-│       │   ├── prisma/         # Conexão resiliente com o banco PostgreSQL
-│       │   ├── quotes/         # Orçamentos técnicos integrados ao business-core
-│       │   ├── raw-materials/  # Papéis, gramaturas, formatos e estoque
-│       │   ├── users/          # Gestão de usuários e operadores
-│       │   ├── work-orders/    # Ordens de Serviço, máquina de estados e chão de fábrica
-│       │   ├── app.module.ts
-│       │   └── main.ts         # Inicialização e setup do Swagger
-│       └── test/               # Testes de integração da API
+│       │   ├── components/     # UI components (Kanban, Gráficos, Modais, Tabelas)
+│       │   ├── hooks/          # Hooks customizados e queries
+│       │   ├── pages/          # Páginas (Dashboard, PCP, Comercial, Financeiro, Estoque)
+│       │   └── services/       # Clientes HTTP e integração com a API
+│       └── tests/              # Suítes de testes do frontend (Vitest + Testing Library)
+├── documentacao_humana/        # Manuais e guias explicativos para pessoas humanas
+│   ├── README.md               # Índice mestre e mapa de leitura por perfil
+│   ├── 01_visao_geral_e_guia_de_inicio_rapido.md
+│   ├── 02_manual_comercial_e_engenharia_de_orcamentos.md
+│   ├── 03_manual_producao_pcp_e_chao_de_fabrica.md
+│   ├── 04_manual_estoque_insumos_e_maquinas.md
+│   ├── 05_manual_financeiro_contas_e_dre.md
+│   └── 06_faq_e_guia_de_testes_swagger.md
 ├── packages/
 │   ├── business-core/          # Motor matemático puro de corte de folha e precificação
 │   │   ├── src/

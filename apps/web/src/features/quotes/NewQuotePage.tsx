@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { calculateSheetCutting, calculateQuotePricing } from '@erp/business-core';
@@ -10,13 +10,17 @@ import { NumberInput } from '../../components/common/NumberInput';
 import { Select } from '../../components/common/Select';
 import { SheetCuttingCanvas } from '../../components/cutting-preview/SheetCuttingCanvas';
 import { formatCurrency } from '../../lib/utils';
-import { ArrowLeft, Save, Sparkles, AlertCircle, Bookmark } from 'lucide-react';
+import { ArrowLeft, Save, Sparkles, AlertCircle, Bookmark, Settings } from 'lucide-react';
 import { PartyItem, RawMaterialItem, MachineItem, PaginatedResult } from '../../types';
 import { ProductTemplateItem } from '@erp/shared-types';
+import { QuickQuotesTemplatesModal } from './QuickQuotesTemplatesModal';
 
 export const NewQuotePage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const templateIdParam = searchParams.get('templateId');
+  const appliedTemplateRef = useRef<string | null>(null);
 
   // Form states
   const [partyId, setPartyId] = useState('');
@@ -31,6 +35,8 @@ export const NewQuotePage: React.FC = () => {
   const [markupPercent, setMarkupPercent] = useState(35);
   const [notes, setNotes] = useState('');
   const [finishingOptions, setFinishingOptions] = useState<string[]>(['DOBRA']);
+  const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Fetch Product Templates
   const { data: templates = [] } = useQuery<ProductTemplateItem[]>({
@@ -40,6 +46,17 @@ export const NewQuotePage: React.FC = () => {
       return res.data;
     },
   });
+
+  // Apply template from URL if present
+  useEffect(() => {
+    if (templateIdParam && templates.length > 0 && appliedTemplateRef.current !== templateIdParam) {
+      const found = templates.find((t) => t.id === templateIdParam);
+      if (found) {
+        applyTemplate(found);
+        appliedTemplateRef.current = templateIdParam;
+      }
+    }
+  }, [templateIdParam, templates]);
 
   // Fetch Parties
   const { data: partiesData } = useQuery<PaginatedResult<PartyItem>>({
@@ -184,7 +201,7 @@ export const NewQuotePage: React.FC = () => {
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string | string[] } } };
       const msg = error.response?.data?.message;
-      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Erro ao gerar orçamento.'));
+      setSubmitError(Array.isArray(msg) ? msg.join(' ') : (msg || 'Erro ao gerar orçamento.'));
     },
   });
 
@@ -223,19 +240,47 @@ export const NewQuotePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Modelos Rápidos de Balcão (1-Clique) */}
-      {templates.length > 0 && (
-        <Card className="border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20">
-          <CardContent className="p-3.5 space-y-2">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
-                <Bookmark className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>Modelos Rápidos de Balcão (1-Clique)</span>
+      {/* In-app Error Banner */}
+      {submitError && (
+        <div className="p-3.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+            <span>{submitError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSubmitError(null)}
+            className="text-rose-500 hover:text-rose-700 dark:hover:text-rose-200 text-xs font-semibold px-2 py-0.5"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
+
+      {/* Modelos Rápidos Pré-definidos (1-Clique) */}
+      <Card className="border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20">
+        <CardContent className="p-3.5 space-y-2.5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
+              <Bookmark className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Modelos Rápidos Pré-definidos (1-Clique)</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">
+                Preenchimento instantâneo de especificações técnicas
               </span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                Preenchimento instantâneo de formato e especificações
-              </span>
+              <button
+                type="button"
+                onClick={() => setIsTemplatesModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 dark:text-emerald-300 dark:hover:text-emerald-200 bg-emerald-100/70 hover:bg-emerald-200/70 dark:bg-emerald-900/50 dark:hover:bg-emerald-900/80 rounded-lg transition-colors cursor-pointer"
+                title="Gerenciar e cadastrar modelos rápidos"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>Gerenciar Modelos</span>
+              </button>
             </div>
+          </div>
+          {templates.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2">
               {templates.map((tpl) => (
                 <button
@@ -248,9 +293,20 @@ export const NewQuotePage: React.FC = () => {
                 </button>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 dark:bg-slate-900/50 text-xs text-slate-500 dark:text-slate-400">
+              <span>Nenhum modelo rápido pré-definido cadastrado ainda.</span>
+              <button
+                type="button"
+                onClick={() => setIsTemplatesModalOpen(true)}
+                className="text-emerald-600 hover:underline font-medium"
+              >
+                Cadastrar primeiro modelo
+              </button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Form Controls */}
@@ -510,6 +566,16 @@ export const NewQuotePage: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      {/* Quick Quotes Templates Management Modal */}
+      <QuickQuotesTemplatesModal
+        isOpen={isTemplatesModalOpen}
+        onClose={() => setIsTemplatesModalOpen(false)}
+        onSelectTemplate={(tpl) => {
+          applyTemplate(tpl);
+          setIsTemplatesModalOpen(false);
+        }}
+      />
     </div>
   );
 };

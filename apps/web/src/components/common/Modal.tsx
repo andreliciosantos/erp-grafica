@@ -9,7 +9,7 @@ export interface ModalProps {
   description?: string;
   children: ReactNode;
   footer?: ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -38,6 +38,8 @@ export const Modal: React.FC<ModalProps> = ({
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
     '3xl': 'max-w-3xl',
+    '4xl': 'max-w-4xl',
+    '5xl': 'max-w-5xl',
   };
 
   return (

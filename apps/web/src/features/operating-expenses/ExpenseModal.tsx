@@ -282,7 +282,16 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             <Select
               label="Ou Fornecedor Cadastrado (Opcional)"
               value={supplierId}
-              onChange={(e) => setSupplierId(e.target.value)}
+              onChange={(e) => {
+                const sId = e.target.value;
+                setSupplierId(sId);
+                if (sId) {
+                  const found = suppliersData?.data?.find((s) => s.id === sId);
+                  if (found && !beneficiaryName.trim()) {
+                    setBeneficiaryName(found.tradeName || found.name);
+                  }
+                }
+              }}
               options={[{ value: '', label: 'Nenhum / Credor Avulso' }, ...suppliersList]}
             />
             <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">

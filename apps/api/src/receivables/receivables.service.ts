@@ -16,7 +16,7 @@ import { CreateReceivableDto } from './dto/create-receivable.dto';
 import { UpdateReceivableDto } from './dto/update-receivable.dto';
 import { PayReceivableDto } from './dto/pay-receivable.dto';
 import { GenerateOrderInstallmentsDto } from './dto/generate-order-installments.dto';
-import { Prisma } from '@erp/database';
+import { Receivable, Prisma } from '@erp/database';
 
 export interface PaginatedReceivablesResponse {
   data: ReceivableItem[];
@@ -28,13 +28,29 @@ export interface PaginatedReceivablesResponse {
   };
 }
 
+type ReceivableWithRelations = Receivable & {
+  party?: {
+    id: string;
+    name: string;
+    tradeName?: string | null;
+    document: string;
+    phone: string;
+  } | null;
+  workOrder?: {
+    id: string;
+    orderNumber: string;
+    totalAmount: Prisma.Decimal | number;
+    status: WorkOrderStatus | string;
+  } | null;
+};
+
 @Injectable()
 export class ReceivablesService {
   private readonly logger = new Logger(ReceivablesService.name);
 
   constructor(private readonly prisma: PrismaService) {}
 
-  private mapToItem(receivable: any): ReceivableItem {
+  private mapToItem(receivable: ReceivableWithRelations): ReceivableItem {
     return {
       id: receivable.id,
       workOrderId: receivable.workOrderId,
@@ -388,7 +404,7 @@ export class ReceivablesService {
       },
     });
 
-    const createdItems: any[] = [];
+    const createdItems: ReceivableWithRelations[] = [];
     const baseDueDate = dto.firstDueDate ? new Date(dto.firstDueDate) : new Date();
 
     if (alreadyPaidAmount > 0) {

@@ -443,6 +443,21 @@ export function createMockPrismaService() {
         operatingExpenses.push(e);
         return e;
       }),
+      findUnique: vi.fn(async ({ where }: any) => {
+        return operatingExpenses.find((e) => e.id === where.id) || null;
+      }),
+      update: vi.fn(async ({ where, data }: any) => {
+        const idx = operatingExpenses.findIndex((e) => e.id === where.id);
+        if (idx === -1) throw new Error('Not found');
+        operatingExpenses[idx] = { ...operatingExpenses[idx], ...data, updatedAt: new Date() };
+        return operatingExpenses[idx];
+      }),
+      delete: vi.fn(async ({ where }: any) => {
+        const idx = operatingExpenses.findIndex((e) => e.id === where.id);
+        if (idx === -1) throw new Error('Not found');
+        const [deleted] = operatingExpenses.splice(idx, 1);
+        return deleted;
+      }),
       count: vi.fn(async () => operatingExpenses.length),
     },
     $transaction: vi.fn(async (cb: any) => {

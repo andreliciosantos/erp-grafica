@@ -134,6 +134,25 @@ export const PayExpenseModal: React.FC<PayExpenseModalProps> = ({
           />
         </div>
 
+        {Math.abs(paidAmount - expense.amount) > 0.005 && (
+          <div
+            className={`p-2.5 rounded-xl text-xs flex items-center justify-between border ${
+              paidAmount < expense.amount
+                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
+                : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20'
+            }`}
+          >
+            <span className="font-medium">
+              {paidAmount < expense.amount ? 'Economia / Desconto obtido:' : 'Acréscimo de Juros / Multa:'}
+            </span>
+            <span className="font-bold">
+              {paidAmount < expense.amount
+                ? `- ${formatCurrency(expense.amount - paidAmount)}`
+                : `+ ${formatCurrency(paidAmount - expense.amount)}`}
+            </span>
+          </div>
+        )}
+
         <Select
           label="Forma de Pagamento"
           value={paymentMethod}

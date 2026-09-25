@@ -3,7 +3,15 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Quote, QuoteItem, WorkOrder } from '@erp/database';
+import {
+  Quote,
+  QuoteItem,
+  WorkOrder,
+  Prisma,
+  WorkOrderStatus,
+  StageStatus,
+  PaymentStatus,
+} from '@erp/database';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import {
@@ -13,22 +21,44 @@ import {
 } from '@erp/business-core';
 import {
   QuoteStatus,
-  WorkOrderStatus,
-  StageStatus,
-  PaymentStatus,
   ChannelSource,
+  WorkOrderStatus as SharedWorkOrderStatus,
 } from '@erp/shared-types';
 import { EventsGateway } from '../events/events.gateway';
 
+// Padrões industriais e fallbacks de engenharia gráfica
+const DEFAULT_FALLBACK_HOURLY_RATE = 100;
+const DEFAULT_FALLBACK_SETUP_MINUTES = 15;
+const DEFAULT_FALLBACK_SPEED_PER_HOUR = 3000;
+const DEFAULT_PARENT_SHEET_WIDTH_MM = 660;
+const DEFAULT_PARENT_SHEET_HEIGHT_MM = 960;
+const DEFAULT_COST_PER_SHEET = 0.85;
+const DEFAULT_BLEED_MM = 3;
+const DEFAULT_GRIPPER_MARGIN_MM = 10;
+const DEFAULT_WASTE_RATE = 0.10;
+const DEFAULT_FINISHING_UNIT_COST = 0.05;
+const DEFAULT_VALID_DAYS = 10;
+
 export type QuoteWithDetails = Quote & {
-  items: QuoteItem[];
-  party?: { id: string; name: string; document: string; phone: string };
+  items: (QuoteItem & {
+    rawMaterial?: {
+      id: string;
+      name: string;
+      costPerUnit: Prisma.Decimal | number;
+    } | null;
+  })[];
+  party?: { id: string; name: string; document: string; phone: string; email?: string | null } | null;
   workOrder?: {
     id: string;
     orderNumber: string;
-    status: any;
-    stages?: any[];
-  } | any | null;
+    status: WorkOrderStatus;
+    stages?: {
+      id: string;
+      stepOrder?: number;
+      name?: string;
+      status: StageStatus;
+    }[];
+  } | null;
 };
 
 export interface PaginatedQuotesResponse {
@@ -62,15 +92,15 @@ export class QuotesService {
 
     const machine =
       (await this.prisma.machine.findFirst({ where: { isActive: true } })) || {
-        hourlyRate: new Decimal(100),
-        setupMinutes: 15,
-        maxSheetsHour: 3000,
+        hourlyRate: new Decimal(DEFAULT_FALLBACK_HOURLY_RATE),
+        setupMinutes: DEFAULT_FALLBACK_SETUP_MINUTES,
+        maxSheetsHour: DEFAULT_FALLBACK_SPEED_PER_HOUR,
       };
 
     let totalQuoteCost = new Decimal(0);
     let totalQuoteAmount = new Decimal(0);
 
-    const calculatedItems: any[] = [];
+    const calculatedItems: Prisma.QuoteItemCreateWithoutQuoteInput[] = [];
 
     for (const itemDto of dto.items) {
       let rawMaterial = null;
@@ -80,9 +110,11 @@ export class QuotesService {
         });
       }
 
-      const parentWidth = rawMaterial?.sheetWidthMm || 660;
-      const parentHeight = rawMaterial?.sheetHeightMm || 960;
-      const costPerSheet = rawMaterial?.costPerUnit ? new Decimal(rawMaterial.costPerUnit) : new Decimal(0.85);
+      const parentWidth = rawMaterial?.sheetWidthMm || DEFAULT_PARENT_SHEET_WIDTH_MM;
+      const parentHeight = rawMaterial?.sheetHeightMm || DEFAULT_PARENT_SHEET_HEIGHT_MM;
+      const costPerSheet = rawMaterial?.costPerUnit
+        ? new Decimal(rawMaterial.costPerUnit)
+        : new Decimal(DEFAULT_COST_PER_SHEET);
 
       const cuttingResult = calculateSheetCutting({
         parentSheetWidthMm: parentWidth,
@@ -90,20 +122,20 @@ export class QuotesService {
         itemWidthMm: itemDto.widthMm,
         itemHeightMm: itemDto.heightMm,
         runQuantity: itemDto.quantity,
-        bleedMm: 3,
-        gripperMarginMm: 10,
-        wasteRate: 0.10,
+        bleedMm: DEFAULT_BLEED_MM,
+        gripperMarginMm: DEFAULT_GRIPPER_MARGIN_MM,
+        wasteRate: DEFAULT_WASTE_RATE,
       });
 
       const finishingOptionsCount = itemDto.finishingOptions?.length || 0;
-      const finishingCostTotal = new Decimal(finishingOptionsCount * 0.05 * itemDto.quantity);
+      const finishingCostTotal = new Decimal(finishingOptionsCount * DEFAULT_FINISHING_UNIT_COST * itemDto.quantity);
 
       const pricingResult = calculateQuotePricing({
         sheetsRequired: cuttingResult.sheetsRequired,
         costPerSheet,
         machineHourlyRate: new Decimal(machine.hourlyRate),
         machineSetupMinutes: machine.setupMinutes,
-        machineMaxSheetsHour: machine.maxSheetsHour || 3000,
+        machineMaxSheetsHour: machine.maxSheetsHour || DEFAULT_FALLBACK_SPEED_PER_HOUR,
         finishingCostTotal,
         markupApplied: dto.markupApplied,
         itemQuantity: itemDto.quantity,
@@ -113,7 +145,7 @@ export class QuotesService {
       totalQuoteAmount = totalQuoteAmount.add(pricingResult.totalAmount);
 
       calculatedItems.push({
-        rawMaterialId: rawMaterial?.id || null,
+        rawMaterial: rawMaterial?.id ? { connect: { id: rawMaterial.id } } : undefined,
         productName: itemDto.productName,
         quantity: itemDto.quantity,
         widthMm: itemDto.widthMm,
@@ -131,7 +163,7 @@ export class QuotesService {
       });
     }
 
-    const validDays = dto.validDays || 10;
+    const validDays = dto.validDays || DEFAULT_VALID_DAYS;
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + validDays);
 
@@ -206,8 +238,8 @@ export class QuotesService {
       this.eventsGateway.emitWorkOrderStatusChanged({
         workOrderId: result.workOrder.id,
         orderNumber: result.workOrder.orderNumber,
-        previousStatus: WorkOrderStatus.PENDING,
-        newStatus: WorkOrderStatus.PENDING,
+        previousStatus: SharedWorkOrderStatus.PENDING,
+        newStatus: SharedWorkOrderStatus.PENDING,
         updatedAt: new Date().toISOString(),
       });
     }
@@ -326,8 +358,8 @@ export class QuotesService {
     this.eventsGateway.emitWorkOrderStatusChanged({
       workOrderId: result.id,
       orderNumber: result.orderNumber,
-      previousStatus: WorkOrderStatus.PENDING,
-      newStatus: WorkOrderStatus.PENDING,
+      previousStatus: SharedWorkOrderStatus.PENDING,
+      newStatus: SharedWorkOrderStatus.PENDING,
       updatedAt: new Date().toISOString(),
     });
 

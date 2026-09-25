@@ -395,6 +395,11 @@ model OperatingExpense {
 
   supplier            Party?           @relation(fields: [supplierId], references: [id])
 
+  @@index([competenceDate])
+  @@index([dueDate])
+  @@index([status])
+  @@index([category])
+  @@index([supplierId])
   @@map("operating_expenses")
 }
 

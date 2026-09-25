@@ -702,9 +702,54 @@ A especificação W3C *Pointer Events Level 3* introduz a propriedade CSS `touch
 
 ---
 
+## 25. Padrão de Projeto Prototype, Gabaritos Paramétricos e Complexidade de Entrada de Dados no Balcão Gráfico
+
+A orçamentação gráfica tradicional é caracterizada por uma alta complexidade combinatorial: cada produto demanda a definição de largura ($w$), altura ($h$), sangria ($b$), margem de pinça ($m$), cores de impressão frente/verso ($c_F \times c_V$), insumo de substrato ($RM$), máquina impressora ($M$), acabamentos complementares ($F$) e margem de markup ($\mu$). Em ambientes de atendimento rápido no balcão, digitar repetidamente essas dezenas de variáveis gera atrasos, erros de digitação e orçamentos tecnicamente inviáveis.
+
+### 25.1. Teoria da Carga Cognitiva e Princípio de Hick-Hyman em Sistemas de Balcão
+A **Lei de Hick-Hyman** modela o tempo de decisão $T$ do atendente em função do número $n$ de escolhas e alternativas disponíveis com probabilidades equiprováveis:
+$$T = b \cdot \log_2(n + 1)$$
+Ao apresentar uma tela em branco com dezenas de campos numéricos avulsos, o espaço amostral de combinações possíveis tende ao infinito contínuo ($\mathbb{R}^{10}$), elevando a sobrecarga cognitiva (*cognitive load*).
+A introdução de **Gabaritos Pré-definidos de Produtos (`ProductTemplateItem`)** particiona esse espaço contínuo em um conjunto finito discreto de protótipos industriais canônicos:
+$$\mathcal{T} = \{ \text{Cartão 9x5}, \text{Panfleto A5}, \text{Folder A4}, \text{Cartaz A3}, \text{Banner 60x90}, \dots \}$$
+O atendente reduz seu tempo de seleção a um único clique $\mathcal{O}(1)$, deixando para ajustar apenas variáveis conjunturais como quantidade de tiragem ou cliente.
+
+### 25.2. O Padrão de Projeto Criacional Prototype (Clonagem Paramétrica)
+Em engenharia de software, o padrão **Prototype** delega a instanciação de objetos complexos à clonagem de uma instância de referência já parametrizada. 
+No ERP Gráfica:
+```typescript
+interface ProductTemplateItem {
+  id: string;
+  name: string;
+  category?: string;
+  defaultWidthMm: number;
+  defaultHeightMm: number;
+  defaultColorsFront: number;
+  defaultColorsBack: number;
+  defaultRawMaterialId?: string;
+  defaultMachineId?: string;
+  defaultFinishing: string[];
+  suggestedQuantities: number[];
+  defaultMarkupPercent: number;
+  isActive: boolean;
+}
+```
+A função `applyTemplate(tpl)` realiza uma projeção funcional sobre os estados da calculadora paramétrica:
+$$\mathcal{P}_{\text{Calculator}}: \text{Template} \mapsto \langle \text{width}, \text{height}, \text{colors}, \text{material}, \text{machine}, \text{markup}, \text{finishings} \rangle$$
+disparando instantaneamente os motores analíticos de imposição (`calculateSheetCutting`) e precificação industrial (`calculateQuotePricing`) do `@erp/business-core`.
+
+### 25.3. Acoplamento Fraco e Roteamento Declarativo via URL Search Parameters
+Para permitir que o catálogo de modelos rápidos seja acessado a partir de diferentes pontos da aplicação (como a listagem geral de orçamentos `QuotesListPage` ou a calculadora `NewQuotePage`), adotou-se o desacoplamento por **Parâmetros de Busca de URL (*URL Search Parameters*)**:
+1. O usuário visualiza o catálogo no modal `QuickQuotesTemplatesModal` e clica em *"Usar Modelo"*.
+2. O sistema navega declarativamente para `/quotes/new?templateId=xyz`.
+3. Um efeito reativo com salvaguarda de idempotência (`appliedTemplateRef`) detecta a presença do parâmetro e sincroniza os estados de formulário uma única vez, prevenindo recálculos desnecessários ou sobrescrita acidental de customizações feitas pelo operador.
+
+---
+
 ## Conclusão da Aula Magistral
 
-> *"Como pudemos constatar ao longo desta análise, o ERP Gráfica Modular não é uma coleção fortuita de bibliotecas da moda. Cada tecnologia — do rigor aritmético do `Decimal.js` à eficiência de grafos do `Turborepo`, da integridade relacional do `PostgreSQL` à reatividade funcional do `React 18`, da ergonomia biomecânica da Lei de Fitts na adaptação Mobile-First com rolagem suave à fotometria cromática de acessibilidade WCAG em tons pastel, dos autômatos formais de formatação léxica à consistência transacional e idempotência matemática nas operações universais de atualização, da engenharia anti-FOUC ao controle de color-scheme, da separação contábil rigorosa entre custos diretos (CPV) e operacionais (OPEX), da álgebra em cascata da DRE em tempo real, da geometria vetorial nativa do Code-128, da resiliência assíncrona do Service Worker PWA no chão de fábrica, até a unificação atômica de orçamentos em ordens de serviço industriais, a supressão de alertas bloqueantes e a divulgação progressiva ergonômica nos modais — foi selecionada para responder a um desafio rigoroso de computação e física industrial. Com 170 testes automatizados aprovados e cobertura total de suas regras de negócio, a arquitetura de software demonstra sua excelência: a harmonização elegante entre a teoria da ciência da computação e a resolução pragmática de problemas de negócio no mundo real."*
+> *"Como pudemos constatar ao longo desta análise, o ERP Gráfica Modular não é uma coleção fortuita de bibliotecas da moda. Cada tecnologia — do rigor aritmético do `Decimal.js` à eficiência de grafos do `Turborepo`, da integridade relacional do `PostgreSQL` à reatividade funcional do `React 18`, da ergonomia biomecânica da Lei de Fitts na adaptação Mobile-First com rolagem suave à fotometria cromática de acessibilidade WCAG em tons pastel, dos autômatos formais de formatação léxica à consistência transacional e idempotência matemática nas operações universais de atualização, da engenharia anti-FOUC ao controle de color-scheme, da separação contábil rigorosa entre custos diretos (CPV) e operacionais (OPEX), da álgebra em cascata da DRE em tempo real, da geometria vetorial nativa do Code-128, da resiliência assíncrona do Service Worker PWA no chão de fábrica, da unificação atômica de orçamentos em ordens de serviço industriais, da supressão de alertas bloqueantes e divulgação progressiva ergonômica nos modais, até a clonagem paramétrica com o padrão Prototype na gestão de orçamentos rápidos pré-definidos — foi selecionada para responder a um desafio rigoroso de computação e física industrial. Com 182 testes automatizados aprovados e cobertura total de suas regras de negócio, a arquitetura de software demonstra sua excelência: a harmonização elegante entre a teoria da ciência da computação e a resolução pragmática de problemas de negócio no mundo real."*
+
 
 
 
