@@ -1,0 +1,989 @@
+{
+  "users": [
+    {
+      "id": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "name": "Administrador do Sistema",
+      "email": "admin@erpgrafica.com",
+      "passwordHash": "$2b$10$4sL54JMxjd5lTErPgTiA.Ox3DT7CZORRtmkV82jTjFcXOshjy1O3S",
+      "role": "ADMIN",
+      "isActive": true,
+      "createdAt": "2026-09-21T20:05:25.476Z",
+      "updatedAt": "2026-09-21T20:05:25.476Z"
+    },
+    {
+      "id": "7b433e3e-6976-4ef2-99ad-426190a0df11",
+      "name": "Operador Chão de Fábrica",
+      "email": "operador@erpgrafica.com",
+      "passwordHash": "$2b$10$l6nQIAN1nJ4Zp3Cpg/yqeOloYF7SJ55.w81uKRuanJDO09CvTW.S6",
+      "role": "OPERATOR",
+      "isActive": true,
+      "createdAt": "2026-09-21T20:05:25.556Z",
+      "updatedAt": "2026-09-21T20:05:25.556Z"
+    }
+  ],
+  "parties": [
+    {
+      "id": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "type": "COMPANY",
+      "name": "Gráfica e Editora Exemplo Ltda",
+      "tradeName": "Editora Exemplo",
+      "document": "12345678000195",
+      "email": "contato@editoraexemplo.com.br",
+      "phone": "5511988887777",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo",
+      "state": "SP",
+      "isCustomer": true,
+      "isSupplier": false,
+      "createdAt": "2026-09-21T20:05:25.616Z",
+      "updatedAt": "2026-09-21T20:05:25.616Z"
+    }
+  ],
+  "rawMaterials": [
+    {
+      "id": "rm-offset-90g-66x96",
+      "name": "Papel Offset 90g (660x960mm)",
+      "category": "PAPER",
+      "unitOfMeasure": "FL",
+      "costPerUnit": "0.45",
+      "currentStock": "10000",
+      "minStock": "2000",
+      "sheetWidthMm": 660,
+      "sheetHeightMm": 960,
+      "grammage": 90,
+      "createdAt": "2026-09-21T20:05:25.614Z",
+      "updatedAt": "2026-09-21T20:05:25.614Z"
+    },
+    {
+      "id": "2a0c7049-0152-4b13-b4a0-d84cbfd4cc69",
+      "name": "testes",
+      "category": "VINYL",
+      "unitOfMeasure": "FL",
+      "costPerUnit": "0.85",
+      "currentStock": "5000",
+      "minStock": "1000",
+      "sheetWidthMm": 660,
+      "sheetHeightMm": 960,
+      "grammage": 150,
+      "createdAt": "2026-09-22T19:15:42.514Z",
+      "updatedAt": "2026-09-22T19:15:42.514Z"
+    },
+    {
+      "id": "rm-couche-150g-66x96",
+      "name": "Papel Couché Brilho 150g (660x960mm)",
+      "category": "PAPER",
+      "unitOfMeasure": "FL",
+      "costPerUnit": "0.85",
+      "currentStock": "4754",
+      "minStock": "1000",
+      "sheetWidthMm": 660,
+      "sheetHeightMm": 960,
+      "grammage": 150,
+      "createdAt": "2026-09-21T20:05:25.609Z",
+      "updatedAt": "2026-09-22T21:52:12.926Z"
+    },
+    {
+      "id": "f1247b16-610e-48a4-b469-4e66ddda988b",
+      "name": "officio A4",
+      "category": "PAPER",
+      "unitOfMeasure": "FL",
+      "costPerUnit": "0.05",
+      "currentStock": "10000",
+      "minStock": "1000",
+      "sheetWidthMm": 210,
+      "sheetHeightMm": 297,
+      "grammage": 75,
+      "createdAt": "2026-09-24T19:28:29.490Z",
+      "updatedAt": "2026-09-24T19:28:29.490Z"
+    }
+  ],
+  "stockMovements": [
+    {
+      "id": "18e1bd56-2ad1-45fc-b3ad-5d7b124e4a36",
+      "rawMaterialId": "rm-couche-150g-66x96",
+      "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
+      "quantity": "-123",
+      "reason": "CONSUMO_PRODUCAO",
+      "createdAt": "2026-09-22T21:52:12.923Z"
+    }
+  ],
+  "machines": [
+    {
+      "id": "m-heidelberg-speedmaster",
+      "name": "Heidelberg Speedmaster SM 74 (Offset)",
+      "hourlyRate": "180",
+      "setupMinutes": 30,
+      "maxSheetsHour": 8000,
+      "isActive": true
+    },
+    {
+      "id": "m-konica-c3070",
+      "name": "Konica Minolta AccurioPrint C3070 (Digital)",
+      "hourlyRate": "95",
+      "setupMinutes": 10,
+      "maxSheetsHour": 3000,
+      "isActive": true
+    }
+  ],
+  "quotes": [
+    {
+      "id": "c5998199-10b6-45ac-9b27-3decc8436ed2",
+      "code": 1,
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "247.32",
+      "markupApplied": "0.35",
+      "totalAmount": "380.49",
+      "validUntil": "2026-10-06T20:06:53.837Z",
+      "notes": "Orçamento de teste via Swagger",
+      "createdAt": "2026-09-21T20:06:53.839Z",
+      "updatedAt": "2026-09-21T20:06:53.869Z",
+      "items": [
+        {
+          "id": "4ccdd67f-8f6d-4180-8470-63a13b6b3a16",
+          "quoteId": "c5998199-10b6-45ac-9b27-3decc8436ed2",
+          "rawMaterialId": "rm-couche-150g-66x96",
+          "productName": "Folder Institucional A4 4x4",
+          "quantity": 1000,
+          "widthMm": 210,
+          "heightMm": 297,
+          "colorsFront": 4,
+          "colorsBack": 4,
+          "finishingOptions": [
+            "DOBRA"
+          ],
+          "sheetsRequired": 123,
+          "itemsPerSheet": 9,
+          "paperCostCalculated": "104.55",
+          "finishingCostTotal": "50",
+          "machineCostTotal": "92.77",
+          "unitPrice": "0.3805",
+          "itemTotalAmount": "380.49"
+        }
+      ]
+    },
+    {
+      "id": "0264e2dc-545b-40fb-9a89-a616aad5be48",
+      "code": 3,
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "115.22",
+      "markupApplied": "0.35",
+      "totalAmount": "177.26",
+      "validUntil": "2026-10-09T19:33:23.457Z",
+      "notes": "",
+      "createdAt": "2026-09-24T19:33:23.459Z",
+      "updatedAt": "2026-09-24T20:34:47.625Z",
+      "items": [
+        {
+          "id": "8339d908-2fd6-4328-9192-8f8401aab981",
+          "quoteId": "0264e2dc-545b-40fb-9a89-a616aad5be48",
+          "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+          "productName": "Teste de ordem de serviço/orçamento",
+          "quantity": 500,
+          "widthMm": 10,
+          "heightMm": 7,
+          "colorsFront": 4,
+          "colorsBack": 4,
+          "finishingOptions": [
+            "CORTE_ESPECIAL"
+          ],
+          "sheetsRequired": 3,
+          "itemsPerSheet": 273,
+          "paperCostCalculated": "0.15",
+          "finishingCostTotal": "25",
+          "machineCostTotal": "90.07",
+          "unitPrice": "0.3545",
+          "itemTotalAmount": "177.26"
+        }
+      ]
+    },
+    {
+      "id": "6e999fe0-0423-4c46-bca0-ac804f594e36",
+      "code": 4,
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "346.67",
+      "markupApplied": "0.35",
+      "totalAmount": "533.34",
+      "validUntil": "2026-10-09T20:43:20.147Z",
+      "notes": "",
+      "createdAt": "2026-09-24T20:43:20.149Z",
+      "updatedAt": "2026-09-24T20:43:52.950Z",
+      "items": [
+        {
+          "id": "39fa5d27-945c-4823-9207-cfe276ee8cb7",
+          "quoteId": "6e999fe0-0423-4c46-bca0-ac804f594e36",
+          "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+          "productName": "Folder Institucional A4",
+          "quantity": 5000,
+          "widthMm": 21,
+          "heightMm": 29,
+          "colorsFront": 4,
+          "colorsBack": 4,
+          "finishingOptions": [
+            "DOBRA"
+          ],
+          "sheetsRequired": 92,
+          "itemsPerSheet": 60,
+          "paperCostCalculated": "4.6",
+          "finishingCostTotal": "250",
+          "machineCostTotal": "92.07",
+          "unitPrice": "0.1067",
+          "itemTotalAmount": "533.34"
+        }
+      ]
+    },
+    {
+      "id": "d44af176-5983-44da-be05-f5650fd06bf9",
+      "code": 5,
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "90.57",
+      "markupApplied": "0.35",
+      "totalAmount": "139.34",
+      "validUntil": "2026-10-10T18:51:19.395Z",
+      "notes": "",
+      "createdAt": "2026-09-25T18:51:19.405Z",
+      "updatedAt": "2026-09-25T18:51:19.405Z",
+      "items": [
+        {
+          "id": "779d73d1-de9a-4865-bac6-1aab530687ea",
+          "quoteId": "d44af176-5983-44da-be05-f5650fd06bf9",
+          "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+          "productName": "Plastificação ",
+          "quantity": 10,
+          "widthMm": 15,
+          "heightMm": 20,
+          "colorsFront": 4,
+          "colorsBack": 4,
+          "finishingOptions": [
+            "CORTE_ESPECIAL"
+          ],
+          "sheetsRequired": 1,
+          "itemsPerSheet": 104,
+          "paperCostCalculated": "0.05",
+          "finishingCostTotal": "0.5",
+          "machineCostTotal": "90.02",
+          "unitPrice": "13.934",
+          "itemTotalAmount": "139.34"
+        }
+      ]
+    }
+  ],
+  "workOrders": [
+    {
+      "id": "d0328364-8011-4c85-ae45-27bc5f32607b",
+      "orderNumber": "OS-2026-00001",
+      "quoteId": "c5998199-10b6-45ac-9b27-3decc8436ed2",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "PENDING",
+      "priority": 2,
+      "deliveryDate": "2026-10-06T20:06:53.837Z",
+      "fileUrl": null,
+      "barcode": "OS202600001",
+      "totalAmount": "380.49",
+      "paymentStatus": "OVERDUE",
+      "createdAt": "2026-09-21T20:06:53.872Z",
+      "updatedAt": "2026-09-24T19:26:25.610Z",
+      "stages": [
+        {
+          "id": "200b78b5-1313-474d-ae29-6070dbbdd865",
+          "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-21T20:06:53.872Z",
+          "updatedAt": "2026-09-25T01:06:28.845Z",
+          "logs": [
+            {
+              "id": "2ace1c16-cd75-4fca-b97e-6adf07ad76be",
+              "stageId": "200b78b5-1313-474d-ae29-6070dbbdd865",
+              "operatorId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+              "machineId": "m-konica-c3070",
+              "startedAt": "2026-09-22T19:28:50.547Z",
+              "finishedAt": "2026-09-22T19:28:50.547Z",
+              "wasteQuantity": 10,
+              "notes": null
+            },
+            {
+              "id": "636ff4bd-d230-4f3d-ba99-f828fe01ef86",
+              "stageId": "200b78b5-1313-474d-ae29-6070dbbdd865",
+              "operatorId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+              "machineId": null,
+              "startedAt": "2026-09-23T18:50:25.331Z",
+              "finishedAt": "2026-09-23T18:50:25.331Z",
+              "wasteQuantity": 0,
+              "notes": null
+            },
+            {
+              "id": "a52f042d-90eb-4a24-a111-b6d17fc3437c",
+              "stageId": "200b78b5-1313-474d-ae29-6070dbbdd865",
+              "operatorId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+              "machineId": null,
+              "startedAt": "2026-09-25T00:16:09.007Z",
+              "finishedAt": null,
+              "wasteQuantity": 0,
+              "notes": null
+            },
+            {
+              "id": "ee8351ea-0424-4297-84eb-7290a5358e06",
+              "stageId": "200b78b5-1313-474d-ae29-6070dbbdd865",
+              "operatorId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+              "machineId": null,
+              "startedAt": "2026-09-25T01:05:49.589Z",
+              "finishedAt": "2026-09-25T01:06:28.846Z",
+              "wasteQuantity": 0,
+              "notes": null
+            }
+          ]
+        },
+        {
+          "id": "5bc8d965-b2f4-47f5-b99c-42671eb4c6ee",
+          "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-21T20:06:53.872Z",
+          "updatedAt": "2026-09-25T01:06:27.030Z",
+          "logs": [
+            {
+              "id": "e39edc73-bc13-4bbe-bdcf-ad5ff55ec59b",
+              "stageId": "5bc8d965-b2f4-47f5-b99c-42671eb4c6ee",
+              "operatorId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+              "machineId": null,
+              "startedAt": "2026-09-22T19:29:53.578Z",
+              "finishedAt": "2026-09-25T01:06:27.030Z",
+              "wasteQuantity": 0,
+              "notes": null
+            }
+          ]
+        },
+        {
+          "id": "a4ac5854-f0ca-409e-ae53-74754b2714ed",
+          "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-21T20:06:53.872Z",
+          "updatedAt": "2026-09-25T01:06:25.213Z",
+          "logs": [
+            {
+              "id": "7bf19d74-285d-4041-975b-6a0a9f0607cd",
+              "stageId": "a4ac5854-f0ca-409e-ae53-74754b2714ed",
+              "operatorId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+              "machineId": null,
+              "startedAt": "2026-09-25T01:06:15.111Z",
+              "finishedAt": "2026-09-25T01:06:20.607Z",
+              "wasteQuantity": 0,
+              "notes": null
+            },
+            {
+              "id": "56260c4a-d3ec-4398-81e7-6ff1ddc63445",
+              "stageId": "a4ac5854-f0ca-409e-ae53-74754b2714ed",
+              "operatorId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+              "machineId": null,
+              "startedAt": "2026-09-25T01:06:25.214Z",
+              "finishedAt": "2026-09-25T01:06:25.214Z",
+              "wasteQuantity": 0,
+              "notes": null
+            }
+          ]
+        },
+        {
+          "id": "45cb8419-3c55-40c2-a0d2-884fe2dc5eb9",
+          "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "PENDING",
+          "createdAt": "2026-09-21T20:06:53.872Z",
+          "updatedAt": "2026-09-21T20:06:53.872Z",
+          "logs": []
+        },
+        {
+          "id": "e89a1742-b97d-4d30-b5eb-0f40b6e8b300",
+          "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "PENDING",
+          "createdAt": "2026-09-21T20:06:53.872Z",
+          "updatedAt": "2026-09-21T20:06:53.872Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "24e1b97a-d0ba-4d0f-a5fc-2b3f202aae59",
+      "orderNumber": "OS-2026-00004",
+      "quoteId": "6e999fe0-0423-4c46-bca0-ac804f594e36",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "PRE_PRESS",
+      "priority": 2,
+      "deliveryDate": "2026-10-09T20:43:52.946Z",
+      "fileUrl": null,
+      "barcode": "OS202600004",
+      "totalAmount": "533.34",
+      "paymentStatus": "OVERDUE",
+      "createdAt": "2026-09-24T20:43:20.166Z",
+      "updatedAt": "2026-09-25T00:08:44.913Z",
+      "stages": [
+        {
+          "id": "af1eb109-bd34-4d4f-8aa7-f3cfb54161f9",
+          "workOrderId": "24e1b97a-d0ba-4d0f-a5fc-2b3f202aae59",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "PENDING",
+          "createdAt": "2026-09-24T20:43:20.166Z",
+          "updatedAt": "2026-09-24T20:43:20.166Z",
+          "logs": []
+        },
+        {
+          "id": "469f22a5-16a3-4732-944d-1d33dc4bc760",
+          "workOrderId": "24e1b97a-d0ba-4d0f-a5fc-2b3f202aae59",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "PENDING",
+          "createdAt": "2026-09-24T20:43:20.166Z",
+          "updatedAt": "2026-09-24T20:43:20.166Z",
+          "logs": []
+        },
+        {
+          "id": "cd29988c-4abe-44b7-8e21-cc7dda24dbae",
+          "workOrderId": "24e1b97a-d0ba-4d0f-a5fc-2b3f202aae59",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "PENDING",
+          "createdAt": "2026-09-24T20:43:20.166Z",
+          "updatedAt": "2026-09-24T20:43:20.166Z",
+          "logs": []
+        },
+        {
+          "id": "582c6724-722d-47ae-b6c9-1079def6b86b",
+          "workOrderId": "24e1b97a-d0ba-4d0f-a5fc-2b3f202aae59",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "PENDING",
+          "createdAt": "2026-09-24T20:43:20.166Z",
+          "updatedAt": "2026-09-24T20:43:20.166Z",
+          "logs": []
+        },
+        {
+          "id": "0acf221a-86ad-46f5-a843-59feffb23714",
+          "workOrderId": "24e1b97a-d0ba-4d0f-a5fc-2b3f202aae59",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "PENDING",
+          "createdAt": "2026-09-24T20:43:20.166Z",
+          "updatedAt": "2026-09-24T20:43:20.166Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "2a0ba841-7473-4e38-9957-76b65208263f",
+      "orderNumber": "OS-2026-00003",
+      "quoteId": "0264e2dc-545b-40fb-9a89-a616aad5be48",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "PRE_PRESS",
+      "priority": 2,
+      "deliveryDate": "2026-10-09T19:33:23.457Z",
+      "fileUrl": null,
+      "barcode": "OS202600003",
+      "totalAmount": "177.26",
+      "paymentStatus": "PENDING",
+      "createdAt": "2026-09-24T20:34:47.648Z",
+      "updatedAt": "2026-09-25T00:08:45.143Z",
+      "stages": [
+        {
+          "id": "e1a65a45-a136-4a09-a6bb-b3bfaa27f45b",
+          "workOrderId": "2a0ba841-7473-4e38-9957-76b65208263f",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "PENDING",
+          "createdAt": "2026-09-24T20:34:47.648Z",
+          "updatedAt": "2026-09-24T20:34:47.648Z",
+          "logs": []
+        },
+        {
+          "id": "17f2c710-af27-448f-a905-8393e961fd8b",
+          "workOrderId": "2a0ba841-7473-4e38-9957-76b65208263f",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "PENDING",
+          "createdAt": "2026-09-24T20:34:47.648Z",
+          "updatedAt": "2026-09-24T20:34:47.648Z",
+          "logs": []
+        },
+        {
+          "id": "4e753bd7-3f5f-49f2-aace-edcad72b9951",
+          "workOrderId": "2a0ba841-7473-4e38-9957-76b65208263f",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "PENDING",
+          "createdAt": "2026-09-24T20:34:47.648Z",
+          "updatedAt": "2026-09-24T20:34:47.648Z",
+          "logs": []
+        },
+        {
+          "id": "a41d53ad-7329-439c-af2a-ed554a9f89c9",
+          "workOrderId": "2a0ba841-7473-4e38-9957-76b65208263f",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "PENDING",
+          "createdAt": "2026-09-24T20:34:47.648Z",
+          "updatedAt": "2026-09-24T20:34:47.648Z",
+          "logs": []
+        },
+        {
+          "id": "affda111-a263-4d1c-993b-0c3e637af5a3",
+          "workOrderId": "2a0ba841-7473-4e38-9957-76b65208263f",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "PENDING",
+          "createdAt": "2026-09-24T20:34:47.648Z",
+          "updatedAt": "2026-09-24T20:34:47.648Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "b50d3df0-6647-42e4-8175-65e94068ca3c",
+      "orderNumber": "OS-2026-00005",
+      "quoteId": "d44af176-5983-44da-be05-f5650fd06bf9",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "PRE_PRESS",
+      "priority": 2,
+      "deliveryDate": "2026-10-10T18:51:19.395Z",
+      "fileUrl": null,
+      "barcode": "OS202600005",
+      "totalAmount": "139.34",
+      "paymentStatus": "PARTIALLY_PAID",
+      "createdAt": "2026-09-25T18:51:19.440Z",
+      "updatedAt": "2026-09-25T18:53:48.091Z",
+      "stages": [
+        {
+          "id": "0fcce3b5-fdf2-4baa-b0b3-d518f9f7b28d",
+          "workOrderId": "b50d3df0-6647-42e4-8175-65e94068ca3c",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-25T18:51:19.440Z",
+          "updatedAt": "2026-09-25T18:52:39.339Z",
+          "logs": [
+            {
+              "id": "d5b497ae-9588-416a-a2bd-4686f4c3f4b1",
+              "stageId": "0fcce3b5-fdf2-4baa-b0b3-d518f9f7b28d",
+              "operatorId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+              "machineId": "m-konica-c3070",
+              "startedAt": "2026-09-25T18:52:39.348Z",
+              "finishedAt": "2026-09-25T18:52:39.348Z",
+              "wasteQuantity": 0,
+              "notes": null
+            }
+          ]
+        },
+        {
+          "id": "427fef7a-e0f8-4867-85aa-b7adbdb2c4b6",
+          "workOrderId": "b50d3df0-6647-42e4-8175-65e94068ca3c",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "PENDING",
+          "createdAt": "2026-09-25T18:51:19.440Z",
+          "updatedAt": "2026-09-25T18:51:19.440Z",
+          "logs": []
+        },
+        {
+          "id": "49d3d639-7f18-452d-bee9-34e43f203bc8",
+          "workOrderId": "b50d3df0-6647-42e4-8175-65e94068ca3c",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "PENDING",
+          "createdAt": "2026-09-25T18:51:19.440Z",
+          "updatedAt": "2026-09-25T18:51:19.440Z",
+          "logs": []
+        },
+        {
+          "id": "c2cce076-6c75-4899-b8dc-aff23411d37a",
+          "workOrderId": "b50d3df0-6647-42e4-8175-65e94068ca3c",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "PENDING",
+          "createdAt": "2026-09-25T18:51:19.440Z",
+          "updatedAt": "2026-09-25T18:51:19.440Z",
+          "logs": []
+        },
+        {
+          "id": "f27997d3-9760-460e-b36e-c883aaa1aeea",
+          "workOrderId": "b50d3df0-6647-42e4-8175-65e94068ca3c",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "PENDING",
+          "createdAt": "2026-09-25T18:51:19.440Z",
+          "updatedAt": "2026-09-25T18:51:19.440Z",
+          "logs": []
+        }
+      ]
+    }
+  ],
+  "employees": [
+    {
+      "id": "acb1ff74-3aaa-4d33-8b16-0a16553953bf",
+      "name": "Carlos Eduardo Silva",
+      "document": "12345678901",
+      "registration": "OP-042",
+      "role": "Operador Heidelberg SM-74",
+      "department": "PRINTING",
+      "shift": "MORNING",
+      "status": "ACTIVE",
+      "email": "carlos.silva@erpgrafica.com",
+      "phone": "11988887777",
+      "hireDate": "2026-09-22T21:28:08.101Z",
+      "hourlyRate": "35.5",
+      "monthlySalary": "4200",
+      "notes": "Especialista em acerto de tinteiro e verniz UV",
+      "createdAt": "2026-09-22T21:28:08.109Z",
+      "updatedAt": "2026-09-22T21:28:08.109Z"
+    }
+  ],
+  "operatingExpenses": [
+    {
+      "id": "9b06c89e-e19f-463f-822c-ca7988dbb64e",
+      "description": "0dsa",
+      "category": "RENT_FACILITIES",
+      "expenseType": "FIXED",
+      "amount": "1.56",
+      "dueDate": "2026-09-23T12:00:00.000Z",
+      "paidAt": "2026-09-23T12:00:00.000Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "competenceDate": "2026-09-01T12:00:00.000Z",
+      "supplierId": null,
+      "beneficiaryName": null,
+      "barcode": null,
+      "documentNumber": "sadsadasdsa",
+      "isRecurring": false,
+      "recurrenceInterval": null,
+      "recurrenceEndDate": null,
+      "notes": null,
+      "createdAt": "2026-09-23T21:05:02.747Z",
+      "updatedAt": "2026-09-23T23:19:09.628Z"
+    }
+  ],
+  "receivables": [
+    {
+      "id": "db503455-de46-4e6b-b38e-5f1eefdba066",
+      "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "description": "Sinal (50%) - OS-2026-00001",
+      "installmentNumber": 1,
+      "totalInstallments": 2,
+      "amount": "190.25",
+      "dueDate": "2026-09-24T18:25:20.581Z",
+      "paidAt": null,
+      "status": "PENDING",
+      "paymentMethod": null,
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-24T18:25:20.582Z",
+      "updatedAt": "2026-09-24T18:25:20.582Z"
+    },
+    {
+      "id": "1687d4df-235a-4be5-90e9-4646c2c62753",
+      "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "description": "Saldo na Retirada - OS-2026-00001",
+      "installmentNumber": 2,
+      "totalInstallments": 2,
+      "amount": "190.24",
+      "dueDate": "2026-10-06T20:06:53.837Z",
+      "paidAt": null,
+      "status": "PENDING",
+      "paymentMethod": null,
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-24T18:25:20.588Z",
+      "updatedAt": "2026-09-24T18:25:20.588Z"
+    },
+    {
+      "id": "ef9b8f67-0888-4183-a11c-8409739696c5",
+      "workOrderId": "24e1b97a-d0ba-4d0f-a5fc-2b3f202aae59",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "description": "Parcela 1/3 - OS-2026-00004",
+      "installmentNumber": 1,
+      "totalInstallments": 3,
+      "amount": "177.78",
+      "dueDate": "2026-09-24T20:43:42.247Z",
+      "paidAt": null,
+      "status": "PENDING",
+      "paymentMethod": null,
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-24T20:43:42.248Z",
+      "updatedAt": "2026-09-24T20:43:42.248Z"
+    },
+    {
+      "id": "cb791595-8f0e-4a10-9cb1-0686ff01a560",
+      "workOrderId": "24e1b97a-d0ba-4d0f-a5fc-2b3f202aae59",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "description": "Parcela 2/3 - OS-2026-00004",
+      "installmentNumber": 2,
+      "totalInstallments": 3,
+      "amount": "177.78",
+      "dueDate": "2026-10-24T20:43:42.247Z",
+      "paidAt": null,
+      "status": "PENDING",
+      "paymentMethod": null,
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-24T20:43:42.256Z",
+      "updatedAt": "2026-09-24T20:43:42.256Z"
+    },
+    {
+      "id": "9fd180dd-76d7-4813-81b2-e3cff6dca4d3",
+      "workOrderId": "24e1b97a-d0ba-4d0f-a5fc-2b3f202aae59",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "description": "Parcela 3/3 - OS-2026-00004",
+      "installmentNumber": 3,
+      "totalInstallments": 3,
+      "amount": "177.78",
+      "dueDate": "2026-11-23T20:43:42.247Z",
+      "paidAt": null,
+      "status": "PENDING",
+      "paymentMethod": null,
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-24T20:43:42.259Z",
+      "updatedAt": "2026-09-24T20:43:42.259Z"
+    },
+    {
+      "id": "6d80d67a-de4a-4f72-83a7-aa143d182283",
+      "workOrderId": "b50d3df0-6647-42e4-8175-65e94068ca3c",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "description": "Parcela 2/3 - OS-2026-00005",
+      "installmentNumber": 2,
+      "totalInstallments": 3,
+      "amount": "46.45",
+      "dueDate": "2026-10-25T18:53:19.772Z",
+      "paidAt": null,
+      "status": "PENDING",
+      "paymentMethod": null,
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-25T18:53:19.779Z",
+      "updatedAt": "2026-09-25T18:53:19.779Z"
+    },
+    {
+      "id": "9badd6db-f2b7-45d5-a480-771a64922ffe",
+      "workOrderId": "b50d3df0-6647-42e4-8175-65e94068ca3c",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "description": "Parcela 3/3 - OS-2026-00005",
+      "installmentNumber": 3,
+      "totalInstallments": 3,
+      "amount": "46.45",
+      "dueDate": "2026-11-24T18:53:19.772Z",
+      "paidAt": null,
+      "status": "PENDING",
+      "paymentMethod": null,
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-25T18:53:19.782Z",
+      "updatedAt": "2026-09-25T18:53:19.782Z"
+    },
+    {
+      "id": "fa95207e-fb1a-42cc-9fbb-07844d45d481",
+      "workOrderId": "b50d3df0-6647-42e4-8175-65e94068ca3c",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "description": "Parcela 1/3 - OS-2026-00005",
+      "installmentNumber": 1,
+      "totalInstallments": 3,
+      "amount": "46.44",
+      "dueDate": "2026-09-25T18:53:19.772Z",
+      "paidAt": "2026-09-25T12:00:00.000Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-25T18:53:19.774Z",
+      "updatedAt": "2026-09-25T18:53:48.086Z"
+    }
+  ],
+  "productTemplates": [
+    {
+      "id": "6f1abafe-c9a7-4855-adf2-66835f16e5bb",
+      "name": "Cartão de Visita 4x4 Couchê 300g",
+      "category": "Papelaria",
+      "description": "Formato clássico 90x50mm, impressão frente e verso colorida com verniz total.",
+      "defaultWidthMm": 90,
+      "defaultHeightMm": 50,
+      "defaultColorsFront": 4,
+      "defaultColorsBack": 4,
+      "defaultFinishing": [
+        "VERNIZ_TOTAL"
+      ],
+      "defaultRawMaterialId": null,
+      "defaultMachineId": null,
+      "defaultMarkupPercent": "40",
+      "suggestedQuantities": [
+        500,
+        1000,
+        2000,
+        5000
+      ],
+      "isActive": true,
+      "createdAt": "2026-09-23T21:31:15.228Z",
+      "updatedAt": "2026-09-23T21:31:15.228Z"
+    },
+    {
+      "id": "36593d17-d5de-443a-8ecb-94395f8ae1f3",
+      "name": "Panfleto A5 Couchê 115g 4x0",
+      "category": "Promocional",
+      "description": "Formato A5 (148x210mm) ideal para panfletagem e divulgação em massa.",
+      "defaultWidthMm": 148,
+      "defaultHeightMm": 210,
+      "defaultColorsFront": 4,
+      "defaultColorsBack": 0,
+      "defaultFinishing": [
+        "REFILE"
+      ],
+      "defaultRawMaterialId": null,
+      "defaultMachineId": null,
+      "defaultMarkupPercent": "35",
+      "suggestedQuantities": [
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "isActive": true,
+      "createdAt": "2026-09-23T21:31:15.243Z",
+      "updatedAt": "2026-09-23T21:31:15.243Z"
+    },
+    {
+      "id": "5507655a-bd81-4029-b82a-2e4f212f9106",
+      "name": "Folder A4 2 Dobras Couchê 150g",
+      "category": "Promocional",
+      "description": "Folder institucional A4 aberto (297x210mm) com 2 dobras (6 páginas).",
+      "defaultWidthMm": 297,
+      "defaultHeightMm": 210,
+      "defaultColorsFront": 4,
+      "defaultColorsBack": 4,
+      "defaultFinishing": [
+        "DOBRA",
+        "REFILE"
+      ],
+      "defaultRawMaterialId": null,
+      "defaultMachineId": null,
+      "defaultMarkupPercent": "35",
+      "suggestedQuantities": [
+        500,
+        1000,
+        2500,
+        5000
+      ],
+      "isActive": true,
+      "createdAt": "2026-09-23T21:31:15.245Z",
+      "updatedAt": "2026-09-23T21:31:15.245Z"
+    },
+    {
+      "id": "56fcd38c-dbb6-426f-9cfc-d95b7c0b0e2b",
+      "name": "Banner Lona 440g c/ Bastão e Cordinha",
+      "category": "Comunicação Visual",
+      "description": "Banner em lona fosca ou brilho 600x900mm com acabamento em madeira e cordinha.",
+      "defaultWidthMm": 600,
+      "defaultHeightMm": 900,
+      "defaultColorsFront": 4,
+      "defaultColorsBack": 0,
+      "defaultFinishing": [
+        "BAINHA",
+        "BASTAO_CORDINHA"
+      ],
+      "defaultRawMaterialId": null,
+      "defaultMachineId": null,
+      "defaultMarkupPercent": "45",
+      "suggestedQuantities": [
+        1,
+        2,
+        5,
+        10
+      ],
+      "isActive": true,
+      "createdAt": "2026-09-23T21:31:15.246Z",
+      "updatedAt": "2026-09-23T21:31:15.246Z"
+    },
+    {
+      "id": "7879252d-b454-4fcd-ac39-02f566ec8661",
+      "name": "Adesivo Vinil Meio-Corte",
+      "category": "Adesivos & Rótulos",
+      "description": "Adesivo 50x50mm impresso em vinil adesivo brilho com meio-corte eletrônico.",
+      "defaultWidthMm": 50,
+      "defaultHeightMm": 50,
+      "defaultColorsFront": 4,
+      "defaultColorsBack": 0,
+      "defaultFinishing": [
+        "MEIO_CORTE"
+      ],
+      "defaultRawMaterialId": null,
+      "defaultMachineId": null,
+      "defaultMarkupPercent": "50",
+      "suggestedQuantities": [
+        100,
+        500,
+        1000,
+        2500
+      ],
+      "isActive": true,
+      "createdAt": "2026-09-23T21:31:15.248Z",
+      "updatedAt": "2026-09-23T21:31:15.248Z"
+    },
+    {
+      "id": "6fda958e-1b62-4113-b3fb-51a8ae5b27db",
+      "name": "Pasta com Bolsa Couchê 300g",
+      "category": "Papelaria",
+      "description": "Pasta institucional 310x220mm com bolsa interna colada e porta-cartão.",
+      "defaultWidthMm": 310,
+      "defaultHeightMm": 220,
+      "defaultColorsFront": 4,
+      "defaultColorsBack": 0,
+      "defaultFinishing": [
+        "CORTE_VINCO",
+        "COLAGEM_BOLSA"
+      ],
+      "defaultRawMaterialId": null,
+      "defaultMachineId": null,
+      "defaultMarkupPercent": "40",
+      "suggestedQuantities": [
+        250,
+        500,
+        1000,
+        2500
+      ],
+      "isActive": true,
+      "createdAt": "2026-09-23T21:31:15.249Z",
+      "updatedAt": "2026-09-23T21:31:15.249Z"
+    }
+  ]
+}

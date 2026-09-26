@@ -9,15 +9,18 @@ coverage/
 # Turbo
 .turbo/
 
-# Environment & Secrets
-.env
+# Environment & Secrets (incluídos temporariamente para sincronização dev conforme solicitado)
+# .env
 .env.local
 .env.*.local
-packages/*/.env
-apps/*/.env
+# packages/*/.env
+# apps/*/.env
 
 # Local Database & Temp
-data/
+data/embedded-pg/postmaster.pid
+data/embedded-pg/postmaster.opts
+data/embedded-pg/*.log
+data/embedded-pg/pg_stat_tmp/*
 *.tmp
 
 # Logs

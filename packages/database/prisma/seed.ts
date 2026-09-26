@@ -1,10 +1,23 @@
 import { PrismaClient, Role, PartyType, RawMaterialCategory } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import * as fs from 'fs';
+import * as path from 'path';
+import { restoreFromSnapshot } from './restore';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seed...');
+  const jsonPath = path.resolve(__dirname, 'seed-data.json');
+  if (fs.existsSync(jsonPath)) {
+    console.log('🌱 Found seed-data.json! Restoring complete snapshot...');
+    const ok = await restoreFromSnapshot();
+    if (ok) {
+      console.log('🎉 Database snapshot restoration complete.');
+      return;
+    }
+  }
+
+  console.log('🌱 Starting default database seed...');
 
   // 1. Admin User
   const adminPassword = await bcrypt.hash('admin123', 10);

@@ -6,6 +6,10 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "db:start": "node scripts/start-db.js",
+    "db:seed": "pnpm --filter @erp/database db:seed",
+    "db:dump": "pnpm --filter @erp/database exec tsx prisma/dump.ts",
+    "db:restore": "pnpm --filter @erp/database exec tsx prisma/restore.ts",
     "db:generate": "pnpm --filter @erp/database db:generate",
     "db:migrate": "pnpm --filter @erp/database db:migrate",
     "db:studio": "pnpm --filter @erp/database db:studio"

@@ -622,3 +622,22 @@ Para eliminar o atrito manual de cópia e colagem de texto cru e oferecer uma ex
 6. **Garantia de Qualidade e Testes:**
    - Criada a suíte de testes unitários [`PaymentReceiptModal.test.tsx`](file:///c:/Users/Micro/Documents/Projetos/ERP_GRAFICA/apps/web/src/features/receivables/PaymentReceiptModal.test.tsx) cobrindo tanto o ambiente Mobile (Web Share nativo) quanto o Desktop (pré-abertura síncrona sem bloqueio de pop-up, injeção no clipboard e links de resgate).
    - 100% dos testes aprovados (148 testes em `apps/web`) e compilação de produção validada.
+
+---
+
+## 24. Portabilidade Total Multi-Máquinas (Ambiente `.env` e Banco de Dados Integrados)
+
+Para viabilizar a transição instantânea de desenvolvimento entre múltiplos computadores (ex.: escritório e residência) com zero fricção e zero perda de estado ou configurações, foi estruturada a **estratégia unificada de persistência e portabilidade**:
+
+1. **Rastreamento Temporário dos Arquivos de Ambiente (`.env`):**
+   - Configurações do ecossistema (`.env` na raiz, `apps/api/.env` e `packages/database/.env`) incluídas para versionamento no GitHub, garantindo que portas, chaves JWT de desenvolvimento e string de conexão do PostgreSQL estejam prontas logo após o `git pull` (com planejamento para remoção/segregação via cofre de segredos antes do deploy em produção).
+
+2. **Snapshot Relacional Completo (`packages/database/prisma/seed-data.json`):**
+   - Script de extração [`dump.ts`](file:///c:/Users/Micro/Documents/Projetos/ERP_GRAFICA/packages/database/prisma/dump.ts) e de restauração atômica [`restore.ts`](file:///c:/Users/Micro/Documents/Projetos/ERP_GRAFICA/packages/database/prisma/restore.ts).
+   - O arquivo `seed-data.json` preserva todas as tabelas e registros existentes: usuários, clientes, maquinário gráfico, matérias-primas e estoque, orçamentos, ordens de serviço com histórico de estágios, despesas operacionais e contas a receber.
+   - O comando padrão `pnpm db:seed` detecta automaticamente o snapshot e executa a restauração completa idempotente via `upsert`.
+
+3. **Automação do PostgreSQL Embarcado (`scripts/start-db.js` / `pnpm db:start`):**
+   - Inicializador inteligente que detecta se a porta 5432 já está ativa.
+   - Varredura e purga automática de travas residuais de processos encerrados (`postmaster.pid`), eliminando falhas de inicialização em clones novos.
+   - Versionamento do diretório de dados `data/embedded-pg` no GitHub com exclusão rigorosa de sockets efêmeros e logs em `.gitignore`.
