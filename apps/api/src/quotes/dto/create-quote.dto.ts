@@ -9,11 +9,36 @@ import {
   Max,
   Min,
   ValidateNested,
+  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ChannelSource } from '@erp/shared-types';
 import { CreateQuoteItemDto } from './create-quote-item.dto';
+
+export class QuoteInstallmentDto {
+  @ApiProperty({ description: 'Número sequencial da parcela (ex: 1, 2, 3)' })
+  @IsNumber()
+  installmentNumber!: number;
+
+  @ApiProperty({ description: 'Total de parcelas do plano (ex: 3)' })
+  @IsNumber()
+  totalInstallments!: number;
+
+  @ApiProperty({ description: 'Valor financeiro da parcela em R$' })
+  @IsNumber()
+  @Min(0.01)
+  amount!: number;
+
+  @ApiProperty({ description: 'Data de vencimento (YYYY-MM-DD)' })
+  @IsDateString()
+  dueDate!: string;
+
+  @ApiPropertyOptional({ description: 'Descrição da parcela' })
+  @IsString()
+  @IsOptional()
+  description?: string;
+}
 
 export class CreateQuoteDto {
   @ApiProperty({
@@ -76,4 +101,14 @@ export class CreateQuoteDto {
   @ValidateNested({ each: true })
   @Type(() => CreateQuoteItemDto)
   items!: CreateQuoteItemDto[];
+
+  @ApiPropertyOptional({
+    description: 'Cronograma detalhado de parcelas e datas de vencimento customizadas',
+    type: [QuoteInstallmentDto],
+  })
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => QuoteInstallmentDto)
+  installments?: QuoteInstallmentDto[];
 }

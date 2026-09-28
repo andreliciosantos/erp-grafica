@@ -226,6 +226,25 @@ export class QuotesService {
             party: { select: { id: true, name: true, phone: true } },
           },
         });
+
+        if (dto.installments && dto.installments.length > 0) {
+          for (const inst of dto.installments) {
+            await tx.receivable.create({
+              data: {
+                workOrderId: workOrder.id,
+                partyId: quote.partyId,
+                description:
+                  inst.description ||
+                  `Parcela ${inst.installmentNumber}/${inst.totalInstallments} - ${workOrder.orderNumber}`,
+                installmentNumber: inst.installmentNumber,
+                totalInstallments: inst.totalInstallments,
+                amount: new Decimal(inst.amount),
+                dueDate: new Date(inst.dueDate),
+                status: PaymentStatus.PENDING,
+              },
+            });
+          }
+        }
       }
 
       return {

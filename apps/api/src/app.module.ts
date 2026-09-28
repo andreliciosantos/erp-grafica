@@ -15,6 +15,7 @@ import { OperatingExpensesModule } from './operating-expenses/operating-expenses
 import { ReceivablesModule } from './receivables/receivables.module';
 import { FinancialModule } from './financial/financial.module';
 import { ProductTemplatesModule } from './product-templates/product-templates.module';
+import { PaymentConditionsModule } from './payment-conditions/payment-conditions.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ProductTemplatesModule } from './product-templates/product-templates.mo
     ReceivablesModule,
     FinancialModule,
     ProductTemplatesModule,
+    PaymentConditionsModule,
   ],
 })
 export class AppModule {}

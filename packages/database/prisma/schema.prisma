@@ -467,3 +467,22 @@ model ProductTemplate {
   @@map("product_templates")
 }
 
+// -------------------------------------------------------------
+// CONDIÇÕES DE PAGAMENTO / PARCELAMENTO PADRÃO
+// -------------------------------------------------------------
+model PaymentCondition {
+  id                   String        @id @default(uuid())
+  name                 String        // Ex: "Sinal 50% + 50% na Retirada", "3x Sem Juros (30/60/90d)"
+  description          String?
+  installmentsCount    Int           @default(1)
+  downPaymentPercent   Decimal       @default(0) @db.Decimal(5, 2)
+  intervalDays         Int           @default(30)
+  dayOffsets           Json          @default("[]") // Offsets de dias para cada parcela ex: [0, 30, 60]
+  isDefault            Boolean       @default(false)
+  isActive             Boolean       @default(true)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@map("payment_conditions")
+}
+

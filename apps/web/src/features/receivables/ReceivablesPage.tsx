@@ -22,6 +22,7 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
 } from 'lucide-react';
 import {
   ReceivableItem,
@@ -32,6 +33,7 @@ import { PaginatedResult } from '../../types';
 import { PayReceivableModal } from './PayReceivableModal';
 import { ReceivableFormModal } from './ReceivableFormModal';
 import { PaymentReceiptModal } from './PaymentReceiptModal';
+import { PaymentConditionsModal } from './PaymentConditionsModal';
 
 export const ReceivablesPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -47,6 +49,7 @@ export const ReceivablesPage: React.FC = () => {
   // Modals state
   const [payingReceivable, setPayingReceivable] = useState<ReceivableItem | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isPaymentConditionsModalOpen, setIsPaymentConditionsModalOpen] = useState(false);
   const [receivableToEdit, setReceivableToEdit] = useState<ReceivableItem | null>(null);
   const [receiptToShow, setReceiptToShow] = useState<ReceivableItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<ReceivableItem | null>(null);
@@ -171,6 +174,17 @@ export const ReceivablesPage: React.FC = () => {
               className="text-xs font-semibold bg-transparent border-none focus:outline-hidden text-slate-800 dark:text-slate-200"
             />
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsPaymentConditionsModalOpen(true)}
+            className="text-xs h-9 px-3"
+            title="Configurar tipos de pagamento e parcelamento padrão"
+          >
+            <CreditCard className="w-3.5 h-3.5 mr-1 text-slate-500" />
+            Condições de Pagamento
+          </Button>
 
           <Button
             variant="outline"
@@ -597,6 +611,12 @@ export const ReceivablesPage: React.FC = () => {
         isOpen={Boolean(receiptToShow)}
         onClose={() => setReceiptToShow(null)}
         receivable={receiptToShow}
+      />
+
+      {/* Payment Conditions & Installment Templates Modal */}
+      <PaymentConditionsModal
+        isOpen={isPaymentConditionsModalOpen}
+        onClose={() => setIsPaymentConditionsModalOpen(false)}
       />
 
       {/* Confirm Delete Modal */}

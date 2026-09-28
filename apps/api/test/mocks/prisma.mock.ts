@@ -74,6 +74,7 @@ export function createMockPrismaService() {
   let stageLogs: any[] = [];
   let receivables: any[] = [];
   let operatingExpenses: any[] = [];
+  let paymentConditions: any[] = [];
   let quoteCounter = 100;
 
   const mock = {
@@ -499,6 +500,49 @@ export function createMockPrismaService() {
       }),
       count: vi.fn(async () => operatingExpenses.length),
     },
+    paymentCondition: {
+      findMany: vi.fn(async ({ where }: any = {}) => {
+        let res = [...paymentConditions];
+        if (where?.isActive !== undefined) res = res.filter((c) => c.isActive === where.isActive);
+        return res;
+      }),
+      findUnique: vi.fn(async ({ where }: any) => {
+        return paymentConditions.find((c) => c.id === where.id) || null;
+      }),
+      create: vi.fn(async ({ data }: any) => {
+        const item = {
+          id: `cond-${paymentConditions.length + 1}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ...data,
+        };
+        paymentConditions.push(item);
+        return item;
+      }),
+      update: vi.fn(async ({ where, data }: any) => {
+        const idx = paymentConditions.findIndex((c) => c.id === where.id);
+        if (idx === -1) throw new Error('Not found');
+        paymentConditions[idx] = { ...paymentConditions[idx], ...data, updatedAt: new Date() };
+        return paymentConditions[idx];
+      }),
+      updateMany: vi.fn(async ({ where, data }: any) => {
+        let count = 0;
+        paymentConditions.forEach((c) => {
+          if (where?.isDefault && c.isDefault) {
+            c.isDefault = data.isDefault;
+            count++;
+          }
+        });
+        return { count };
+      }),
+      delete: vi.fn(async ({ where }: any) => {
+        const idx = paymentConditions.findIndex((c) => c.id === where.id);
+        if (idx === -1) throw new Error('Not found');
+        const [deleted] = paymentConditions.splice(idx, 1);
+        return deleted;
+      }),
+      count: vi.fn(async () => paymentConditions.length),
+    },
     $transaction: vi.fn(async (cb: any) => {
       return cb(mock);
     }),
@@ -514,6 +558,7 @@ export function createMockPrismaService() {
       stageLogs,
       receivables,
       operatingExpenses,
+      paymentConditions,
     },
   };
 

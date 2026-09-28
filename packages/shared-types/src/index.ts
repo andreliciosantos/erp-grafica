@@ -144,13 +144,23 @@ export interface CreateQuoteItemDto {
   finishingOptions: string[];
 }
 
+export interface QuoteInstallmentDto {
+  installmentNumber: number;
+  totalInstallments: number;
+  amount: number;
+  dueDate: string;
+  description?: string;
+}
+
 export interface CreateQuoteDto {
   partyId: string;
-  origin: ChannelSource;
+  origin?: ChannelSource;
   markupApplied: number; // e.g. 0.40 for 40%
   validDays?: number;    // default: 10 days
   items: CreateQuoteItemDto[];
   notes?: string;
+  autoApprove?: boolean;
+  installments?: QuoteInstallmentDto[];
 }
 
 export interface QuoteItemResponseDto {
@@ -644,6 +654,44 @@ export interface UpdateProductTemplateDto {
   defaultMachineId?: string | null;
   defaultMarkupPercent?: number;
   suggestedQuantities?: number[];
+  isActive?: boolean;
+}
+
+// -------------------------------------------------------------
+// Condições de Pagamento / Parcelamento Padrão
+// -------------------------------------------------------------
+export interface PaymentConditionItem {
+  id: string;
+  name: string;
+  description?: string | null;
+  installmentsCount: number;
+  downPaymentPercent: number;
+  intervalDays: number;
+  dayOffsets: number[];
+  isDefault: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePaymentConditionDto {
+  name: string;
+  description?: string;
+  installmentsCount: number;
+  downPaymentPercent?: number;
+  intervalDays?: number;
+  dayOffsets?: number[];
+  isDefault?: boolean;
+}
+
+export interface UpdatePaymentConditionDto {
+  name?: string;
+  description?: string;
+  installmentsCount?: number;
+  downPaymentPercent?: number;
+  intervalDays?: number;
+  dayOffsets?: number[];
+  isDefault?: boolean;
   isActive?: boolean;
 }
 

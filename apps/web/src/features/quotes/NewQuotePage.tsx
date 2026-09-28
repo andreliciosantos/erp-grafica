@@ -10,10 +10,119 @@ import { NumberInput } from '../../components/common/NumberInput';
 import { Select } from '../../components/common/Select';
 import { SheetCuttingCanvas } from '../../components/cutting-preview/SheetCuttingCanvas';
 import { formatCurrency } from '../../lib/utils';
-import { ArrowLeft, Save, Sparkles, AlertCircle, Bookmark, Settings } from 'lucide-react';
+import {
+  ArrowLeft,
+  Save,
+  Sparkles,
+  AlertCircle,
+  Bookmark,
+  Settings,
+  CreditCard,
+  Plus,
+  Trash2,
+  CheckCircle2,
+  Calendar,
+} from 'lucide-react';
 import { PartyItem, RawMaterialItem, MachineItem, PaginatedResult } from '../../types';
-import { ProductTemplateItem } from '@erp/shared-types';
+import { ProductTemplateItem, PaymentConditionItem } from '@erp/shared-types';
 import { QuickQuotesTemplatesModal } from './QuickQuotesTemplatesModal';
+import { PaymentConditionsModal } from '../receivables/PaymentConditionsModal';
+
+interface CustomInstallment {
+  id: string;
+  installmentNumber: number;
+  amount: number;
+  dueDate: string;
+  description: string;
+}
+
+function toDateInputValue(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function addDaysToDateStr(dateStr: string, days: number): string {
+  if (!dateStr) return toDateInputValue(new Date());
+  const parts = dateStr.split('-');
+  if (parts.length < 3) return dateStr;
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  d.setDate(d.getDate() + days);
+  return toDateInputValue(d);
+}
+
+function generateInstallmentSchedule(
+  totalAmount: number,
+  count: number,
+  condition: PaymentConditionItem | null,
+  baseDate: string,
+  interval: number,
+  existingDates?: string[]
+): CustomInstallment[] {
+  const safeCount = Math.max(1, count);
+  const safeTotal = Math.max(0, totalAmount);
+  const result: CustomInstallment[] = [];
+  const downPercent = condition ? Number(condition.downPaymentPercent) || 0 : 0;
+
+  if (downPercent > 0) {
+    const downAmount = Math.round(safeTotal * (downPercent / 100) * 100) / 100;
+    const remainingCount = safeCount - 1;
+    const remainingTotal = Math.max(0, Math.round((safeTotal - downAmount) * 100) / 100);
+
+    result.push({
+      id: `inst-1-${Date.now()}`,
+      installmentNumber: 1,
+      amount: downAmount,
+      dueDate: existingDates?.[0] || baseDate,
+      description: `Sinal / Entrada (${downPercent}%)`,
+    });
+
+    if (remainingCount > 0) {
+      const each = Math.round((remainingTotal / remainingCount) * 100) / 100;
+      for (let i = 1; i <= remainingCount; i++) {
+        const isLast = i === remainingCount;
+        const currentAmount = isLast
+          ? Math.round((remainingTotal - each * (remainingCount - 1)) * 100) / 100
+          : each;
+        const dueDate = existingDates?.[i] || addDaysToDateStr(baseDate, i * interval);
+        result.push({
+          id: `inst-${i + 1}-${Date.now() + i}`,
+          installmentNumber: i + 1,
+          amount: currentAmount,
+          dueDate,
+          description: `Parcela ${i + 1}/${safeCount}`,
+        });
+      }
+    }
+  } else {
+    const offsets =
+      condition?.dayOffsets &&
+      Array.isArray(condition.dayOffsets) &&
+      condition.dayOffsets.length === safeCount
+        ? (condition.dayOffsets as number[])
+        : null;
+
+    const each = Math.round((safeTotal / safeCount) * 100) / 100;
+    for (let i = 0; i < safeCount; i++) {
+      const isLast = i === safeCount - 1;
+      const currentAmount = isLast
+        ? Math.round((safeTotal - each * (safeCount - 1)) * 100) / 100
+        : each;
+      const offsetDays = offsets ? Number(offsets[i]) || i * interval : i * interval;
+      const dueDate = existingDates?.[i] || addDaysToDateStr(baseDate, offsetDays);
+      result.push({
+        id: `inst-${i + 1}-${Date.now() + i}`,
+        installmentNumber: i + 1,
+        amount: currentAmount,
+        dueDate,
+        description: safeCount === 1 ? 'Pagamento À Vista (100%)' : `Parcela ${i + 1}/${safeCount}`,
+      });
+    }
+  }
+
+  return result;
+}
 
 export const NewQuotePage: React.FC = () => {
   const navigate = useNavigate();
@@ -37,6 +146,26 @@ export const NewQuotePage: React.FC = () => {
   const [finishingOptions, setFinishingOptions] = useState<string[]>(['DOBRA']);
   const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Fetch Payment Conditions (standard installment models)
+  const { data: paymentConditions = [] } = useQuery<PaymentConditionItem[]>({
+    queryKey: ['payment-conditions'],
+    queryFn: async () => {
+      const res = await api.get('/payment-conditions?activeOnly=true');
+      return res.data;
+    },
+  });
+
+  // Installment schedule states
+  const [selectedConditionId, setSelectedConditionId] = useState<string | null>(null);
+  const [installmentsCount, setInstallmentsCount] = useState<number>(1);
+  const [firstDueDate, setFirstDueDate] = useState<string>(() => toDateInputValue(new Date()));
+  const [intervalDays, setIntervalDays] = useState<number>(30);
+  const [installments, setInstallments] = useState<CustomInstallment[]>([]);
+  const [isPaymentConditionsModalOpen, setIsPaymentConditionsModalOpen] = useState(false);
+  const initialAppliedRef = useRef(false);
+  const installmentsRef = useRef<CustomInstallment[]>([]);
+  installmentsRef.current = installments;
 
   // Fetch Product Templates
   const { data: templates = [] } = useQuery<ProductTemplateItem[]>({
@@ -169,18 +298,196 @@ export const NewQuotePage: React.FC = () => {
     }
   }, [sheetWidth, sheetHeight, widthMm, heightMm, quantity, selectedMaterial, selectedMachine, finishingOptions, markupPercent]);
 
+  const totalAmount = calculation.pricing.totalAmount;
+
+  // Initialize installments with default condition or single payment
+  useEffect(() => {
+    if (totalAmount > 0 && !initialAppliedRef.current && paymentConditions.length > 0) {
+      const defaultCond = paymentConditions.find((c) => c.isDefault) || paymentConditions[0];
+      if (defaultCond) {
+        setSelectedConditionId(defaultCond.id);
+        setInstallmentsCount(defaultCond.installmentsCount);
+        setIntervalDays(defaultCond.intervalDays || 30);
+        setInstallments(
+          generateInstallmentSchedule(
+            totalAmount,
+            defaultCond.installmentsCount,
+            defaultCond,
+            firstDueDate,
+            defaultCond.intervalDays || 30
+          )
+        );
+        initialAppliedRef.current = true;
+      }
+    } else if (totalAmount > 0 && installments.length === 0) {
+      setInstallments(
+        generateInstallmentSchedule(
+          totalAmount,
+          installmentsCount,
+          null,
+          firstDueDate,
+          intervalDays
+        )
+      );
+    }
+  }, [totalAmount, paymentConditions, firstDueDate, installmentsCount, intervalDays, installments.length]);
+
+  // Recalculate amounts if totalAmount changes (e.g. quantity or markup modified)
+  const prevTotalRef = useRef(totalAmount);
+  useEffect(() => {
+    if (totalAmount > 0 && prevTotalRef.current !== totalAmount) {
+      prevTotalRef.current = totalAmount;
+      const currentList = installmentsRef.current;
+      if (currentList.length > 0) {
+        const activeCondition = paymentConditions.find((c) => c.id === selectedConditionId) || null;
+        const existingDates = currentList.map((i) => i.dueDate);
+        const updated = generateInstallmentSchedule(
+          totalAmount,
+          currentList.length,
+          activeCondition,
+          firstDueDate,
+          intervalDays,
+          existingDates
+        );
+        setInstallments(updated);
+      }
+    }
+  }, [totalAmount, selectedConditionId, paymentConditions, firstDueDate, intervalDays]);
+
+  const applyCondition = (condition: PaymentConditionItem) => {
+    setSelectedConditionId(condition.id);
+    setInstallmentsCount(condition.installmentsCount);
+    setIntervalDays(condition.intervalDays || 30);
+    const newSchedule = generateInstallmentSchedule(
+      totalAmount,
+      condition.installmentsCount,
+      condition,
+      firstDueDate,
+      condition.intervalDays || 30
+    );
+    setInstallments(newSchedule);
+  };
+
+  const handleCountChange = (newCount: number) => {
+    const validCount = Math.max(1, newCount);
+    setInstallmentsCount(validCount);
+    setSelectedConditionId(null);
+    const existingDates = installments.map((i) => i.dueDate);
+    const newSchedule = generateInstallmentSchedule(
+      totalAmount,
+      validCount,
+      null,
+      firstDueDate,
+      intervalDays,
+      existingDates.slice(0, validCount)
+    );
+    setInstallments(newSchedule);
+  };
+
+  const handleFirstDueDateChange = (newDate: string) => {
+    setFirstDueDate(newDate);
+    setInstallments((prev) =>
+      prev.map((inst, idx) => ({
+        ...inst,
+        dueDate: idx === 0 ? newDate : addDaysToDateStr(newDate, idx * intervalDays),
+      }))
+    );
+  };
+
+  const handleIntervalDaysChange = (newInterval: number) => {
+    const validInterval = Math.max(1, newInterval);
+    setIntervalDays(validInterval);
+    setInstallments((prev) =>
+      prev.map((inst, idx) => ({
+        ...inst,
+        dueDate: idx === 0 ? inst.dueDate : addDaysToDateStr(prev[0]?.dueDate || firstDueDate, idx * validInterval),
+      }))
+    );
+  };
+
+  const handleUpdateInstallment = (index: number, field: keyof CustomInstallment, value: any) => {
+    setSelectedConditionId(null);
+    setInstallments((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const handleAddInstallment = () => {
+    setSelectedConditionId(null);
+    const last = installments[installments.length - 1];
+    const newDate = last ? addDaysToDateStr(last.dueDate, intervalDays) : firstDueDate;
+    const newNumber = installments.length + 1;
+    setInstallmentsCount(newNumber);
+    setInstallments((prev) => [
+      ...prev.map((inst) => ({
+        ...inst,
+        description: inst.description.replace(/\/\d+/, `/${newNumber}`),
+      })),
+      {
+        id: `inst-${newNumber}-${Date.now()}`,
+        installmentNumber: newNumber,
+        amount: 0,
+        dueDate: newDate,
+        description: `Parcela ${newNumber}/${newNumber}`,
+      },
+    ]);
+  };
+
+  const handleRemoveInstallment = (index: number) => {
+    if (installments.length <= 1) return;
+    setSelectedConditionId(null);
+    const remaining = installments.filter((_, idx) => idx !== index);
+    const newCount = remaining.length;
+    setInstallmentsCount(newCount);
+    const renumbered = remaining.map((inst, idx) => ({
+      ...inst,
+      installmentNumber: idx + 1,
+      description: inst.description.replace(/\d+\/\d+/, `${idx + 1}/${newCount}`),
+    }));
+    setInstallments(renumbered);
+  };
+
+  const handleAutoBalance = () => {
+    if (installments.length === 0) return;
+    const sumOther = installments.slice(0, -1).reduce((acc, i) => acc + Number(i.amount || 0), 0);
+    const balancedLast = Math.max(0, Math.round((totalAmount - sumOther) * 100) / 100);
+    setInstallments((prev) => {
+      const next = [...prev];
+      next[next.length - 1] = {
+        ...next[next.length - 1],
+        amount: balancedLast,
+      };
+      return next;
+    });
+  };
+
+  const totalInstallmentsAmount = useMemo(
+    () => Math.round(installments.reduce((acc, i) => acc + Number(i.amount || 0), 0) * 100) / 100,
+    [installments]
+  );
+  const sumDifference = useMemo(
+    () => Math.round((totalAmount - totalInstallmentsAmount) * 100) / 100,
+    [totalAmount, totalInstallmentsAmount]
+  );
+  const isSumBalanced = Math.abs(sumDifference) < 0.01;
+
   // Mutation to create quote
   const createQuoteMutation = useMutation({
     mutationFn: async () => {
+      const effectivePartyId = partyId || parties[0]?.id || '';
+      const effectiveMaterialId = rawMaterialId || materials[0]?.id || '';
+
       const payload = {
-        partyId,
+        partyId: effectivePartyId,
         markupApplied: Number(markupPercent) / 100,
         validDays: 15,
         notes,
         items: [
           {
             productName,
-            rawMaterialId,
+            rawMaterialId: effectiveMaterialId,
             quantity: Number(quantity),
             widthMm: Number(widthMm),
             heightMm: Number(heightMm),
@@ -189,6 +496,13 @@ export const NewQuotePage: React.FC = () => {
             finishingOptions,
           },
         ],
+        installments: installments.map((inst, idx) => ({
+          installmentNumber: idx + 1,
+          totalInstallments: installments.length,
+          amount: Number(inst.amount),
+          dueDate: inst.dueDate,
+          description: inst.description || `Parcela ${idx + 1}/${installments.length}`,
+        })),
       };
       const res = await api.post('/quotes', payload);
       return res.data;
@@ -552,9 +866,227 @@ export const NewQuotePage: React.FC = () => {
                 </div>
               </div>
 
+            </CardContent>
+          </Card>
+
+          {/* Payment & Installments Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-emerald-500" />
+                  Condições de Pagamento & Parcelamento
+                </CardTitle>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Escolha o número de parcelas, edite as datas de vencimento ou use um padrão rápido
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsPaymentConditionsModalOpen(true)}
+                className="text-xs h-7 px-2 text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400"
+                title="Configurar tipos de pagamento e parcelamento padrão"
+              >
+                <Settings className="w-3.5 h-3.5 mr-1" />
+                Gerenciar Padrões
+              </Button>
+            </CardHeader>
+
+            <CardContent className="space-y-4 pt-1">
+              {/* Modelos de Acesso Rápido */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                  Acesso Rápido (1 clique):
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {paymentConditions.map((cond) => {
+                    const isSelected = selectedConditionId === cond.id;
+                    return (
+                      <button
+                        key={cond.id}
+                        type="button"
+                        onClick={() => applyCondition(cond)}
+                        className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        {cond.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Controles de Configuração Livre */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Nº de Parcelas
+                  </label>
+                  <select
+                    value={installmentsCount}
+                    onChange={(e) => handleCountChange(Number(e.target.value))}
+                    className="w-full text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5 font-semibold text-slate-900 dark:text-slate-100"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 18, 24].map((num) => (
+                      <option key={num} value={num}>
+                        {num}x {num === 1 ? '(À vista)' : 'parcelas'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    1º Vencimento
+                  </label>
+                  <input
+                    type="date"
+                    value={firstDueDate}
+                    onChange={(e) => handleFirstDueDateChange(e.target.value)}
+                    className="w-full text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5 text-slate-900 dark:text-slate-100 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Intervalo Padrão
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      min="1"
+                      max="180"
+                      value={intervalDays}
+                      onChange={(e) => handleIntervalDaysChange(Number(e.target.value))}
+                      className="w-full text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5 text-slate-900 dark:text-slate-100"
+                    />
+                    <span className="text-[11px] text-slate-400 font-medium">dias</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cronograma Interativo de Parcelas e Vencimentos Customizáveis */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Cronograma de Vencimentos ({installments.length} parcela{installments.length > 1 ? 's' : ''}):
+                  </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleAddInstallment}
+                    className="text-[11px] h-6 px-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Adicionar Parcela
+                  </Button>
+                </div>
+
+                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                  {installments.map((inst, index) => (
+                    <div
+                      key={inst.id}
+                      className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row sm:items-center gap-2 justify-between"
+                    >
+                      <div className="flex items-center gap-1.5 flex-1">
+                        <span className="text-xs font-bold text-slate-400 w-6 text-center">
+                          {index + 1}ª
+                        </span>
+                        <input
+                          type="text"
+                          value={inst.description}
+                          onChange={(e) => handleUpdateInstallment(index, 'description', e.target.value)}
+                          placeholder="Descrição da parcela"
+                          className="text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-transparent px-2 py-1 text-slate-800 dark:text-slate-200 flex-1 min-w-[100px]"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <input
+                            type="date"
+                            value={inst.dueDate}
+                            onChange={(e) => handleUpdateInstallment(index, 'dueDate', e.target.value)}
+                            className="text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-transparent px-1.5 py-1 text-slate-800 dark:text-slate-200 font-medium"
+                            title="Editar data de vencimento desta parcela livremente"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-slate-400">R$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={inst.amount}
+                            onChange={(e) => handleUpdateInstallment(index, 'amount', Number(e.target.value))}
+                            className="w-20 text-xs font-bold text-slate-900 dark:text-slate-100 rounded-md border border-slate-200 dark:border-slate-700 bg-transparent px-1.5 py-1 text-right"
+                            title="Editar valor desta parcela"
+                          />
+                        </div>
+
+                        {installments.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveInstallment(index)}
+                            className="text-slate-400 hover:text-rose-500 p-1"
+                            title="Remover esta parcela"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Validação de Soma & Saldo */}
+                <div className="p-2.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    {isSumBalanced ? (
+                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Soma das parcelas confere: {formatCurrency(totalInstallmentsAmount)}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium text-[11px]">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        Soma: {formatCurrency(totalInstallmentsAmount)} / Total: {formatCurrency(totalAmount)} (Dif: {formatCurrency(sumDifference)})
+                      </span>
+                    )}
+                  </div>
+
+                  {!isSumBalanced && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAutoBalance}
+                      className="text-[11px] h-6 px-2 text-amber-700 border-amber-300 dark:border-amber-700"
+                    >
+                      Ajustar Centavos
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {submitError && (
+                <div className="flex items-center gap-2 p-2.5 text-xs rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{submitError}</span>
+                </div>
+              )}
+
               <Button
                 size="lg"
-                className="w-full mt-4"
+                className="w-full mt-2"
                 onClick={() => createQuoteMutation.mutate()}
                 isLoading={createQuoteMutation.isPending}
                 disabled={Boolean(calculation.error) || calculation.cutting.itemsPerSheet <= 0}
@@ -574,6 +1106,16 @@ export const NewQuotePage: React.FC = () => {
         onSelectTemplate={(tpl) => {
           applyTemplate(tpl);
           setIsTemplatesModalOpen(false);
+        }}
+      />
+
+      {/* Payment Conditions & Installment Templates Modal */}
+      <PaymentConditionsModal
+        isOpen={isPaymentConditionsModalOpen}
+        onClose={() => setIsPaymentConditionsModalOpen(false)}
+        onSelectCondition={(cond) => {
+          applyCondition(cond);
+          setIsPaymentConditionsModalOpen(false);
         }}
       />
     </div>

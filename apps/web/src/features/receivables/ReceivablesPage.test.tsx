@@ -90,6 +90,23 @@ describe('ReceivablesPage', () => {
       if (url.includes('/receivables/summary')) {
         return Promise.resolve({ data: mockSummary });
       }
+      if (url.includes('/payment-conditions')) {
+        return Promise.resolve({
+          data: [
+            {
+              id: 'cond-1',
+              name: 'Sinal 50% + 50%',
+              description: '50% entrada e saldo em 30d',
+              installmentsCount: 2,
+              downPaymentPercent: 50,
+              intervalDays: 30,
+              dayOffsets: [0, 30],
+              isDefault: true,
+              isActive: true,
+            },
+          ],
+        });
+      }
       if (url.includes('/receivables')) {
         return Promise.resolve({
           data: {
@@ -192,6 +209,19 @@ describe('ReceivablesPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Recibo de Pagamento')).toBeInTheDocument();
       expect(screen.getByText('PAGAMENTO CONFIRMADO')).toBeInTheDocument();
+    });
+  });
+
+  it('opens payment conditions modal when clicking on "Condições de Pagamento"', async () => {
+    renderWithProviders(<ReceivablesPage />);
+
+    const conditionsBtn = screen.getByRole('button', { name: /Condições de Pagamento/i });
+    expect(conditionsBtn).toBeInTheDocument();
+    fireEvent.click(conditionsBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('Condições de Pagamento e Parcelamento')).toBeInTheDocument();
+      expect(screen.getByText(/Gerencie os padrões de parcelamento/i)).toBeInTheDocument();
     });
   });
 });
