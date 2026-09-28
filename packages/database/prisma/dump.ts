@@ -24,6 +24,8 @@ async function dump() {
     operatingExpenses: await prisma.operatingExpense.findMany(),
     receivables: await prisma.receivable.findMany(),
     productTemplates: await prisma.productTemplate.findMany(),
+    paymentConditions: await prisma.paymentCondition.findMany(),
+    quickServicePresets: await prisma.quickServicePreset.findMany(),
   };
 
   const outputPath = path.resolve(__dirname, 'seed-data.json');

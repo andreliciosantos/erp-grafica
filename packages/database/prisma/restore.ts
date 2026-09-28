@@ -146,6 +146,24 @@ export async function restoreFromSnapshot() {
     });
   }
 
+  // 12. Payment Conditions
+  for (const pc of data.paymentConditions || []) {
+    await prisma.paymentCondition.upsert({
+      where: { id: pc.id },
+      update: pc,
+      create: pc,
+    });
+  }
+
+  // 13. Quick Service Presets
+  for (const qp of data.quickServicePresets || []) {
+    await prisma.quickServicePreset.upsert({
+      where: { id: qp.id },
+      update: qp,
+      create: qp,
+    });
+  }
+
   console.log('✅ Database successfully restored from snapshot!');
   return true;
 }

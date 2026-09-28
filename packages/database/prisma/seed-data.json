@@ -31,6 +31,22 @@
       "resetPasswordExpires": null,
       "createdAt": "2026-09-21T20:05:25.556Z",
       "updatedAt": "2026-09-21T20:05:25.556Z"
+    },
+    {
+      "id": "dcc1d3eb-a849-42f2-af6e-a241749bb186",
+      "name": "Andrelício Santos",
+      "email": "andreliciosantos@gmail.com",
+      "passwordHash": null,
+      "role": "ADMIN",
+      "isActive": true,
+      "isRoot": false,
+      "emailVerified": false,
+      "activationToken": "735e068b3932d3f937e3d575526ebcbee50f15ef89e295ee0b8b43494d64fe32",
+      "activationTokenExpires": "2026-09-30T15:33:12.574Z",
+      "resetPasswordToken": null,
+      "resetPasswordExpires": null,
+      "createdAt": "2026-09-28T15:32:15.721Z",
+      "updatedAt": "2026-09-28T15:33:12.576Z"
     }
   ],
   "parties": [
@@ -49,6 +65,22 @@
       "isSupplier": false,
       "createdAt": "2026-09-21T20:05:25.616Z",
       "updatedAt": "2026-09-21T20:05:25.616Z"
+    },
+    {
+      "id": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "type": "INDIVIDUAL",
+      "name": "Cliente Balcão / Consumidor Final",
+      "tradeName": "Consumidor Avulso",
+      "document": "00000000000",
+      "email": null,
+      "phone": "00000000000",
+      "address": null,
+      "city": null,
+      "state": null,
+      "isCustomer": true,
+      "isSupplier": false,
+      "createdAt": "2026-09-28T15:28:33.760Z",
+      "updatedAt": "2026-09-28T15:28:33.760Z"
     }
   ],
   "rawMaterials": [
@@ -100,13 +132,13 @@
       "category": "PAPER",
       "unitOfMeasure": "FL",
       "costPerUnit": "0.05",
-      "currentStock": "10000",
+      "currentStock": "9910",
       "minStock": "1000",
       "sheetWidthMm": 210,
       "sheetHeightMm": 297,
       "grammage": 75,
       "createdAt": "2026-09-24T19:28:29.490Z",
-      "updatedAt": "2026-09-24T19:28:29.490Z"
+      "updatedAt": "2026-09-28T17:35:12.060Z"
     }
   ],
   "stockMovements": [
@@ -117,6 +149,54 @@
       "quantity": "-123",
       "reason": "CONSUMO_PRODUCAO",
       "createdAt": "2026-09-22T21:52:12.923Z"
+    },
+    {
+      "id": "64feaf69-390a-40cb-84b0-6cf24377b65e",
+      "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+      "workOrderId": "e89edcdc-85b1-48d7-9945-239060d2ba4f",
+      "quantity": "-15",
+      "reason": "CONSUMO_PRODUCAO",
+      "createdAt": "2026-09-28T16:10:35.906Z"
+    },
+    {
+      "id": "b747b067-ab0d-4159-b75b-c23bd22af8ec",
+      "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+      "workOrderId": "7e3a0de7-e727-4f97-ad99-7669c8d3c90d",
+      "quantity": "-15",
+      "reason": "CONSUMO_PRODUCAO",
+      "createdAt": "2026-09-28T16:38:51.401Z"
+    },
+    {
+      "id": "f0d16605-3824-4c64-9601-5491d82fa90c",
+      "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+      "workOrderId": "b59777c4-e0b3-4a59-a9e1-76338f63eaa6",
+      "quantity": "-13",
+      "reason": "CONSUMO_PRODUCAO",
+      "createdAt": "2026-09-28T17:29:18.005Z"
+    },
+    {
+      "id": "2ac18854-6475-4e97-8830-82f757f26bcd",
+      "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+      "workOrderId": "0ff3dbd3-d8cb-4f94-a6fd-5432e07fdcb6",
+      "quantity": "-17",
+      "reason": "CONSUMO_PRODUCAO",
+      "createdAt": "2026-09-28T17:30:08.934Z"
+    },
+    {
+      "id": "7b205d65-ca6b-48cb-afd1-73d6f79f5b22",
+      "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+      "workOrderId": "d4ddffe7-8541-4ec4-a37c-e5948874466a",
+      "quantity": "-20",
+      "reason": "CONSUMO_PRODUCAO",
+      "createdAt": "2026-09-28T17:34:15.958Z"
+    },
+    {
+      "id": "684b2de9-2ef7-435a-bd1e-586655c56164",
+      "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+      "workOrderId": "fae1caef-3c67-4fca-a0bc-dc1e9fb04135",
+      "quantity": "-10",
+      "reason": "CONSUMO_PRODUCAO",
+      "createdAt": "2026-09-28T17:35:12.058Z"
     }
   ],
   "machines": [
@@ -289,6 +369,294 @@
           "itemTotalAmount": "139.34"
         }
       ]
+    },
+    {
+      "id": "e25b78a3-027c-4794-9ac5-9bc8117cb285",
+      "code": 6,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "5",
+      "markupApplied": "0.3",
+      "totalAmount": "5",
+      "validUntil": "2026-09-28T15:28:33.762Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-09-28T15:28:33.765Z",
+      "updatedAt": "2026-09-28T15:28:33.765Z",
+      "items": [
+        {
+          "id": "eae902d5-e9de-4c16-a8a9-6a502a3c0161",
+          "quoteId": "e25b78a3-027c-4794-9ac5-9bc8117cb285",
+          "rawMaterialId": null,
+          "productName": "Xerox P&B A4",
+          "quantity": 10,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "0.5",
+          "itemTotalAmount": "5"
+        }
+      ]
+    },
+    {
+      "id": "95492cb9-4519-4b5b-b56d-5e4f57d770ce",
+      "code": 7,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "105",
+      "markupApplied": "0.3",
+      "totalAmount": "105",
+      "validUntil": "2026-09-28T15:31:28.705Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-09-28T15:31:28.707Z",
+      "updatedAt": "2026-09-28T15:31:28.707Z",
+      "items": [
+        {
+          "id": "276e5ed3-df91-4402-b586-41aefe00e63f",
+          "quoteId": "95492cb9-4519-4b5b-b56d-5e4f57d770ce",
+          "rawMaterialId": null,
+          "productName": "Foto 3x4 (Cartela c/ 6)",
+          "quantity": 7,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "15",
+          "itemTotalAmount": "105"
+        }
+      ]
+    },
+    {
+      "id": "19286cc7-791c-430c-b08c-f5252c5c9521",
+      "code": 8,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "7.5",
+      "markupApplied": "0.3",
+      "totalAmount": "7.5",
+      "validUntil": "2026-09-28T16:10:35.855Z",
+      "notes": null,
+      "createdAt": "2026-09-28T16:10:35.871Z",
+      "updatedAt": "2026-09-28T16:10:35.871Z",
+      "items": [
+        {
+          "id": "3b906ecc-ac56-42a3-a7a6-c5e8a9d60912",
+          "quoteId": "19286cc7-791c-430c-b08c-f5252c5c9521",
+          "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+          "productName": "Xerox P&B A4 Teste Estoque",
+          "quantity": 15,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 15,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "0.5",
+          "itemTotalAmount": "7.5"
+        }
+      ]
+    },
+    {
+      "id": "ba810371-8d17-4ac8-82ab-483729a87d77",
+      "code": 9,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "15",
+      "markupApplied": "0.3",
+      "totalAmount": "15",
+      "validUntil": "2026-09-28T16:38:51.376Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-09-28T16:38:51.379Z",
+      "updatedAt": "2026-09-28T16:38:51.379Z",
+      "items": [
+        {
+          "id": "0f37b976-092b-466a-b1fd-f0f75936748d",
+          "quoteId": "ba810371-8d17-4ac8-82ab-483729a87d77",
+          "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+          "productName": "xerox básica",
+          "quantity": 15,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 15,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "1",
+          "itemTotalAmount": "15"
+        }
+      ]
+    },
+    {
+      "id": "8c1de12e-4e99-4038-aa93-3dc224984a1f",
+      "code": 10,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "13",
+      "markupApplied": "0.3",
+      "totalAmount": "13",
+      "validUntil": "2026-09-28T17:29:17.977Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-09-28T17:29:17.979Z",
+      "updatedAt": "2026-09-28T17:29:17.979Z",
+      "items": [
+        {
+          "id": "f5b5df94-4cdf-4fff-8adf-c4f060a58844",
+          "quoteId": "8c1de12e-4e99-4038-aa93-3dc224984a1f",
+          "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+          "productName": "xerox básica",
+          "quantity": 13,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 13,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "1",
+          "itemTotalAmount": "13"
+        }
+      ]
+    },
+    {
+      "id": "47ddd686-0617-40e1-bbf1-8c525032d868",
+      "code": 11,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "17",
+      "markupApplied": "0.3",
+      "totalAmount": "17",
+      "validUntil": "2026-09-28T17:30:08.915Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-09-28T17:30:08.918Z",
+      "updatedAt": "2026-09-28T17:30:08.918Z",
+      "items": [
+        {
+          "id": "201fc12d-d382-4ee1-82b9-2a37aea31b4c",
+          "quoteId": "47ddd686-0617-40e1-bbf1-8c525032d868",
+          "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+          "productName": "xerox básica",
+          "quantity": 17,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 17,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "1",
+          "itemTotalAmount": "17"
+        }
+      ]
+    },
+    {
+      "id": "7b800f3b-e5f2-4af2-b0b4-0571d787d485",
+      "code": 12,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "20",
+      "markupApplied": "0.3",
+      "totalAmount": "20",
+      "validUntil": "2026-09-28T17:34:15.939Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-09-28T17:34:15.942Z",
+      "updatedAt": "2026-09-28T17:34:15.942Z",
+      "items": [
+        {
+          "id": "dd278f08-c33f-4ef0-9e47-ec4ea93b2fe2",
+          "quoteId": "7b800f3b-e5f2-4af2-b0b4-0571d787d485",
+          "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+          "productName": "xerox básica",
+          "quantity": 20,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 20,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "1",
+          "itemTotalAmount": "20"
+        }
+      ]
+    },
+    {
+      "id": "0b7d5755-a3d8-483f-9a55-b46b1fb3e64c",
+      "code": 13,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "10",
+      "markupApplied": "0.3",
+      "totalAmount": "10",
+      "validUntil": "2026-09-28T17:35:12.043Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-09-28T17:35:12.045Z",
+      "updatedAt": "2026-09-28T17:35:12.045Z",
+      "items": [
+        {
+          "id": "23579d77-0a1f-4d5d-b1e8-617bedda49a8",
+          "quoteId": "0b7d5755-a3d8-483f-9a55-b46b1fb3e64c",
+          "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+          "productName": "xerox básica",
+          "quantity": 10,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 10,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "1",
+          "itemTotalAmount": "10"
+        }
+      ]
     }
   ],
   "workOrders": [
@@ -309,6 +677,16 @@
       "createdAt": "2026-09-21T20:06:53.872Z",
       "updatedAt": "2026-09-24T19:26:25.610Z",
       "stages": [
+        {
+          "id": "e89a1742-b97d-4d30-b5eb-0f40b6e8b300",
+          "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "PENDING",
+          "createdAt": "2026-09-21T20:06:53.872Z",
+          "updatedAt": "2026-09-21T20:06:53.872Z",
+          "logs": []
+        },
         {
           "id": "200b78b5-1313-474d-ae29-6070dbbdd865",
           "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
@@ -417,16 +795,6 @@
           "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
           "stepOrder": 4,
           "name": "Controle de Qualidade",
-          "status": "PENDING",
-          "createdAt": "2026-09-21T20:06:53.872Z",
-          "updatedAt": "2026-09-21T20:06:53.872Z",
-          "logs": []
-        },
-        {
-          "id": "e89a1742-b97d-4d30-b5eb-0f40b6e8b300",
-          "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
-          "stepOrder": 5,
-          "name": "Expedição / Retirada",
           "status": "PENDING",
           "createdAt": "2026-09-21T20:06:53.872Z",
           "updatedAt": "2026-09-21T20:06:53.872Z",
@@ -651,6 +1019,558 @@
           "logs": []
         }
       ]
+    },
+    {
+      "id": "06ebf6ad-0f44-4aa6-aa2f-51994ac4d7cc",
+      "orderNumber": "OS-2026-00006",
+      "quoteId": "e25b78a3-027c-4794-9ac5-9bc8117cb285",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-09-28T15:28:33.762Z",
+      "fileUrl": null,
+      "barcode": "OS202600006",
+      "totalAmount": "5",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-09-28T15:28:33.776Z",
+      "updatedAt": "2026-09-28T15:28:33.776Z",
+      "stages": [
+        {
+          "id": "18abab2b-04b3-458d-ae5e-d9f20b336a61",
+          "workOrderId": "06ebf6ad-0f44-4aa6-aa2f-51994ac4d7cc",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T15:28:33.776Z",
+          "updatedAt": "2026-09-28T15:28:33.776Z",
+          "logs": []
+        },
+        {
+          "id": "e8ddecde-333e-4ce4-acb4-4bcfbaea9a9d",
+          "workOrderId": "06ebf6ad-0f44-4aa6-aa2f-51994ac4d7cc",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T15:28:33.776Z",
+          "updatedAt": "2026-09-28T15:28:33.776Z",
+          "logs": []
+        },
+        {
+          "id": "33ad856f-d43a-42e1-88c1-afc9c7fc31bb",
+          "workOrderId": "06ebf6ad-0f44-4aa6-aa2f-51994ac4d7cc",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T15:28:33.776Z",
+          "updatedAt": "2026-09-28T15:28:33.776Z",
+          "logs": []
+        },
+        {
+          "id": "2b7ba1e3-c08e-40d7-8f44-151c6e36bd42",
+          "workOrderId": "06ebf6ad-0f44-4aa6-aa2f-51994ac4d7cc",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T15:28:33.776Z",
+          "updatedAt": "2026-09-28T15:28:33.776Z",
+          "logs": []
+        },
+        {
+          "id": "cd0694ae-36e9-4028-a3b7-d04a819855e2",
+          "workOrderId": "06ebf6ad-0f44-4aa6-aa2f-51994ac4d7cc",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T15:28:33.776Z",
+          "updatedAt": "2026-09-28T15:28:33.776Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "f8068e29-f60d-422c-93c3-9c8f8e1ba719",
+      "orderNumber": "OS-2026-00007",
+      "quoteId": "95492cb9-4519-4b5b-b56d-5e4f57d770ce",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-09-28T15:31:28.705Z",
+      "fileUrl": null,
+      "barcode": "OS202600007",
+      "totalAmount": "105",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-09-28T15:31:28.714Z",
+      "updatedAt": "2026-09-28T15:31:28.714Z",
+      "stages": [
+        {
+          "id": "bbcc7bf1-a211-4a30-9c5a-8d2c7a612d62",
+          "workOrderId": "f8068e29-f60d-422c-93c3-9c8f8e1ba719",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T15:31:28.714Z",
+          "updatedAt": "2026-09-28T15:31:28.714Z",
+          "logs": []
+        },
+        {
+          "id": "ddf6b8c3-1902-418a-b996-9ad75692c93e",
+          "workOrderId": "f8068e29-f60d-422c-93c3-9c8f8e1ba719",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T15:31:28.714Z",
+          "updatedAt": "2026-09-28T15:31:28.714Z",
+          "logs": []
+        },
+        {
+          "id": "db436cf9-eb81-44b7-ac28-cd30d8d7439e",
+          "workOrderId": "f8068e29-f60d-422c-93c3-9c8f8e1ba719",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T15:31:28.714Z",
+          "updatedAt": "2026-09-28T15:31:28.714Z",
+          "logs": []
+        },
+        {
+          "id": "78a1629f-4eb3-4013-abfd-42026713cf5a",
+          "workOrderId": "f8068e29-f60d-422c-93c3-9c8f8e1ba719",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T15:31:28.714Z",
+          "updatedAt": "2026-09-28T15:31:28.714Z",
+          "logs": []
+        },
+        {
+          "id": "4892072d-c0ea-43bf-9c01-b4d57b40c5d8",
+          "workOrderId": "f8068e29-f60d-422c-93c3-9c8f8e1ba719",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T15:31:28.714Z",
+          "updatedAt": "2026-09-28T15:31:28.714Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "e89edcdc-85b1-48d7-9945-239060d2ba4f",
+      "orderNumber": "OS-2026-00008",
+      "quoteId": "19286cc7-791c-430c-b08c-f5252c5c9521",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-09-28T16:10:35.855Z",
+      "fileUrl": null,
+      "barcode": "OS202600008",
+      "totalAmount": "7.5",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-09-28T16:10:35.888Z",
+      "updatedAt": "2026-09-28T16:10:35.888Z",
+      "stages": [
+        {
+          "id": "dee08bdf-797f-45ee-acb4-1c6731b2cf86",
+          "workOrderId": "e89edcdc-85b1-48d7-9945-239060d2ba4f",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T16:10:35.888Z",
+          "updatedAt": "2026-09-28T16:10:35.888Z",
+          "logs": []
+        },
+        {
+          "id": "f5a21b44-03cd-45b7-a3ae-4293835cc80f",
+          "workOrderId": "e89edcdc-85b1-48d7-9945-239060d2ba4f",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T16:10:35.888Z",
+          "updatedAt": "2026-09-28T16:10:35.888Z",
+          "logs": []
+        },
+        {
+          "id": "f8cc9816-f59a-4701-abf4-19a32702e3a5",
+          "workOrderId": "e89edcdc-85b1-48d7-9945-239060d2ba4f",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T16:10:35.888Z",
+          "updatedAt": "2026-09-28T16:10:35.888Z",
+          "logs": []
+        },
+        {
+          "id": "da91a796-f219-4050-8bf2-3513e5372b1b",
+          "workOrderId": "e89edcdc-85b1-48d7-9945-239060d2ba4f",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T16:10:35.888Z",
+          "updatedAt": "2026-09-28T16:10:35.888Z",
+          "logs": []
+        },
+        {
+          "id": "bb825e8d-1b2b-4064-9f35-e07cc5080b64",
+          "workOrderId": "e89edcdc-85b1-48d7-9945-239060d2ba4f",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T16:10:35.888Z",
+          "updatedAt": "2026-09-28T16:10:35.888Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "7e3a0de7-e727-4f97-ad99-7669c8d3c90d",
+      "orderNumber": "OS-2026-00009",
+      "quoteId": "ba810371-8d17-4ac8-82ab-483729a87d77",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-09-28T16:38:51.376Z",
+      "fileUrl": null,
+      "barcode": "OS202600009",
+      "totalAmount": "15",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-09-28T16:38:51.387Z",
+      "updatedAt": "2026-09-28T16:38:51.387Z",
+      "stages": [
+        {
+          "id": "a897898d-aed1-425f-b011-35332772aaf4",
+          "workOrderId": "7e3a0de7-e727-4f97-ad99-7669c8d3c90d",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T16:38:51.387Z",
+          "updatedAt": "2026-09-28T16:38:51.387Z",
+          "logs": []
+        },
+        {
+          "id": "8ab75fca-8575-4019-bdf4-4e1bd5a1a907",
+          "workOrderId": "7e3a0de7-e727-4f97-ad99-7669c8d3c90d",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T16:38:51.387Z",
+          "updatedAt": "2026-09-28T16:38:51.387Z",
+          "logs": []
+        },
+        {
+          "id": "f083c9a6-8030-4b02-b6c3-0ebc9e655b10",
+          "workOrderId": "7e3a0de7-e727-4f97-ad99-7669c8d3c90d",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T16:38:51.387Z",
+          "updatedAt": "2026-09-28T16:38:51.387Z",
+          "logs": []
+        },
+        {
+          "id": "7c626f35-ba17-470c-95a7-7d0f6af8c96c",
+          "workOrderId": "7e3a0de7-e727-4f97-ad99-7669c8d3c90d",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T16:38:51.387Z",
+          "updatedAt": "2026-09-28T16:38:51.387Z",
+          "logs": []
+        },
+        {
+          "id": "31dd3860-82a3-4a4c-a17d-d07ba4f7d5cd",
+          "workOrderId": "7e3a0de7-e727-4f97-ad99-7669c8d3c90d",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T16:38:51.387Z",
+          "updatedAt": "2026-09-28T16:38:51.387Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "b59777c4-e0b3-4a59-a9e1-76338f63eaa6",
+      "orderNumber": "OS-2026-00010",
+      "quoteId": "8c1de12e-4e99-4038-aa93-3dc224984a1f",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-09-28T17:29:17.977Z",
+      "fileUrl": null,
+      "barcode": "OS202600010",
+      "totalAmount": "13",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-09-28T17:29:17.990Z",
+      "updatedAt": "2026-09-28T17:29:17.990Z",
+      "stages": [
+        {
+          "id": "3cf43301-3a37-472a-95e0-76ef350bbf0a",
+          "workOrderId": "b59777c4-e0b3-4a59-a9e1-76338f63eaa6",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:29:17.990Z",
+          "updatedAt": "2026-09-28T17:29:17.990Z",
+          "logs": []
+        },
+        {
+          "id": "33824f27-2637-49a4-96e1-5a12ae3d4dc2",
+          "workOrderId": "b59777c4-e0b3-4a59-a9e1-76338f63eaa6",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:29:17.990Z",
+          "updatedAt": "2026-09-28T17:29:17.990Z",
+          "logs": []
+        },
+        {
+          "id": "1778d179-6b03-4ee9-aa2c-7998f7c2d063",
+          "workOrderId": "b59777c4-e0b3-4a59-a9e1-76338f63eaa6",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:29:17.990Z",
+          "updatedAt": "2026-09-28T17:29:17.990Z",
+          "logs": []
+        },
+        {
+          "id": "565a09ae-6882-462a-9779-c0a4f9171dc0",
+          "workOrderId": "b59777c4-e0b3-4a59-a9e1-76338f63eaa6",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:29:17.990Z",
+          "updatedAt": "2026-09-28T17:29:17.990Z",
+          "logs": []
+        },
+        {
+          "id": "bb397bee-04a3-4e08-bf97-f178b3b839e2",
+          "workOrderId": "b59777c4-e0b3-4a59-a9e1-76338f63eaa6",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:29:17.990Z",
+          "updatedAt": "2026-09-28T17:29:17.990Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "0ff3dbd3-d8cb-4f94-a6fd-5432e07fdcb6",
+      "orderNumber": "OS-2026-00011",
+      "quoteId": "47ddd686-0617-40e1-bbf1-8c525032d868",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-09-28T17:30:08.915Z",
+      "fileUrl": null,
+      "barcode": "OS202600011",
+      "totalAmount": "17",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-09-28T17:30:08.923Z",
+      "updatedAt": "2026-09-28T17:30:08.923Z",
+      "stages": [
+        {
+          "id": "9ebdf29d-bf04-4ff9-85ad-c0bf16d1fa0b",
+          "workOrderId": "0ff3dbd3-d8cb-4f94-a6fd-5432e07fdcb6",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:30:08.923Z",
+          "updatedAt": "2026-09-28T17:30:08.923Z",
+          "logs": []
+        },
+        {
+          "id": "e26348d6-a6d8-4a79-af67-d4ffda7f3414",
+          "workOrderId": "0ff3dbd3-d8cb-4f94-a6fd-5432e07fdcb6",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:30:08.923Z",
+          "updatedAt": "2026-09-28T17:30:08.923Z",
+          "logs": []
+        },
+        {
+          "id": "4b18423a-8884-4398-b0e9-4b22871d8212",
+          "workOrderId": "0ff3dbd3-d8cb-4f94-a6fd-5432e07fdcb6",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:30:08.923Z",
+          "updatedAt": "2026-09-28T17:30:08.923Z",
+          "logs": []
+        },
+        {
+          "id": "e6efddab-a49d-427a-bcad-1e578bc9030d",
+          "workOrderId": "0ff3dbd3-d8cb-4f94-a6fd-5432e07fdcb6",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:30:08.923Z",
+          "updatedAt": "2026-09-28T17:30:08.923Z",
+          "logs": []
+        },
+        {
+          "id": "c35e73af-38d9-4661-b6cb-945f524aaa6e",
+          "workOrderId": "0ff3dbd3-d8cb-4f94-a6fd-5432e07fdcb6",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:30:08.923Z",
+          "updatedAt": "2026-09-28T17:30:08.923Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "d4ddffe7-8541-4ec4-a37c-e5948874466a",
+      "orderNumber": "OS-2026-00012",
+      "quoteId": "7b800f3b-e5f2-4af2-b0b4-0571d787d485",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-09-28T17:34:15.939Z",
+      "fileUrl": null,
+      "barcode": "OS202600012",
+      "totalAmount": "20",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-09-28T17:34:15.947Z",
+      "updatedAt": "2026-09-28T17:34:15.947Z",
+      "stages": [
+        {
+          "id": "23ac1406-9de8-4512-b3d6-4e6d4e7bc3ec",
+          "workOrderId": "d4ddffe7-8541-4ec4-a37c-e5948874466a",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:34:15.947Z",
+          "updatedAt": "2026-09-28T17:34:15.947Z",
+          "logs": []
+        },
+        {
+          "id": "aea3d195-5487-4b9c-bcd9-454bc694e323",
+          "workOrderId": "d4ddffe7-8541-4ec4-a37c-e5948874466a",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:34:15.947Z",
+          "updatedAt": "2026-09-28T17:34:15.947Z",
+          "logs": []
+        },
+        {
+          "id": "ae60b5eb-d49d-4449-b84f-b177758bba46",
+          "workOrderId": "d4ddffe7-8541-4ec4-a37c-e5948874466a",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:34:15.947Z",
+          "updatedAt": "2026-09-28T17:34:15.947Z",
+          "logs": []
+        },
+        {
+          "id": "2686cd5e-200e-495b-81d8-36665a6b7da8",
+          "workOrderId": "d4ddffe7-8541-4ec4-a37c-e5948874466a",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:34:15.947Z",
+          "updatedAt": "2026-09-28T17:34:15.947Z",
+          "logs": []
+        },
+        {
+          "id": "a11a7d7a-4b81-4173-8013-08231618180b",
+          "workOrderId": "d4ddffe7-8541-4ec4-a37c-e5948874466a",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:34:15.947Z",
+          "updatedAt": "2026-09-28T17:34:15.947Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "fae1caef-3c67-4fca-a0bc-dc1e9fb04135",
+      "orderNumber": "OS-2026-00013",
+      "quoteId": "0b7d5755-a3d8-483f-9a55-b46b1fb3e64c",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-09-28T17:35:12.043Z",
+      "fileUrl": null,
+      "barcode": "OS202600013",
+      "totalAmount": "10",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-09-28T17:35:12.050Z",
+      "updatedAt": "2026-09-28T17:35:12.050Z",
+      "stages": [
+        {
+          "id": "40595776-c035-4267-9a4c-5da63411707f",
+          "workOrderId": "fae1caef-3c67-4fca-a0bc-dc1e9fb04135",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:35:12.050Z",
+          "updatedAt": "2026-09-28T17:35:12.050Z",
+          "logs": []
+        },
+        {
+          "id": "683ad9ca-959c-4da2-ac1b-91b34e944fa8",
+          "workOrderId": "fae1caef-3c67-4fca-a0bc-dc1e9fb04135",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:35:12.050Z",
+          "updatedAt": "2026-09-28T17:35:12.050Z",
+          "logs": []
+        },
+        {
+          "id": "55a147b4-ca84-4e06-acc3-72b2660601d0",
+          "workOrderId": "fae1caef-3c67-4fca-a0bc-dc1e9fb04135",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:35:12.050Z",
+          "updatedAt": "2026-09-28T17:35:12.050Z",
+          "logs": []
+        },
+        {
+          "id": "8f4e55a7-c1a8-4ebf-a846-97c8ef787d78",
+          "workOrderId": "fae1caef-3c67-4fca-a0bc-dc1e9fb04135",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:35:12.050Z",
+          "updatedAt": "2026-09-28T17:35:12.050Z",
+          "logs": []
+        },
+        {
+          "id": "c2776755-8a9e-4f2f-bf7c-0ce7c448c833",
+          "workOrderId": "fae1caef-3c67-4fca-a0bc-dc1e9fb04135",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-28T17:35:12.050Z",
+          "updatedAt": "2026-09-28T17:35:12.050Z",
+          "logs": []
+        }
+      ]
     }
   ],
   "employees": [
@@ -715,6 +1635,150 @@
       "notes": null,
       "createdAt": "2026-09-25T18:53:19.774Z",
       "updatedAt": "2026-09-25T18:53:48.086Z"
+    },
+    {
+      "id": "8756c873-a5a8-4155-94d5-aebd144b46f5",
+      "workOrderId": "06ebf6ad-0f44-4aa6-aa2f-51994ac4d7cc",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00006",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "5",
+      "dueDate": "2026-09-28T15:28:33.785Z",
+      "paidAt": "2026-09-28T15:28:33.785Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-28T15:28:33.786Z",
+      "updatedAt": "2026-09-28T15:28:33.786Z"
+    },
+    {
+      "id": "1eadf0e0-f089-4c56-9bf7-c47ecc66a0d0",
+      "workOrderId": "f8068e29-f60d-422c-93c3-9c8f8e1ba719",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00007",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "105",
+      "dueDate": "2026-09-28T15:31:28.728Z",
+      "paidAt": "2026-09-28T15:31:28.728Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-28T15:31:28.729Z",
+      "updatedAt": "2026-09-28T15:31:28.729Z"
+    },
+    {
+      "id": "de1b3f04-f3d4-4cd3-8b29-d2707dd32f83",
+      "workOrderId": "e89edcdc-85b1-48d7-9945-239060d2ba4f",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00008",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "7.5",
+      "dueDate": "2026-09-28T16:10:35.912Z",
+      "paidAt": "2026-09-28T16:10:35.912Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-28T16:10:35.913Z",
+      "updatedAt": "2026-09-28T16:10:35.913Z"
+    },
+    {
+      "id": "76d842da-aee0-4264-93d1-aa2df6f0f88f",
+      "workOrderId": "7e3a0de7-e727-4f97-ad99-7669c8d3c90d",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00009",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "15",
+      "dueDate": "2026-09-28T16:38:51.405Z",
+      "paidAt": "2026-09-28T16:38:51.405Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-28T16:38:51.406Z",
+      "updatedAt": "2026-09-28T16:38:51.406Z"
+    },
+    {
+      "id": "6396e171-6645-44a1-8661-2c5b7e04c993",
+      "workOrderId": "b59777c4-e0b3-4a59-a9e1-76338f63eaa6",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00010",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "13",
+      "dueDate": "2026-09-28T17:29:18.009Z",
+      "paidAt": "2026-09-28T17:29:18.009Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-28T17:29:18.010Z",
+      "updatedAt": "2026-09-28T17:29:18.010Z"
+    },
+    {
+      "id": "0b266035-d35f-4365-9607-cb1ef3c93b83",
+      "workOrderId": "0ff3dbd3-d8cb-4f94-a6fd-5432e07fdcb6",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00011",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "17",
+      "dueDate": "2026-09-28T17:30:08.938Z",
+      "paidAt": "2026-09-28T17:30:08.938Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-28T17:30:08.940Z",
+      "updatedAt": "2026-09-28T17:30:08.940Z"
+    },
+    {
+      "id": "77e9085d-0c2b-4fe9-a195-86b0dd67381d",
+      "workOrderId": "d4ddffe7-8541-4ec4-a37c-e5948874466a",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00012",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "20",
+      "dueDate": "2026-09-28T17:34:15.961Z",
+      "paidAt": "2026-09-28T17:34:15.961Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-28T17:34:15.963Z",
+      "updatedAt": "2026-09-28T17:34:15.963Z"
+    },
+    {
+      "id": "1a4451d5-c2f1-47c2-adb6-4f78a2198a43",
+      "workOrderId": "fae1caef-3c67-4fca-a0bc-dc1e9fb04135",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00013",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "10",
+      "dueDate": "2026-09-28T17:35:12.060Z",
+      "paidAt": "2026-09-28T17:35:12.060Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-28T17:35:12.061Z",
+      "updatedAt": "2026-09-28T17:35:12.061Z"
     },
     {
       "id": "db503455-de46-4e6b-b38e-5f1eefdba066",
@@ -996,6 +2060,189 @@
       "isActive": true,
       "createdAt": "2026-09-23T21:31:15.249Z",
       "updatedAt": "2026-09-23T21:31:15.249Z"
+    }
+  ],
+  "paymentConditions": [
+    {
+      "id": "bff2a8fe-c3ba-44ec-b7a4-23f3d87cea67",
+      "name": "À Vista (100% no Pedido)",
+      "description": "Pagamento integral de 100% no ato do pedido via PIX, dinheiro ou cartão.",
+      "installmentsCount": 1,
+      "downPaymentPercent": "100",
+      "intervalDays": 0,
+      "dayOffsets": [
+        0
+      ],
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2026-09-28T15:22:24.795Z",
+      "updatedAt": "2026-09-28T15:22:24.795Z"
+    },
+    {
+      "id": "989c5bfe-bce9-43f2-be62-8c620f373868",
+      "name": "Sinal 50% + 50% na Retirada / 30d",
+      "description": "Sinal de 50% no pedido e o saldo de 50% na entrega ou em 30 dias.",
+      "installmentsCount": 2,
+      "downPaymentPercent": "50",
+      "intervalDays": 30,
+      "dayOffsets": [
+        0,
+        30
+      ],
+      "isDefault": false,
+      "isActive": true,
+      "createdAt": "2026-09-28T15:22:24.801Z",
+      "updatedAt": "2026-09-28T15:22:24.801Z"
+    },
+    {
+      "id": "0c065fbd-c02e-4e14-ab67-23cadced09d2",
+      "name": "3x Sem Juros (30 / 60 / 90 dias)",
+      "description": "Parcelamento em 3 vezes iguais sem juros a cada 30 dias.",
+      "installmentsCount": 3,
+      "downPaymentPercent": "0",
+      "intervalDays": 30,
+      "dayOffsets": [
+        30,
+        60,
+        90
+      ],
+      "isDefault": false,
+      "isActive": true,
+      "createdAt": "2026-09-28T15:22:24.802Z",
+      "updatedAt": "2026-09-28T15:22:24.802Z"
+    },
+    {
+      "id": "b06d9ccb-32e8-49d7-88ea-fe4a76984876",
+      "name": "Entrada 30% + 2x (30 / 60 dias)",
+      "description": "Entrada inicial de 30% e 2 parcelas de 35% aos 30 e 60 dias.",
+      "installmentsCount": 3,
+      "downPaymentPercent": "30",
+      "intervalDays": 30,
+      "dayOffsets": [
+        0,
+        30,
+        60
+      ],
+      "isDefault": false,
+      "isActive": true,
+      "createdAt": "2026-09-28T15:22:24.803Z",
+      "updatedAt": "2026-09-28T15:22:24.803Z"
+    },
+    {
+      "id": "508fad56-15ad-4563-bead-734fbc77edda",
+      "name": "Boleto Faturado 28 dias (1x)",
+      "description": "Faturamento para clientes pessoa jurídica com vencimento para 28 dias.",
+      "installmentsCount": 1,
+      "downPaymentPercent": "0",
+      "intervalDays": 28,
+      "dayOffsets": [
+        28
+      ],
+      "isDefault": false,
+      "isActive": true,
+      "createdAt": "2026-09-28T15:22:24.804Z",
+      "updatedAt": "2026-09-28T15:22:24.804Z"
+    }
+  ],
+  "quickServicePresets": [
+    {
+      "id": "f264d8e6-7ca2-4624-825a-abe256ed3fa6",
+      "name": "Xerox P&B A4",
+      "category": "Xerox",
+      "defaultPrice": "0.5",
+      "rawMaterialId": null,
+      "materialConsumeQty": "1",
+      "isActive": true,
+      "createdAt": "2026-09-28T15:56:55.060Z",
+      "updatedAt": "2026-09-28T15:56:55.060Z"
+    },
+    {
+      "id": "2c086e5c-72f1-4c94-94e6-7af9d0eab75f",
+      "name": "Xerox Colorida A4",
+      "category": "Xerox",
+      "defaultPrice": "2",
+      "rawMaterialId": null,
+      "materialConsumeQty": "1",
+      "isActive": true,
+      "createdAt": "2026-09-28T15:56:55.065Z",
+      "updatedAt": "2026-09-28T15:56:55.065Z"
+    },
+    {
+      "id": "db044d0b-f1c1-4ef6-afc4-76f23cb61cec",
+      "name": "Impressão A4 Sulfite 75g",
+      "category": "Impressão",
+      "defaultPrice": "1",
+      "rawMaterialId": null,
+      "materialConsumeQty": "1",
+      "isActive": true,
+      "createdAt": "2026-09-28T15:56:55.067Z",
+      "updatedAt": "2026-09-28T15:56:55.067Z"
+    },
+    {
+      "id": "8ff4311b-d49e-4fb1-a958-2616bad1c24b",
+      "name": "Impressão A3 Couchê 170g",
+      "category": "Impressão",
+      "defaultPrice": "5",
+      "rawMaterialId": null,
+      "materialConsumeQty": "1",
+      "isActive": true,
+      "createdAt": "2026-09-28T15:56:55.069Z",
+      "updatedAt": "2026-09-28T15:56:55.069Z"
+    },
+    {
+      "id": "630edfd7-8567-464e-8322-8274a7c40e32",
+      "name": "Plastificação Polaseal A4",
+      "category": "Acabamento",
+      "defaultPrice": "6",
+      "rawMaterialId": null,
+      "materialConsumeQty": "1",
+      "isActive": true,
+      "createdAt": "2026-09-28T15:56:55.070Z",
+      "updatedAt": "2026-09-28T15:56:55.070Z"
+    },
+    {
+      "id": "390c626a-d3f4-4a79-8285-5eb8c1c3d047",
+      "name": "Encadernação Espiral até 50 fls",
+      "category": "Acabamento",
+      "defaultPrice": "8",
+      "rawMaterialId": null,
+      "materialConsumeQty": "1",
+      "isActive": true,
+      "createdAt": "2026-09-28T15:56:55.072Z",
+      "updatedAt": "2026-09-28T15:56:55.072Z"
+    },
+    {
+      "id": "7327b127-1861-416a-af76-67b4925c84c0",
+      "name": "Digitalização / Scanner por página",
+      "category": "Foto & Scan",
+      "defaultPrice": "1",
+      "rawMaterialId": null,
+      "materialConsumeQty": "0",
+      "isActive": true,
+      "createdAt": "2026-09-28T15:56:55.074Z",
+      "updatedAt": "2026-09-28T15:56:55.074Z"
+    },
+    {
+      "id": "f26f3db7-db06-4cb1-9758-5e216016bd24",
+      "name": "xerox básica",
+      "category": "Xerox",
+      "defaultPrice": "1",
+      "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+      "materialConsumeQty": "1",
+      "isActive": true,
+      "createdAt": "2026-09-28T16:38:29.900Z",
+      "updatedAt": "2026-09-28T16:38:29.900Z"
+    },
+    {
+      "id": "2614aa7e-6c77-4349-82f9-0660c2664b3d",
+      "name": "Plastificação Polaseal Crachá/RG",
+      "category": "Acabamento",
+      "defaultPrice": "4",
+      "rawMaterialId": null,
+      "materialConsumeQty": "0",
+      "isActive": true,
+      "createdAt": "2026-09-28T15:56:55.071Z",
+      "updatedAt": "2026-09-28T17:31:14.703Z"
     }
   ]
 }

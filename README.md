@@ -79,7 +79,7 @@ erp-grafica/
 
 ---
 
-## ⚡ Como Executar Localmente
+## ⚡ Como Executar Localmente / Rodar em Outro PC
 
 ### 1. Pré-requisitos
 - [Node.js](https://nodejs.org/) (v20 ou superior)
@@ -87,26 +87,31 @@ erp-grafica/
 
 ### 2. Instalação das Dependências
 ```bash
+git clone https://github.com/andreliciosantos/erp-grafica.git
+cd erp-grafica
 pnpm install
 ```
 
-### 3. Banco de Dados e Seeds
+### 3. Iniciar o Banco de Dados
 ```bash
-# Executa as migrations do Prisma
-pnpm db:migrate
-
-# Popula o banco com os dados iniciais de teste (Admin, Operador, Máquinas e Insumos)
-pnpm --filter @erp/database db:seed
+# Inicia o PostgreSQL embarcado na porta 5432 (os dados já estão persistidos em data/embedded-pg)
+pnpm db:start
 ```
 
-### 4. Executar em Modo de Desenvolvimento (Hot-reload / Estilo Nodemon)
-```bash
-# Executa a API com monitoramento de arquivos e recarregamento automático
-pnpm --filter api dev
+> **Nota:** Para restaurar ou re-popular todo o banco de dados em qualquer ambiente:
+> ```bash
+> pnpm db:seed
+> ```
+> O script restaura automaticamente todos os cadastros, ordens de serviço, insumos e orçamentos a partir do snapshot `packages/database/prisma/seed-data.json`. Um backup completo em formato SQL padrão também está disponível em `data/backup_database.sql`.
 
-# Ou na raiz para rodar o pipeline completo
+### 4. Executar o Sistema (API + Web)
+```bash
+# Executa simultaneamente a API (porta 3000) e o Frontend Web (porta 5173)
 pnpm dev
 ```
+- **Web App:** [http://localhost:5173](http://localhost:5173)
+- **API NestJS:** [http://localhost:3000](http://localhost:3000)
+- **Documentação Swagger:** [http://localhost:3000/docs](http://localhost:3000/docs)
 
 ---
 
