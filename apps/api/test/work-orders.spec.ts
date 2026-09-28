@@ -231,5 +231,29 @@ describe('Máquina de Estados e Chão de Fábrica (WorkOrdersService)', () => {
       expect(singleResult.productName).toBe('Folders Institucionais 2 Dobras');
     });
   });
+
+  describe('Produção Rápida de Balcão (createDirect)', () => {
+    it('deve criar OS de balcão sem cliente definido, com itens múltiplos e status entregue', async () => {
+      const order = await workOrdersService.createDirect(
+        {
+          items: [
+            { productName: 'Xerox P&B A4', quantity: 10, unitPrice: 0.5, itemTotalAmount: 5 },
+            { productName: 'Plastificação A4', quantity: 2, unitPrice: 5, itemTotalAmount: 10 },
+          ],
+          totalAmount: 15,
+          paymentMethod: 'PIX',
+          paymentStatus: 'PAID',
+          status: WorkOrderStatus.DELIVERED,
+        },
+        'u-admin-1',
+      );
+
+      expect(order).toBeDefined();
+      expect(order.orderNumber).toMatch(/^OS-\d{4}-\d{5}$/);
+      expect(order.totalAmount).toBe(15);
+      expect(order.status).toBe(WorkOrderStatus.DELIVERED);
+      expect(eventsGatewayMock.emitWorkOrderStatusChanged).toHaveBeenCalled();
+    });
+  });
 });
 

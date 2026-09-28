@@ -13,6 +13,7 @@ import {
   QuoteItem,
   RawMaterial,
   StockMovement,
+  PaymentMethod,
 } from '@erp/database';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -21,6 +22,7 @@ import {
   ChannelSource,
   QuoteStatus,
   PaymentStatus,
+  PartyType,
 } from '@erp/shared-types';
 import { Decimal } from '@erp/business-core';
 import { EventsGateway } from '../events/events.gateway';
@@ -456,22 +458,108 @@ export class WorkOrdersService {
   }
 
   async createDirect(dto: CreateDirectOrderDto, userId: string): Promise<WorkOrder> {
-    const party = await this.prisma.party.findUnique({
-      where: { id: dto.partyId },
-    });
-    if (!party) {
-      throw new NotFoundException(`Cliente com ID ${dto.partyId} não encontrado.`);
+    let partyId = dto.partyId;
+
+    if (!partyId) {
+      let defaultCustomer = await this.prisma.party.findFirst({
+        where: {
+          OR: [
+            { document: '00000000000' },
+            { name: { contains: 'Balcão', mode: 'insensitive' } },
+            { name: { contains: 'Consumidor Final', mode: 'insensitive' } },
+          ],
+        },
+      });
+
+      if (!defaultCustomer) {
+        defaultCustomer = await this.prisma.party.create({
+          data: {
+            type: PartyType.INDIVIDUAL,
+            name: 'Cliente Balcão / Consumidor Final',
+            tradeName: 'Consumidor Avulso',
+            document: '00000000000',
+            phone: '00000000000',
+            isCustomer: true,
+            isSupplier: false,
+          },
+        });
+      }
+      partyId = defaultCustomer.id;
+    } else {
+      const party = await this.prisma.party.findUnique({
+        where: { id: partyId },
+      });
+      if (!party) {
+        throw new NotFoundException(`Cliente com ID ${partyId} não encontrado.`);
+      }
     }
 
     const currentYear = new Date().getFullYear();
-    const deliveryDays = dto.deliveryDays || 5;
+    const deliveryDays = dto.deliveryDays ?? (dto.status === WorkOrderStatus.DELIVERED ? 0 : 5);
     const deliveryDate = new Date();
     deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
 
+    const hasItems = Array.isArray(dto.items) && dto.items.length > 0;
+    const resolvedProductName =
+      dto.productName?.trim() ||
+      (hasItems ? dto.items!.map((it) => `${it.productName} (${it.quantity}x)`).join(', ') : 'Serviço Rápido de Balcão');
+
+    const totalQuantity =
+      dto.quantity && dto.quantity > 0
+        ? dto.quantity
+        : (hasItems ? dto.items!.reduce((acc, it) => acc + (it.quantity || 1), 0) : 1);
+
+    const initialStatus = (dto.status as WorkOrderStatus) || WorkOrderStatus.PENDING;
+    const initialPaymentStatus = (dto.paymentStatus as PaymentStatus) || (dto.paymentMethod ? PaymentStatus.PAID : PaymentStatus.PENDING);
+    const initialStageStatus =
+      initialStatus === WorkOrderStatus.DELIVERED || initialStatus === WorkOrderStatus.READY_FOR_PICKUP
+        ? StageStatus.COMPLETED
+        : StageStatus.PENDING;
+
     const result = await this.prisma.$transaction(async (tx) => {
+      const itemsToCreate = hasItems
+        ? dto.items!.map((it) => {
+            const uPrice = it.unitPrice ?? (it.quantity > 0 && it.itemTotalAmount ? it.itemTotalAmount / it.quantity : 0);
+            const iTotal = it.itemTotalAmount ?? (it.quantity * uPrice);
+            return {
+              productName: it.productName,
+              quantity: it.quantity,
+              widthMm: 0,
+              heightMm: 0,
+              colorsFront: 4,
+              colorsBack: 0,
+              finishingOptions: [],
+              sheetsRequired: 0,
+              itemsPerSheet: 1,
+              paperCostCalculated: 0,
+              finishingCostTotal: 0,
+              machineCostTotal: 0,
+              unitPrice: uPrice,
+              itemTotalAmount: iTotal,
+            };
+          })
+        : [
+            {
+              productName: resolvedProductName,
+              quantity: totalQuantity,
+              widthMm: 0,
+              heightMm: 0,
+              colorsFront: 4,
+              colorsBack: 0,
+              finishingOptions: [],
+              sheetsRequired: 0,
+              itemsPerSheet: 1,
+              paperCostCalculated: 0,
+              finishingCostTotal: 0,
+              machineCostTotal: 0,
+              unitPrice: totalQuantity > 0 ? dto.totalAmount / totalQuantity : dto.totalAmount,
+              itemTotalAmount: dto.totalAmount,
+            },
+          ];
+
       const quote = await tx.quote.create({
         data: {
-          partyId: dto.partyId,
+          partyId,
           userId,
           status: QuoteStatus.APPROVED,
           origin: ChannelSource.WEB,
@@ -481,24 +569,7 @@ export class WorkOrdersService {
           validUntil: deliveryDate,
           notes: dto.notes,
           items: {
-            create: [
-              {
-                productName: dto.productName,
-                quantity: dto.quantity,
-                widthMm: 0,
-                heightMm: 0,
-                colorsFront: 4,
-                colorsBack: 0,
-                finishingOptions: [],
-                sheetsRequired: 0,
-                itemsPerSheet: 1,
-                paperCostCalculated: 0,
-                finishingCostTotal: 0,
-                machineCostTotal: 0,
-                unitPrice: dto.quantity > 0 ? dto.totalAmount / dto.quantity : dto.totalAmount,
-                itemTotalAmount: dto.totalAmount,
-              },
-            ],
+            create: itemsToCreate,
           },
         },
       });
@@ -511,21 +582,21 @@ export class WorkOrdersService {
           orderNumber,
           barcode,
           quoteId: quote.id,
-          partyId: dto.partyId,
+          partyId,
           userId,
           origin: ChannelSource.WEB,
-          status: WorkOrderStatus.PENDING,
+          status: initialStatus,
           priority: dto.priority || 2,
           deliveryDate,
           totalAmount: dto.totalAmount,
-          paymentStatus: PaymentStatus.PENDING,
+          paymentStatus: initialPaymentStatus,
           stages: {
             create: [
-              { stepOrder: 1, name: 'Pré-impressão', status: StageStatus.PENDING },
-              { stepOrder: 2, name: 'Impressão', status: StageStatus.PENDING },
-              { stepOrder: 3, name: 'Acabamento', status: StageStatus.PENDING },
-              { stepOrder: 4, name: 'Controle de Qualidade', status: StageStatus.PENDING },
-              { stepOrder: 5, name: 'Expedição / Retirada', status: StageStatus.PENDING },
+              { stepOrder: 1, name: 'Pré-impressão', status: initialStageStatus },
+              { stepOrder: 2, name: 'Impressão', status: initialStageStatus },
+              { stepOrder: 3, name: 'Acabamento', status: initialStageStatus },
+              { stepOrder: 4, name: 'Controle de Qualidade', status: initialStageStatus },
+              { stepOrder: 5, name: 'Expedição / Retirada', status: initialStageStatus },
             ],
           },
         },
@@ -535,14 +606,31 @@ export class WorkOrdersService {
         },
       });
 
+      if (initialPaymentStatus === PaymentStatus.PAID && dto.totalAmount > 0) {
+        await tx.receivable.create({
+          data: {
+            workOrderId: workOrder.id,
+            partyId,
+            description: `Venda Rápida / Balcão - ${orderNumber}`,
+            installmentNumber: 1,
+            totalInstallments: 1,
+            amount: dto.totalAmount,
+            dueDate: new Date(),
+            paidAt: new Date(),
+            status: PaymentStatus.PAID,
+            paymentMethod: (dto.paymentMethod as any) || PaymentMethod.CASH,
+          },
+        });
+      }
+
       return workOrder;
     });
 
     this.eventsGateway.emitWorkOrderStatusChanged({
       workOrderId: result.id,
       orderNumber: result.orderNumber,
-      previousStatus: WorkOrderStatus.PENDING,
-      newStatus: WorkOrderStatus.PENDING,
+      previousStatus: initialStatus,
+      newStatus: initialStatus,
       updatedAt: new Date().toISOString(),
     });
 

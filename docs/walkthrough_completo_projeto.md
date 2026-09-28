@@ -725,5 +725,45 @@ Para preparar o ERP para ambientes de produção e mitigar riscos de segurança 
    - Fluxos de autenticação testados com digitação de credenciais legítimas via `userEvent.type`.
    - Mantido o formulário limpo, o suporte à recuperação de senha via e-mail e a validação estrita de credenciais.
 
+---
 
+## 26. Produção Rápida de Balcão (Atendimento Expresso sem Fricção)
 
+Para eliminar qualquer atrito operacional no dia a dia da gráfica em demandas imediatas (Xerox, plastificações, cópias, encadernações e pequenas impressões avulsas), foi implementado o fluxo de **Produção Rápida**:
+
+### 26.1. Botão de Acesso na Aba "Visão Geral" (`DashboardPage.tsx`)
+- Posicionado exatamente **ao lado esquerdo** do botão *"Novo Orçamento"*.
+- Estilizado em destaque visual com ícone de raio (`Zap`) e cor âmbar (`bg-amber-600 hover:bg-amber-500`).
+- Ao clicar, abre instantaneamente o modal pop-up de Produção Rápida sem navegar para outra tela.
+
+### 26.2. Pop-up de Produção Rápida (`QuickProductionModal.tsx`)
+1. **Sem Necessidade de Cadastro de Cliente:**
+   - O atendimento é categorizado como *"Cliente Balcão / Consumidor Avulso"*.
+   - Não requer preenchimento obrigatório de CPF, telefone ou endereço, agilizando o atendimento presencial para menos de 5 segundos.
+2. **Atalhos Rápidos de 1 Clique (Presets):**
+   - Catálogo com botões rápidos categorizados (*Xerox*, *Impressão*, *Acabamento*, *Foto & Scan*):
+     - Xerox P&B A4 (R$ 0,50)
+     - Xerox Colorida A4 (R$ 2,00)
+     - Impressão P&B A4 (R$ 1,00)
+     - Impressão Colorida A4 (R$ 2,50)
+     - Impressão Laser A3 Color (R$ 6,00)
+     - Plastificação Polaseal A4 (R$ 5,00)
+     - Plastificação RG / Crachá (R$ 3,50)
+     - Encadernação Espiral (R$ 8,00)
+     - Refile / Corte Avulso (R$ 3,00)
+     - Foto 3x4 (Cartela c/ 6) (R$ 15,00)
+     - Digitalização / Scan de Doc (R$ 2,00)
+   - Clicar em qualquer atalho adiciona o serviço à lista ou incrementa sua quantidade.
+3. **Serviços Personalizados Avulsos:**
+   - Formulário em linha para digitar qualquer descrição livre, quantidade e valor unitário customizado.
+4. **Lista Dinâmica de Serviços Realizados:**
+   - Exibição de cada serviço com controles rápidos de incremento/decremento (`[-]` e `[+]`), edição de preço unitário em tempo real, subtotal e botão para exclusão.
+5. **Forma de Pagamento e Destino da Produção:**
+   - Seletor rápido de pagamento com 1 clique (PIX, Dinheiro, Cartão de Débito, Cartão de Crédito, Pendente).
+   - Seletor de situação da OS: *"Entregue na Hora"* (baixa imediata) ou *"Fila de Produção"* (para pequenas tiragens que aguardam máquina).
+6. **Lançamento Automático no Financeiro e Chão de Fábrica:**
+   - Criação direta da OS com código gerado (ex: `OS-2026-00045`), registro no caixa/recebíveis e atualização instantânea dos cards de KPI e métricas do Dashboard.
+
+### 26.3. Garantia de Qualidade e Cobertura de Testes
+- **Backend:** `apps/api/test/work-orders.spec.ts` validando criação direta com múltiplos itens, status entregue e liquidação financeira.
+- **Frontend:** `apps/web/src/features/dashboard/QuickProductionModal.test.tsx` e `DashboardPage.test.tsx` cobrindo adição de presets, cálculos de totalizadores, serviço avulso, forma de pagamento e submissão.
