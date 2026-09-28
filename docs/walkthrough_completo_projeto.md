@@ -641,3 +641,64 @@ Para viabilizar a transição instantânea de desenvolvimento entre múltiplos c
    - Inicializador inteligente que detecta se a porta 5432 já está ativa.
    - Varredura e purga automática de travas residuais de processos encerrados (`postmaster.pid`), eliminando falhas de inicialização em clones novos.
    - Versionamento do diretório de dados `data/embedded-pg` no GitHub com exclusão rigorosa de sockets efêmeros e logs em `.gitignore`.
+
+---
+
+## 25. Ciclo de Vida de Usuários, Ativação por E-mail Real e Recuperação de Senha
+
+Para atender aos mais elevados padrões de segurança da informação e governança corporativa, o sistema substituiu o modelo antiquado de senhas provisórias cadastradas manualmente por administradores por um **fluxo profissional de onboarding e ciclo de vida de contas baseado em e-mails reais verificados e criptografia de tokens**:
+
+### 25.1. Motivação e Riscos Eliminados
+* **Risco de Vazamento de Senha Provisória:** O envio de senhas em texto puro via chat ou anotações físicas expõe a infraestrutura a acessos não autorizados.
+* **Confirmação de Identidade e Propriedade de E-mail:** Garantia de que o colaborador é proprietário legítimo da caixa postal antes de conceder acesso aos dados confidenciais do ERP (orçamentos, DRE, clientes).
+* **Autonomia e Segurança:** O próprio colaborador define sua senha privada, sem que nenhum outro membro da equipe tenha ciência dela.
+
+### 25.2. Arquitetura do Fluxo de Cadastro e Convite (Onboarding)
+1. **Cadastro pelo Administrador (`UsersPage`):**
+   - O administrador informa apenas **Nome**, **E-mail corporativo** e **Perfil de Permissão (Role)**.
+   - O campo de senha é completamente ocultado na criação de novos usuários, exibindo uma mensagem de orientação sobre o envio automático de convite por e-mail.
+   - Ao submeter o formulário (`POST /api/v1/users`), o backend cria o usuário com `emailVerified: false`, `passwordHash: null`, gera um **token criptográfico de ativação de 48 horas** (`crypto.randomBytes(32).toString('hex')`) e dispara o e-mail de boas-vindas com o link de ativação seguro (`/activate?token=...`).
+
+2. **Ativação pelo Usuário Convidado (`ActivateAccountPage`):**
+   - O colaborador clica no link recebido em seu e-mail e é direcionado à rota pública `/activate?token=...`.
+   - O frontend valida o token de imediato via `GET /api/v1/auth/verify-token?token=...&type=activation`. Se o token for inválido ou expirado, uma tela de orientação orienta o usuário a solicitar reenvio.
+   - Se o token for válido, o formulário exibe o e-mail confirmado bloqueado para edição e solicita que o colaborador crie e confirme sua senha (mínimo de 6 caracteres).
+   - Ao submeter (`POST /api/v1/auth/activate`), o backend valida o token, gera o hash seguro da senha com `bcrypt`, marca `emailVerified: true`, limpa os tokens de uso único, gera os tokens de acesso JWT (`accessToken` e `refreshToken`) e efetua o login instantâneo do colaborador.
+
+3. **Gestão de Convites Pendentes no Painel Administrativo:**
+   - A tabela de usuários exibe a nova coluna **Confirmação** com badges semânticos:
+     - `Confirmado` (verde, com ícone de verificação) para contas ativadas.
+     - `Pendente` (âmbar, com ícone de e-mail) para usuários que ainda não concluíram o cadastro.
+   - Para usuários pendentes, um botão de ação rápida **Reenviar Convite** (`POST /api/v1/users/:id/resend-invitation`) renova o token por mais 48 horas e dispara um novo e-mail de ativação.
+
+### 25.3. Fluxo de Recuperação de Senha ("Esqueci minha senha")
+1. **Solicitação na Tela de Login (`LoginPage`):**
+   - Link discreto *"Esqueci minha senha"* abaixo do campo de senha.
+   - Ao clicar, abre-se o modal de recuperação onde o usuário insere seu e-mail cadastrado.
+   - Disparo de requisição para `POST /api/v1/auth/forgot-password`.
+   - **Prevenção de Enumeração de E-mails:** Para evitar que agentes maliciosos descubram se um e-mail existe no sistema, a resposta da API é sempre uniforme (`"Se o e-mail estiver cadastrado, as instruções foram enviadas com sucesso"`).
+
+2. **Geração de Token de Recuperação:**
+   - Se a conta existir, um token de recuperação de uso único com expiração de **1 hora** é gerado (`resetPasswordToken` e `resetPasswordExpires`).
+   - Um e-mail com template HTML responsivo é despachado contendo o botão de redefinição para `/reset-password?token=...`.
+
+3. **Redefinição Segura (`ResetPasswordPage`):**
+   - O link direciona para `/reset-password?token=...`.
+   - O token é pré-validado via `GET /api/v1/auth/verify-token?token=...&type=reset`.
+   - O usuário digita sua nova senha com confirmação.
+   - `POST /api/v1/auth/reset-password` altera o hash da senha no banco e invalida o token imediatamente.
+
+### 25.4. Proteção e Blindagem no Endpoint de Login (`POST /auth/login`)
+* **Bloqueio de Contas Não-Ativadas:** Tentativas de login em contas sem senha definida (`passwordHash == null`) ou com `emailVerified == false` são rejeitadas com mensagens explicativas (`"Esta conta ainda não foi ativada. Verifique seu e-mail e conclua o cadastro da sua senha."`).
+* **Bloqueio de Contas Desativadas:** Usuários com `isActive: false` são bloqueados imediatamente, mesmo que informem credenciais corretas.
+
+### 25.5. Serviço de E-mail (`MailService` / `MailModule`)
+* Criado módulo global NestJS com `nodemailer`.
+* Suporte nativo a envio SMTP configurável via variáveis de ambiente (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `APP_URL`).
+* **Fallback Inteligente em Ambiente de Desenvolvimento:** Na ausência de credenciais SMTP, o serviço registra os links de ativação e redefinição com destaque nos logs do terminal com formatação visual limpa, viabilizando testes locais sem necessidade de servidores externos.
+
+### 25.6. Garantia de Qualidade e Cobertura de Testes
+* Suíte de testes do Backend (`test/auth.spec.ts`): 13 testes cobrindo todo o ciclo de tokens, bloqueios de login, ativação e expiração.
+* Suíte de testes do Frontend (`LoginPage.test.tsx`, `ActivateAccountPage.test.tsx`, `ResetPasswordPage.test.tsx`, `UsersPage.test.tsx`): 15 testes cobrindo renderização, validações de URL, preenchimento de senhas e mutações de reenvio de convite.
+* **Resultado Consolidado:** 100% de testes aprovados em todo o ecossistema (198 testes automatizados).
+

@@ -101,6 +101,35 @@ export interface JwtPayload {
   role: Role;
 }
 
+export interface ForgotPasswordRequestDto {
+  email: string;
+}
+
+export interface ResetPasswordRequestDto {
+  token: string;
+  password: string;
+}
+
+export interface ActivateAccountRequestDto {
+  token: string;
+  password: string;
+}
+
+export interface VerifyTokenResponseDto {
+  valid: boolean;
+  type: 'activation' | 'reset';
+  email?: string;
+  name?: string;
+  message?: string;
+}
+
+export interface CreateUserRequestDto {
+  name: string;
+  email: string;
+  role?: Role;
+  isActive?: boolean;
+}
+
 // -------------------------------------------------------------
 // Quotes DTOs (Section 6.2)
 // -------------------------------------------------------------

@@ -77,14 +77,19 @@ enum PaymentStatus {
 // USUÁRIOS E AUTENTICAÇÃO
 // -------------------------------------------------------------
 model User {
-  id            String       @id @default(uuid())
-  name          String
-  email         String       @unique
-  passwordHash  String
-  role          Role         @default(OPERATOR)
-  isActive      Boolean      @default(true)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id                     String    @id @default(uuid())
+  name                   String
+  email                  String    @unique
+  passwordHash           String?
+  role                   Role      @default(OPERATOR)
+  isActive               Boolean   @default(true)
+  emailVerified          Boolean   @default(false)
+  activationToken        String?   @unique
+  activationTokenExpires DateTime?
+  resetPasswordToken     String?   @unique
+  resetPasswordExpires   DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   quotes        Quote[]
   workOrders    WorkOrder[]

@@ -16,6 +16,7 @@ export interface UserItem {
   email: string;
   role: string;
   isActive: boolean;
+  emailVerified: boolean;
   createdAt: string;
 }
 

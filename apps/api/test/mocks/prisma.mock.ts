@@ -12,6 +12,7 @@ export function createMockPrismaService() {
       passwordHash: validHash,
       role: Role.ADMIN,
       isActive: true,
+      emailVerified: true,
       createdAt: new Date(),
     },
     {
@@ -21,6 +22,7 @@ export function createMockPrismaService() {
       passwordHash: validHash,
       role: Role.OPERATOR,
       isActive: true,
+      emailVerified: true,
       createdAt: new Date(),
     },
   ];
@@ -79,6 +81,14 @@ export function createMockPrismaService() {
         if (where.email) return users.find((u) => u.email === where.email) || null;
         return null;
       }),
+      findFirst: vi.fn(async ({ where }: any) => {
+        return users.find((u) => {
+          if (where.activationToken && u.activationToken !== where.activationToken) return false;
+          if (where.resetPasswordToken && u.resetPasswordToken !== where.resetPasswordToken) return false;
+          if (where.email && u.email !== where.email) return false;
+          return true;
+        }) || null;
+      }),
       findMany: vi.fn(async () => users),
       count: vi.fn(async () => users.length),
       create: vi.fn(async ({ data }: any) => {
@@ -88,8 +98,11 @@ export function createMockPrismaService() {
       }),
       update: vi.fn(async ({ where, data }: any) => {
         const u = users.find((x) => x.id === where.id);
-        if (u) Object.assign(u, data);
-        return u;
+        if (u) {
+          Object.assign(u, data);
+          return u;
+        }
+        return { id: where.id, ...data };
       }),
     },
     party: {

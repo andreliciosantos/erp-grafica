@@ -7,11 +7,13 @@ export class CreateUserDto {
   name!: string;
 
   @IsEmail({}, { message: 'E-mail inválido.' })
+  @IsNotEmpty({ message: 'E-mail é obrigatório.' })
   email!: string;
 
   @IsString({ message: 'Senha deve ser uma string.' })
   @MinLength(6, { message: 'Senha deve ter no mínimo 6 caracteres.' })
-  password!: string;
+  @IsOptional()
+  password?: string;
 
   @IsEnum(Role, { message: 'Perfil inválido.' })
   @IsOptional()

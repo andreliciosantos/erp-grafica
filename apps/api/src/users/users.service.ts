@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from '@erp/shared-types';
@@ -11,6 +13,8 @@ export interface UserSummary {
   email: string;
   role: Role;
   isActive: boolean;
+  emailVerified: boolean;
+  hasPassword?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -27,7 +31,10 @@ export interface PaginatedUsersResponse {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async create(dto: CreateUserDto): Promise<UserSummary> {
     const existing = await this.prisma.user.findUnique({
@@ -37,7 +44,18 @@ export class UsersService {
       throw new ConflictException('Já existe um usuário com este e-mail.');
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+    let passwordHash: string | null = null;
+    let activationToken: string | null = null;
+    let activationTokenExpires: Date | null = null;
+    let emailVerified = false;
+
+    if (dto.password) {
+      passwordHash = await bcrypt.hash(dto.password, 10);
+      emailVerified = true;
+    } else {
+      activationToken = crypto.randomBytes(32).toString('hex');
+      activationTokenExpires = new Date(Date.now() + 48 * 3600 * 1000); // 48h
+    }
 
     const created = await this.prisma.user.create({
       data: {
@@ -46,6 +64,9 @@ export class UsersService {
         passwordHash,
         role: (dto.role as Role) || Role.OPERATOR,
         isActive: dto.isActive !== undefined ? dto.isActive : true,
+        emailVerified,
+        activationToken,
+        activationTokenExpires,
       },
       select: {
         id: true,
@@ -53,13 +74,55 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        emailVerified: true,
         createdAt: true,
       },
     });
 
+    if (activationToken) {
+      await this.mailService.sendUserInvitation({
+        to: created.email,
+        name: created.name,
+        token: activationToken,
+      });
+    }
+
     return {
       ...created,
       role: created.role as Role,
+      hasPassword: Boolean(passwordHash),
+    };
+  }
+
+  async resendInvitation(id: string): Promise<{ success: boolean; message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+    if (user.emailVerified && user.passwordHash) {
+      throw new ConflictException('Este usuário já confirmou seu e-mail e definiu uma senha.');
+    }
+
+    const activationToken = crypto.randomBytes(32).toString('hex');
+    const activationTokenExpires = new Date(Date.now() + 48 * 3600 * 1000); // 48h
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        activationToken,
+        activationTokenExpires,
+      },
+    });
+
+    await this.mailService.sendUserInvitation({
+      to: user.email,
+      name: user.name,
+      token: activationToken,
+    });
+
+    return {
+      success: true,
+      message: `Novo e-mail de ativação enviado com sucesso para ${user.email}!`,
     };
   }
 
@@ -77,13 +140,24 @@ export class UsersService {
           email: true,
           role: true,
           isActive: true,
+          emailVerified: true,
+          passwordHash: true,
           createdAt: true,
         },
       }),
     ]);
 
     return {
-      data: users.map((u) => ({ ...u, role: u.role as Role })),
+      data: users.map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role as Role,
+        isActive: u.isActive,
+        emailVerified: u.emailVerified,
+        hasPassword: Boolean(u.passwordHash),
+        createdAt: u.createdAt,
+      })),
       meta: {
         total,
         page,
@@ -102,6 +176,8 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        emailVerified: true,
+        passwordHash: true,
         createdAt: true,
       },
     });
@@ -111,8 +187,14 @@ export class UsersService {
     }
 
     return {
-      ...user,
+      id: user.id,
+      name: user.name,
+      email: user.email,
       role: user.role as Role,
+      isActive: user.isActive,
+      emailVerified: user.emailVerified,
+      hasPassword: Boolean(user.passwordHash),
+      createdAt: user.createdAt,
     };
   }
 
@@ -126,6 +208,7 @@ export class UsersService {
     if (dto.isActive !== undefined) dataToUpdate['isActive'] = dto.isActive;
     if (dto.password) {
       dataToUpdate['passwordHash'] = await bcrypt.hash(dto.password, 10);
+      dataToUpdate['emailVerified'] = true;
     }
 
     const updated = await this.prisma.user.update({
@@ -137,13 +220,21 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        emailVerified: true,
+        passwordHash: true,
         updatedAt: true,
       },
     });
 
     return {
-      ...updated,
+      id: updated.id,
+      name: updated.name,
+      email: updated.email,
       role: updated.role as Role,
+      isActive: updated.isActive,
+      emailVerified: updated.emailVerified,
+      hasPassword: Boolean(updated.passwordHash),
+      updatedAt: updated.updatedAt,
     };
   }
 

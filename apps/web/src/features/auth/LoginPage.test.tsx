@@ -99,4 +99,31 @@ describe('LoginPage', () => {
       expect(useAuthStore.getState().user).toEqual(mockUser);
     });
   });
+
+  it('should open forgot password modal and submit email request', async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({
+      data: {
+        message: 'Link de recuperação enviado com sucesso!',
+      },
+    });
+
+    renderWithProviders(<LoginPage />);
+
+    const forgotBtn = screen.getByRole('button', { name: /esqueci minha senha/i });
+    await userEvent.click(forgotBtn);
+
+    expect(screen.getByText('Recuperação de Acesso')).toBeInTheDocument();
+    const emailInput = screen.getByLabelText(/e-mail cadastrado/i);
+    await userEvent.type(emailInput, 'admin@erpgrafica.com');
+
+    const submitBtn = screen.getByRole('button', { name: /enviar link de recuperação/i });
+    await userEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/auth/forgot-password', {
+        email: 'admin@erpgrafica.com',
+      });
+      expect(screen.getByText('Link de recuperação enviado com sucesso!')).toBeInTheDocument();
+    });
+  });
 });

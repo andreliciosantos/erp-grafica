@@ -105,4 +105,15 @@ export class UsersController {
   remove(@Param('id') id: string): Promise<{ success: boolean; message: string }> {
     return this.usersService.remove(id);
   }
+
+  @Post(':id/resend-invitation')
+  @ApiOperation({
+    summary: 'Reenviar convite de ativação',
+    description: 'Gera um novo token de ativação e reenvia o e-mail de convite para o usuário.',
+  })
+  @ApiParam({ name: 'id', description: 'ID do usuário' })
+  @ApiResponse({ status: 200, description: 'E-mail de convite reenviado com sucesso.' })
+  resendInvitation(@Param('id') id: string): Promise<{ success: boolean; message: string }> {
+    return this.usersService.resendInvitation(id);
+  }
 }

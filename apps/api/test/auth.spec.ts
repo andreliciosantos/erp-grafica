@@ -23,10 +23,17 @@ describe('Módulo de Autenticação e Segurança (Auth / Guards)', () => {
       BOT_API_KEY: 'valid-bot-key-123',
     });
 
+    const mailServiceMock = {
+      sendUserInvitation: vi.fn(async () => ({ success: true, link: 'http://test/activate?token=abc' })),
+      sendPasswordReset: vi.fn(async () => ({ success: true, link: 'http://test/reset?token=xyz' })),
+      getSentEmails: vi.fn(() => []),
+    };
+
     authService = new AuthService(
       prismaMock as any,
       jwtService,
       configService,
+      mailServiceMock as any,
     );
   });
 
@@ -63,6 +70,80 @@ describe('Módulo de Autenticação e Segurança (Auth / Guards)', () => {
           password: 'password123',
         }),
       ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('deve rejeitar login se a conta não tiver senha cadastrada (aguardando ativação)', async () => {
+      (prismaMock.user.findUnique as any).mockResolvedValueOnce({
+        id: 'u-pending-1',
+        email: 'pendente@test.com',
+        isActive: true,
+        passwordHash: null,
+        emailVerified: false,
+      });
+
+      await expect(
+        authService.login({
+          email: 'pendente@test.com',
+          password: 'qualquersenha',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('Fluxo de Ativação e Recuperação de Senha', () => {
+    it('deve processar solicitação de esquecimento de senha (forgotPassword)', async () => {
+      const response = await authService.forgotPassword({ email: 'admin@test.com' });
+      expect(response.success).toBe(true);
+      expect(prismaMock.user.update).toHaveBeenCalled();
+    });
+
+    it('deve validar token de ativação com sucesso (verifyToken)', async () => {
+      const result = await authService.verifyToken('valid-token', 'activation');
+      expect(result).toHaveProperty('valid');
+    });
+
+    it('deve ativar a conta do usuário e cadastrar senha (activateAccount)', async () => {
+      const mockUser = {
+        id: 'u-activate-1',
+        name: 'Novo Operador',
+        email: 'novo@test.com',
+        role: Role.OPERATOR,
+        activationToken: 'token-valido',
+        activationTokenExpires: new Date(Date.now() + 100000),
+      };
+      (prismaMock.user.findFirst as any).mockResolvedValueOnce(mockUser);
+      (prismaMock.user.update as any).mockResolvedValueOnce({
+        ...mockUser,
+        emailVerified: true,
+        isActive: true,
+      });
+
+      const response = await authService.activateAccount({
+        token: 'token-valido',
+        password: 'SenhaDefinitiva@123',
+      });
+
+      expect(response).toHaveProperty('accessToken');
+      expect(response.user.email).toBe('novo@test.com');
+      expect(prismaMock.user.update).toHaveBeenCalled();
+    });
+
+    it('deve redefinir senha através de token válido (resetPassword)', async () => {
+      (prismaMock.user.findFirst as any).mockResolvedValueOnce({
+        id: 'u-admin-1',
+        name: 'Admin Test',
+        email: 'admin@test.com',
+        resetPasswordToken: 'reset-token-valido',
+        resetPasswordExpires: new Date(Date.now() + 100000),
+      });
+
+      const response = await authService.resetPassword({
+        token: 'reset-token-valido',
+        password: 'NovaSenhaUltraSegura123',
+      });
+
+      expect(response.success).toBe(true);
+      expect(prismaMock.user.update).toHaveBeenCalled();
     });
   });
 

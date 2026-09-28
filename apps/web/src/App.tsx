@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './features/auth/LoginPage';
+import { ActivateAccountPage } from './features/auth/ActivateAccountPage';
+import { ResetPasswordPage } from './features/auth/ResetPasswordPage';
 import { DashboardPage } from './features/dashboard/DashboardPage';
 import { QuotesListPage } from './features/quotes/QuotesListPage';
 import { NewQuotePage } from './features/quotes/NewQuotePage';
@@ -34,6 +36,8 @@ export const App: React.FC = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/activate" element={<ActivateAccountPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Protected Application Routes */}
           <Route element={<ProtectedRoute />}>

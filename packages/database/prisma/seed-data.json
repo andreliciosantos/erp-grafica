@@ -7,6 +7,11 @@
       "passwordHash": "$2b$10$4sL54JMxjd5lTErPgTiA.Ox3DT7CZORRtmkV82jTjFcXOshjy1O3S",
       "role": "ADMIN",
       "isActive": true,
+      "emailVerified": false,
+      "activationToken": null,
+      "activationTokenExpires": null,
+      "resetPasswordToken": null,
+      "resetPasswordExpires": null,
       "createdAt": "2026-09-21T20:05:25.476Z",
       "updatedAt": "2026-09-21T20:05:25.476Z"
     },
@@ -17,6 +22,11 @@
       "passwordHash": "$2b$10$l6nQIAN1nJ4Zp3Cpg/yqeOloYF7SJ55.w81uKRuanJDO09CvTW.S6",
       "role": "OPERATOR",
       "isActive": true,
+      "emailVerified": false,
+      "activationToken": null,
+      "activationTokenExpires": null,
+      "resetPasswordToken": null,
+      "resetPasswordExpires": null,
       "createdAt": "2026-09-21T20:05:25.556Z",
       "updatedAt": "2026-09-21T20:05:25.556Z"
     }

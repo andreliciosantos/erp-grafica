@@ -8,7 +8,7 @@ import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { formatDateTime } from '../../lib/utils';
-import { ShieldCheck, Plus, UserCheck, Trash2, AlertTriangle, Edit2 } from 'lucide-react';
+import { ShieldCheck, Plus, UserCheck, Trash2, AlertTriangle, Edit2, Mail, Send, CheckCircle2 } from 'lucide-react';
 import { UserItem, PaginatedResult } from '../../types';
 
 export const UsersPage: React.FC = () => {
@@ -50,6 +50,20 @@ export const UsersPage: React.FC = () => {
     },
   });
 
+  const resendInvitationMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.post(`/users/${id}/resend-invitation`);
+      return res.data;
+    },
+    onSuccess: (data: { message?: string }) => {
+      alert(data?.message || 'Novo e-mail de convite enviado com sucesso!');
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Falha ao reenviar e-mail de ativação.');
+    },
+  });
+
   const handleOpenCreateModal = () => {
     setEditingUser(null);
     setName('');
@@ -85,10 +99,10 @@ export const UsersPage: React.FC = () => {
         const res = await api.put(`/users/${editingUser.id}`, payload);
         return res.data;
       } else {
+        // Novo usuário: Não envia senha! O backend gera token de ativação e envia convite por e-mail
         const payload = {
           name,
           email,
-          password,
           role,
         };
         const res = await api.post('/users', payload);
@@ -102,6 +116,11 @@ export const UsersPage: React.FC = () => {
       setName('');
       setEmail('');
       setPassword('');
+      alert(
+        editingUser
+          ? 'Usuário atualizado com sucesso!'
+          : 'Usuário cadastrado com sucesso! Um e-mail de convite foi enviado para confirmação e cadastro de senha.'
+      );
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string | string[] } } };
@@ -147,6 +166,7 @@ export const UsersPage: React.FC = () => {
                     <th className="pb-3 font-medium">Nome do Usuário</th>
                     <th className="pb-3 font-medium">E-mail de Login</th>
                     <th className="pb-3 font-medium">Perfil / Função</th>
+                    <th className="pb-3 font-medium">Confirmação</th>
                     <th className="pb-3 font-medium">Status</th>
                     <th className="pb-3 font-medium">Data de Cadastro</th>
                     <th className="pb-3 font-medium text-right">Ações</th>
@@ -177,12 +197,37 @@ export const UsersPage: React.FC = () => {
                         </Badge>
                       </td>
                       <td className="py-3.5">
+                        {user.emailVerified ? (
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                            Confirmado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            <Mail className="w-3 h-3 text-amber-500" />
+                            Pendente
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3.5">
                         <Badge variant={user.isActive ? 'success' : 'danger'} size="sm">
                           {user.isActive ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </td>
                       <td className="py-3.5 text-slate-500 dark:text-slate-400">{formatDateTime(user.createdAt)}</td>
                       <td className="py-3.5 text-right space-x-1">
+                        {!user.emailVerified && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => resendInvitationMutation.mutate(user.id)}
+                            isLoading={resendInvitationMutation.isPending && (resendInvitationMutation.variables as string) === user.id}
+                            className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 border-amber-200 dark:border-amber-500/30"
+                            title="Reenviar E-mail de Ativação / Convite"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="outline"
@@ -219,6 +264,11 @@ export const UsersPage: React.FC = () => {
           setEditingUser(null);
         }}
         title={editingUser ? "Editar Usuário" : "Cadastrar Novo Usuário"}
+        description={
+          editingUser
+            ? "Atualize as informações de perfil e permissões do colaborador."
+            : "Cadastre um novo colaborador. Um e-mail será disparado com link para criação de senha e ativação."
+        }
         maxWidth="md"
         footer={
           <>
@@ -236,7 +286,7 @@ export const UsersPage: React.FC = () => {
               onClick={() => saveMutation.mutate()}
               isLoading={saveMutation.isPending}
             >
-              {editingUser ? "Atualizar Usuário" : "Salvar Usuário"}
+              {editingUser ? "Atualizar Usuário" : "Enviar Convite e Cadastrar"}
             </Button>
           </>
         }
@@ -259,14 +309,27 @@ export const UsersPage: React.FC = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <Input
-            label={editingUser ? "Nova Senha (opcional)" : "Senha Provisória"}
-            type="password"
-            required={!editingUser}
-            placeholder={editingUser ? "Deixe em branco para manter a mesma" : "Mínimo 6 caracteres..."}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          {!editingUser ? (
+            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-2.5">
+              <Mail className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-emerald-700 dark:text-emerald-200">
+                  Convite e Ativação por E-mail
+                </p>
+                <p className="mt-0.5 text-slate-600 dark:text-slate-300">
+                  O administrador <strong>não define senha temporária</strong>. Um convite seguro será enviado para o e-mail informado para que o usuário confirme seu endereço e defina sua própria senha.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <Input
+              label="Nova Senha (opcional)"
+              type="password"
+              placeholder="Deixe em branco para manter a mesma"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          )}
 
           <Select
             label="Perfil de Permissão (Role)"
