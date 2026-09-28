@@ -8,7 +8,7 @@ import { CurrencyInput } from '../../components/common/CurrencyInput';
 import { NumberInput } from '../../components/common/NumberInput';
 import { Select } from '../../components/common/Select';
 import { Badge } from '../../components/common/Badge';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, cn } from '../../lib/utils';
 import {
   Sparkles,
   Plus,
@@ -18,6 +18,9 @@ import {
   AlertCircle,
   CheckCircle2,
   Tag,
+  Pencil,
+  Check,
+  X,
 } from 'lucide-react';
 import { QuickServicePresetItem, RawMaterialItem, PaginatedResult } from '../../types';
 
@@ -33,6 +36,7 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
   const queryClient = useQueryClient();
 
   // Form states
+  const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Xerox');
   const [defaultPrice, setDefaultPrice] = useState(1.0);
@@ -72,40 +76,68 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
     ? (presets as any).data
     : [];
 
+  const handleCancelEdit = () => {
+    setEditingPresetId(null);
+    setName('');
+    setCategory('Xerox');
+    setDefaultPrice(1.0);
+    setRawMaterialId('');
+    setMaterialConsumeQty(1);
+    setErrorMessage(null);
+  };
+
+  const handleStartEdit = (preset: QuickServicePresetItem) => {
+    setEditingPresetId(preset.id);
+    setName(preset.name);
+    setCategory(preset.category || 'Xerox');
+    setDefaultPrice(Number(preset.defaultPrice));
+    setRawMaterialId(preset.rawMaterialId || '');
+    setMaterialConsumeQty(
+      preset.materialConsumeQty ? Math.max(1, Math.round(Number(preset.materialConsumeQty))) : 1
+    );
+    setErrorMessage(null);
+    setSuccessMessage(null);
+  };
+
   // Create Mutation
   const createMutation = useMutation({
-    mutationFn: async () => {
-      if (!name.trim()) {
-        throw new Error('Informe o nome do modelo de serviço rápido.');
-      }
-      if (defaultPrice < 0) {
-        throw new Error('O preço padrão não pode ser negativo.');
-      }
-
-      const payload = {
-        name: name.trim(),
-        category: category.trim() || 'Outros',
-        defaultPrice,
-        rawMaterialId: rawMaterialId ? rawMaterialId : null,
-        materialConsumeQty: rawMaterialId ? Math.max(1, Math.round(materialConsumeQty)) : 0,
-        isActive: true,
-      };
-
+    mutationFn: async (payload: {
+      name: string;
+      category: string;
+      defaultPrice: number;
+      rawMaterialId: string | null;
+      materialConsumeQty: number;
+      isActive: boolean;
+    }) => {
       const res = await api.post('/quick-service-presets', payload);
       return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quick-service-presets'] });
-      setName('');
-      setDefaultPrice(1.0);
-      setRawMaterialId('');
-      setMaterialConsumeQty(1);
-      setErrorMessage(null);
-      setSuccessMessage('Modelo de serviço rápido salvo com sucesso!');
+      handleCancelEdit();
+      setSuccessMessage('Modelo de serviço rápido cadastrado com sucesso!');
       setTimeout(() => setSuccessMessage(null), 3000);
     },
     onError: (err: any) => {
       const msg = err.response?.data?.message || err.message || 'Falha ao salvar modelo.';
+      setErrorMessage(Array.isArray(msg) ? msg.join(', ') : msg);
+    },
+  });
+
+  // Update Mutation
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await api.put(`/quick-service-presets/${id}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quick-service-presets'] });
+      handleCancelEdit();
+      setSuccessMessage('Modelo de serviço rápido atualizado com sucesso!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || err.message || 'Falha ao atualizar modelo.';
       setErrorMessage(Array.isArray(msg) ? msg.join(', ') : msg);
     },
   });
@@ -126,9 +158,31 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
     },
   });
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate();
+    if (!name.trim()) {
+      setErrorMessage('Informe o nome do modelo de serviço rápido.');
+      return;
+    }
+    if (defaultPrice < 0) {
+      setErrorMessage('O preço padrão não pode ser negativo.');
+      return;
+    }
+
+    const payload = {
+      name: name.trim(),
+      category: category.trim() || 'Outros',
+      defaultPrice,
+      rawMaterialId: rawMaterialId ? rawMaterialId : null,
+      materialConsumeQty: rawMaterialId ? Math.max(1, Math.round(materialConsumeQty)) : 0,
+      isActive: true,
+    };
+
+    if (editingPresetId) {
+      updateMutation.mutate({ id: editingPresetId, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
   };
 
   const selectedMaterial = rawMaterials.find((m) => m.id === rawMaterialId);
@@ -138,7 +192,7 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
       isOpen={isOpen}
       onClose={onClose}
       title="Gerenciar Modelos Prontos de Serviços Rápidos"
-      description="Crie e exclua modelos predefinidos de balcão com vínculo de estoque automático"
+      description="Crie, edite e exclua modelos predefinidos de balcão com vínculo de estoque automático"
       maxWidth="3xl"
     >
       <div className="space-y-6">
@@ -157,14 +211,36 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
           </div>
         )}
 
-        {/* Formulário de Criação de Modelo */}
+        {/* Formulário de Criação / Edição de Modelo */}
         <form
-          onSubmit={handleCreate}
-          className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3"
+          onSubmit={handleSubmit}
+          className={cn(
+            "p-4 rounded-2xl border space-y-3 transition-colors",
+            editingPresetId
+              ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800"
+              : "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800"
+          )}
         >
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>Cadastrar Novo Modelo Pronto</span>
+          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+              {editingPresetId ? (
+                <>
+                  <Pencil className="w-4 h-4 text-blue-500" />
+                  <span className="text-blue-700 dark:text-blue-300">Editar Modelo Pronto</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>Cadastrar Novo Modelo Pronto</span>
+                </>
+              )}
+            </div>
+
+            {editingPresetId && (
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                Em Edição
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -231,15 +307,41 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
             </div>
           </div>
 
-          <div className="flex justify-end pt-1">
+          <div className="flex items-center justify-end gap-2 pt-1">
+            {editingPresetId && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelEdit}
+                disabled={updateMutation.isPending}
+              >
+                <X className="w-3.5 h-3.5 mr-1" />
+                Cancelar Edição
+              </Button>
+            )}
             <Button
               type="submit"
               size="sm"
-              isLoading={createMutation.isPending}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
+              isLoading={createMutation.isPending || updateMutation.isPending}
+              className={cn(
+                'text-white font-semibold',
+                editingPresetId
+                  ? 'bg-blue-600 hover:bg-blue-500'
+                  : 'bg-emerald-600 hover:bg-emerald-500'
+              )}
             >
-              <Plus className="w-4 h-4 mr-1" />
-              Adicionar Modelo
+              {editingPresetId ? (
+                <>
+                  <Check className="w-4 h-4 mr-1" />
+                  Salvar Alterações
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Adicionar Modelo
+                </>
+              )}
             </Button>
           </div>
         </form>
@@ -262,58 +364,93 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
           ) : (
             <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
               <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-                {presetsList.map((preset) => (
-                  <div
-                    key={preset.id}
-                    className="p-3 flex items-center justify-between gap-3 text-xs hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
-                  >
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {preset.name}
-                        </span>
-                        <Badge variant="neutral" size="sm" className="text-[10px]">
-                          <Tag className="w-2.5 h-2.5 mr-0.5" />
-                          {preset.category}
-                        </Badge>
+                {presetsList.map((preset) => {
+                  const isBeingEdited = editingPresetId === preset.id;
+                  return (
+                    <div
+                      key={preset.id}
+                      className={cn(
+                        "p-3 flex items-center justify-between gap-3 text-xs transition-colors",
+                        isBeingEdited
+                          ? "bg-blue-50/70 dark:bg-blue-950/40 border-l-4 border-l-blue-500"
+                          : "hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
+                      )}
+                    >
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {preset.name}
+                          </span>
+                          <Badge variant="neutral" size="sm" className="text-[10px]">
+                            <Tag className="w-2.5 h-2.5 mr-0.5" />
+                            {preset.category}
+                          </Badge>
+                          {isBeingEdited && (
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold bg-blue-100 dark:bg-blue-900/60 px-1.5 py-0.2 rounded">
+                              Editando...
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            Preço padrão: {formatCurrency(Number(preset.defaultPrice))}
+                          </span>
+
+                          {preset.rawMaterial ? (
+                            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                              <Package className="w-3 h-3 text-amber-500" />
+                              Consome {Number(preset.materialConsumeQty)} {preset.rawMaterial.unitOfMeasure} de{' '}
+                              <strong>{preset.rawMaterial.name}</strong> (Estoque: {Number(preset.rawMaterial.currentStock).toLocaleString()} {preset.rawMaterial.unitOfMeasure})
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 italic">
+                              Sem dedução de matéria-prima
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                          Preço padrão: {formatCurrency(Number(preset.defaultPrice))}
-                        </span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {/* Botão de Editar */}
+                        <button
+                          type="button"
+                          onClick={() => handleStartEdit(preset)}
+                          disabled={deleteMutation.isPending || updateMutation.isPending}
+                          className={cn(
+                            "p-1.5 rounded-lg transition-colors",
+                            isBeingEdited
+                              ? "text-blue-600 bg-blue-100 dark:bg-blue-900/60 dark:text-blue-400 font-bold"
+                              : "text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                          )}
+                          title="Editar modelo"
+                          aria-label={`Editar modelo ${preset.name}`}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
 
-                        {preset.rawMaterial ? (
-                          <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                            <Package className="w-3 h-3 text-amber-500" />
-                            Consome {Number(preset.materialConsumeQty)} {preset.rawMaterial.unitOfMeasure} de{' '}
-                            <strong>{preset.rawMaterial.name}</strong> (Estoque: {Number(preset.rawMaterial.currentStock).toLocaleString()} {preset.rawMaterial.unitOfMeasure})
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 italic">
-                            Sem dedução de matéria-prima
-                          </span>
-                        )}
+                        {/* Botão de Excluir */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Deseja realmente excluir o modelo "${preset.name}"?`)) {
+                              if (isBeingEdited) {
+                                handleCancelEdit();
+                              }
+                              deleteMutation.mutate(preset.id);
+                            }
+                          }}
+                          disabled={deleteMutation.isPending || updateMutation.isPending}
+                          className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                          title="Excluir modelo"
+                          aria-label={`Excluir modelo ${preset.name}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-
-                    {/* Botão de Excluir */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`Deseja realmente excluir o modelo "${preset.name}"?`)) {
-                          deleteMutation.mutate(preset.id);
-                        }
-                      }}
-                      disabled={deleteMutation.isPending}
-                      className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
-                      title="Excluir modelo"
-                      aria-label={`Excluir modelo ${preset.name}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
