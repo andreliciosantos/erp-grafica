@@ -205,4 +205,60 @@ describe('QuickProductionModal', () => {
       );
     });
   });
+
+  it('increments and decrements material quantity per unit as clean integers without decimals', async () => {
+    vi.mocked(api.get).mockImplementation((url: string) => {
+      if (url.includes('/raw-materials')) {
+        return Promise.resolve({
+          data: {
+            data: [
+              {
+                id: 'rm-sulfite-a4',
+                name: 'Papel Sulfite A4 75g',
+                unitOfMeasure: 'FL',
+                currentStock: 2500,
+              },
+            ],
+            meta: { total: 1, page: 1, limit: 100, totalPages: 1 },
+          },
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
+
+    renderWithProviders(<QuickProductionModal isOpen={true} onClose={vi.fn()} />);
+
+    // Add 1 Xerox P&B A4
+    const xeroxBtn = screen.getByRole('button', { name: /xerox p&b a4/i });
+    await userEvent.click(xeroxBtn);
+
+    const materialSelect = screen.getByRole('combobox');
+    await userEvent.selectOptions(materialSelect, 'rm-sulfite-a4');
+
+    // Inicialmente: Total: 1 FL
+    await waitFor(() => {
+      expect(screen.getByText('1 FL')).toBeInTheDocument();
+    });
+
+    const increaseBtn = screen.getByRole('button', { name: /aumentar gasto de material/i });
+    const decreaseBtn = screen.getByRole('button', { name: /diminuir gasto de material/i });
+    const materialInput = screen.getByTitle('Quantidade de material gasta por unidade deste serviço') as HTMLInputElement;
+
+    expect(materialInput.value).toBe('1');
+
+    // Clica para aumentar: deve ir para 2 (e não 1,01 ou 2,01)
+    await userEvent.click(increaseBtn);
+    expect(materialInput.value).toBe('2');
+    expect(screen.getByText('2 FL')).toBeInTheDocument();
+
+    // Clica para aumentar novamente: deve ir para 3
+    await userEvent.click(increaseBtn);
+    expect(materialInput.value).toBe('3');
+    expect(screen.getByText('3 FL')).toBeInTheDocument();
+
+    // Clica para diminuir: deve voltar para 2
+    await userEvent.click(decreaseBtn);
+    expect(materialInput.value).toBe('2');
+    expect(screen.getByText('2 FL')).toBeInTheDocument();
+  });
 });

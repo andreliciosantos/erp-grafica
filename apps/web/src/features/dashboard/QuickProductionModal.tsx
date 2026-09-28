@@ -207,7 +207,7 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
         quantity: Math.max(1, customQty),
         unitPrice: Math.max(0, customPrice),
         rawMaterialId: customMaterialId ? customMaterialId : null,
-        materialQuantity: customMaterialId ? Math.max(0.01, customMaterialQty) : 1,
+        materialQuantity: customMaterialId ? Math.max(1, Math.round(customMaterialQty)) : 1,
       },
     ]);
     setCustomName('');
@@ -262,9 +262,10 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
     setItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
+          const cleanQty = Math.max(1, Math.round(qty));
           return {
             ...item,
-            materialQuantity: Math.max(0.01, qty),
+            materialQuantity: cleanQty,
           };
         }
         return item;
@@ -564,9 +565,9 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
                           <NumberInput
                             label="Consumo por unidade de serviço"
                             value={customMaterialQty}
-                            min={0.01}
+                            min={1}
                             step={1}
-                            onChangeValue={(val) => setCustomMaterialQty(val)}
+                            onChangeValue={(val) => setCustomMaterialQty(Math.max(1, Math.round(val)))}
                           />
                         </div>
                       )}
@@ -740,17 +741,49 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
                                   Gasto/un:
                                 </span>
                                 <div className="flex items-center gap-1">
-                                  <input
-                                    type="number"
-                                    min="0.01"
-                                    step="1"
-                                    value={item.materialQuantity ?? 1}
-                                    onChange={(e) =>
-                                      handleUpdateItemMaterialQty(item.id, parseFloat(e.target.value) || 1)
-                                    }
-                                    className="w-14 text-center text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-0.5 px-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                    title="Quantidade de material gasta por unidade deste serviço"
-                                  />
+                                  <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleUpdateItemMaterialQty(
+                                          item.id,
+                                          Math.max(1, (item.materialQuantity ?? 1) - 1)
+                                        )
+                                      }
+                                      className="p-1 rounded text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                                      title="Diminuir gasto por unidade"
+                                      aria-label="Diminuir gasto de material"
+                                    >
+                                      <Minus className="w-2.5 h-2.5" />
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      step={1}
+                                      value={item.materialQuantity ?? 1}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value, 10);
+                                        handleUpdateItemMaterialQty(item.id, isNaN(val) ? 1 : Math.max(1, val));
+                                      }}
+                                      onWheel={(e) => (e.target as HTMLElement).blur()}
+                                      className="w-8 text-center text-xs font-bold text-slate-800 dark:text-slate-100 bg-transparent border-0 p-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                      title="Quantidade de material gasta por unidade deste serviço"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleUpdateItemMaterialQty(
+                                          item.id,
+                                          (item.materialQuantity ?? 1) + 1
+                                        )
+                                      }
+                                      className="p-1 rounded text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                                      title="Aumentar gasto por unidade"
+                                      aria-label="Aumentar gasto de material"
+                                    >
+                                      <Plus className="w-2.5 h-2.5" />
+                                    </button>
+                                  </div>
                                   <span className="text-[10px] text-slate-400 font-semibold whitespace-nowrap">
                                     {selectedMat.unitOfMeasure}
                                   </span>

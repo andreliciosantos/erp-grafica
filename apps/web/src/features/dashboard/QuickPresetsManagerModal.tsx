@@ -87,7 +87,7 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
         category: category.trim() || 'Outros',
         defaultPrice,
         rawMaterialId: rawMaterialId ? rawMaterialId : null,
-        materialConsumeQty: rawMaterialId ? Math.max(0.0001, materialConsumeQty) : 0,
+        materialConsumeQty: rawMaterialId ? Math.max(1, Math.round(materialConsumeQty)) : 0,
         isActive: true,
       };
 
@@ -223,9 +223,9 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
               <NumberInput
                 label={`Qtd Consumida por Unidade ${selectedMaterial ? `(${selectedMaterial.unitOfMeasure})` : ''}`}
                 value={materialConsumeQty}
-                min={0.01}
+                min={1}
                 step={1}
-                onChangeValue={(val) => setMaterialConsumeQty(val)}
+                onChangeValue={(val) => setMaterialConsumeQty(Math.max(1, Math.round(val)))}
                 disabled={!rawMaterialId}
               />
             </div>
