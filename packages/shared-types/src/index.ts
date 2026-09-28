@@ -657,5 +657,13 @@ export interface PaginatedResult<T> {
   };
 }
 
-
-
+export interface UserItem {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  isRoot?: boolean;
+  emailVerified: boolean;
+  createdAt: string;
+}

@@ -35,7 +35,10 @@ export class AuthService {
       );
     }
 
-    if (!user.emailVerified) {
+    const isRoot = Boolean(user.isRoot || user.email === 'admin@erpgrafica.com');
+
+    // Usuário comum exige confirmação prévia de e-mail; o Administrador Principal (Root) é isento
+    if (!isRoot && !user.emailVerified) {
       throw new UnauthorizedException(
         'E-mail ainda não confirmado. Acesse o link enviado para o seu e-mail para ativar sua conta.'
       );

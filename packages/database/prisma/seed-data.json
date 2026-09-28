@@ -7,7 +7,8 @@
       "passwordHash": "$2b$10$4sL54JMxjd5lTErPgTiA.Ox3DT7CZORRtmkV82jTjFcXOshjy1O3S",
       "role": "ADMIN",
       "isActive": true,
-      "emailVerified": false,
+      "isRoot": true,
+      "emailVerified": true,
       "activationToken": null,
       "activationTokenExpires": null,
       "resetPasswordToken": null,
@@ -22,6 +23,7 @@
       "passwordHash": "$2b$10$l6nQIAN1nJ4Zp3Cpg/yqeOloYF7SJ55.w81uKRuanJDO09CvTW.S6",
       "role": "OPERATOR",
       "isActive": true,
+      "isRoot": false,
       "emailVerified": false,
       "activationToken": null,
       "activationTokenExpires": null,
@@ -697,6 +699,24 @@
   ],
   "receivables": [
     {
+      "id": "fa95207e-fb1a-42cc-9fbb-07844d45d481",
+      "workOrderId": "b50d3df0-6647-42e4-8175-65e94068ca3c",
+      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
+      "description": "Parcela 1/3 - OS-2026-00005",
+      "installmentNumber": 1,
+      "totalInstallments": 3,
+      "amount": "46.44",
+      "dueDate": "2026-09-25T18:53:19.772Z",
+      "paidAt": "2026-09-25T12:00:00.000Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-25T18:53:19.774Z",
+      "updatedAt": "2026-09-25T18:53:48.086Z"
+    },
+    {
       "id": "db503455-de46-4e6b-b38e-5f1eefdba066",
       "workOrderId": "d0328364-8011-4c85-ae45-27bc5f32607b",
       "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
@@ -821,24 +841,6 @@
       "notes": null,
       "createdAt": "2026-09-25T18:53:19.782Z",
       "updatedAt": "2026-09-25T18:53:19.782Z"
-    },
-    {
-      "id": "fa95207e-fb1a-42cc-9fbb-07844d45d481",
-      "workOrderId": "b50d3df0-6647-42e4-8175-65e94068ca3c",
-      "partyId": "c6912410-66f5-441f-afb2-4d1cdea9a969",
-      "description": "Parcela 1/3 - OS-2026-00005",
-      "installmentNumber": 1,
-      "totalInstallments": 3,
-      "amount": "46.44",
-      "dueDate": "2026-09-25T18:53:19.772Z",
-      "paidAt": "2026-09-25T12:00:00.000Z",
-      "status": "PAID",
-      "paymentMethod": "PIX",
-      "barcode": null,
-      "documentNumber": null,
-      "notes": null,
-      "createdAt": "2026-09-25T18:53:19.774Z",
-      "updatedAt": "2026-09-25T18:53:48.086Z"
     }
   ],
   "productTemplates": [

@@ -113,4 +113,85 @@ describe('Despesas Operacionais (OperatingExpensesService)', () => {
       expect(paid.notes).toContain('Pago com multa por atraso no terminal');
     });
   });
+
+  describe('Filtro por intervalo entre datas e base de data (startDate, endDate, dateField)', () => {
+    it('deve filtrar despesas dentro do intervalo de datas especificado (startDate e endDate)', async () => {
+      await prismaMock.operatingExpense.create({
+        data: {
+          description: 'Despesa Início do Mês',
+          category: ExpenseCategory.UTILITIES,
+          amount: 100,
+          dueDate: new Date('2026-09-05T12:00:00Z'),
+          competenceDate: new Date('2026-09-05T12:00:00Z'),
+          status: PaymentStatus.PENDING,
+        },
+      });
+
+      await prismaMock.operatingExpense.create({
+        data: {
+          description: 'Despesa Meio do Mês',
+          category: ExpenseCategory.OFFICE_ADMINISTRATIVE,
+          amount: 250,
+          dueDate: new Date('2026-09-15T12:00:00Z'),
+          competenceDate: new Date('2026-09-15T12:00:00Z'),
+          status: PaymentStatus.PENDING,
+        },
+      });
+
+      await prismaMock.operatingExpense.create({
+        data: {
+          description: 'Despesa Fim do Mês',
+          category: ExpenseCategory.RENT_FACILITIES,
+          amount: 500,
+          dueDate: new Date('2026-09-28T12:00:00Z'),
+          competenceDate: new Date('2026-09-28T12:00:00Z'),
+          status: PaymentStatus.PENDING,
+        },
+      });
+
+      const res = await service.findAll(
+        1,
+        20,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        '2026-09-10',
+        '2026-09-20',
+        'competenceDate',
+      );
+
+      expect(res.data.length).toBe(1);
+      expect(res.data[0].description).toBe('Despesa Meio do Mês');
+    });
+
+    it('deve permitir filtrar com base na data de vencimento (dueDate)', async () => {
+      await prismaMock.operatingExpense.create({
+        data: {
+          description: 'Aluguel Vencimento Outubro',
+          category: ExpenseCategory.RENT_FACILITIES,
+          amount: 3000,
+          dueDate: new Date('2026-10-10T12:00:00Z'),
+          competenceDate: new Date('2026-09-01T12:00:00Z'),
+          status: PaymentStatus.PENDING,
+        },
+      });
+
+      const res = await service.findAll(
+        1,
+        20,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        '2026-10-01',
+        '2026-10-15',
+        'dueDate',
+      );
+
+      expect(res.data.some((d) => d.description === 'Aluguel Vencimento Outubro')).toBe(true);
+    });
+  });
 });

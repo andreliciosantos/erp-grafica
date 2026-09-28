@@ -16,6 +16,7 @@ export interface UserItem {
   email: string;
   role: string;
   isActive: boolean;
+  isRoot?: boolean;
   emailVerified: boolean;
   createdAt: string;
 }

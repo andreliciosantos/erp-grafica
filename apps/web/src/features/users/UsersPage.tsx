@@ -8,8 +8,10 @@ import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { formatDateTime } from '../../lib/utils';
-import { ShieldCheck, Plus, UserCheck, Trash2, AlertTriangle, Edit2, Mail, Send, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Plus, UserCheck, Trash2, AlertTriangle, Edit2, Mail, Send, CheckCircle2, Lock } from 'lucide-react';
 import { UserItem, PaginatedResult } from '../../types';
+
+export const isUserRoot = (user?: UserItem | null) => Boolean(user?.isRoot || user?.email === 'admin@erpgrafica.com');
 
 export const UsersPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -173,82 +175,108 @@ export const UsersPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/60">
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3.5 font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <UserCheck className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                        {user.name}
-                      </td>
-                      <td className="py-3.5 text-slate-700 dark:text-slate-300 font-mono">{user.email}</td>
-                      <td className="py-3.5">
-                        <Badge
-                          variant={
-                            user.role === 'ADMIN'
-                              ? 'primary'
-                              : user.role === 'COMMERCIAL'
-                              ? 'success'
-                              : user.role === 'FINANCIAL'
-                              ? 'cyan'
-                              : 'warning'
-                          }
-                          size="sm"
-                        >
-                          {user.role}
-                        </Badge>
-                      </td>
-                      <td className="py-3.5">
-                        {user.emailVerified ? (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                            Confirmado
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                            <Mail className="w-3 h-3 text-amber-500" />
-                            Pendente
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3.5">
-                        <Badge variant={user.isActive ? 'success' : 'danger'} size="sm">
-                          {user.isActive ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </td>
-                      <td className="py-3.5 text-slate-500 dark:text-slate-400">{formatDateTime(user.createdAt)}</td>
-                      <td className="py-3.5 text-right space-x-1">
-                        {!user.emailVerified && (
+                  {users.map((user) => {
+                    const isRoot = isUserRoot(user);
+                    return (
+                      <tr key={user.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="py-3.5 font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                          {isRoot ? (
+                            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          ) : (
+                            <UserCheck className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                          )}
+                          <span>{user.name}</span>
+                          {isRoot && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              Root
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 text-slate-700 dark:text-slate-300 font-mono">{user.email}</td>
+                        <td className="py-3.5">
+                          <Badge
+                            variant={
+                              isRoot || user.role === 'ADMIN'
+                                ? 'primary'
+                                : user.role === 'COMMERCIAL'
+                                ? 'success'
+                                : user.role === 'FINANCIAL'
+                                ? 'cyan'
+                                : 'warning'
+                            }
+                            size="sm"
+                          >
+                            {isRoot ? 'ADMIN ROOT' : user.role}
+                          </Badge>
+                        </td>
+                        <td className="py-3.5">
+                          {isRoot ? (
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" title="Conta Root de Segurança Permanente">
+                              <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                              Root Permanente
+                            </span>
+                          ) : user.emailVerified ? (
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                              Confirmado
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                              <Mail className="w-3 h-3 text-amber-500" />
+                              Pendente
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5">
+                          <Badge variant={user.isActive ? 'success' : 'danger'} size="sm">
+                            {user.isActive ? 'Ativo' : 'Inativo'}
+                          </Badge>
+                        </td>
+                        <td className="py-3.5 text-slate-500 dark:text-slate-400">{formatDateTime(user.createdAt)}</td>
+                        <td className="py-3.5 text-right space-x-1">
+                          {!isRoot && !user.emailVerified && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => resendInvitationMutation.mutate(user.id)}
+                              isLoading={resendInvitationMutation.isPending && (resendInvitationMutation.variables as string) === user.id}
+                              className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 border-amber-200 dark:border-amber-500/30"
+                              title="Reenviar E-mail de Ativação / Convite"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => resendInvitationMutation.mutate(user.id)}
-                            isLoading={resendInvitationMutation.isPending && (resendInvitationMutation.variables as string) === user.id}
-                            className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 border-amber-200 dark:border-amber-500/30"
-                            title="Reenviar E-mail de Ativação / Convite"
+                            onClick={() => handleOpenEditModal(user)}
+                            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700"
+                            title="Editar Usuário"
                           >
-                            <Send className="w-3.5 h-3.5" />
+                            <Edit2 className="w-3.5 h-3.5" />
                           </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleOpenEditModal(user)}
-                          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700"
-                          title="Editar Usuário"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setUserToDelete(user)}
-                          className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-500/30"
-                          title="Excluir ou Desativar Usuário"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                          {isRoot ? (
+                            <span
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700/60 cursor-not-allowed"
+                              title="Conta Root Protegida (impossível excluir ou desativar)"
+                            >
+                              <Lock className="w-3.5 h-3.5" />
+                            </span>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setUserToDelete(user)}
+                              className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-500/30"
+                              title="Excluir ou Desativar Usuário"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -331,19 +359,34 @@ export const UsersPage: React.FC = () => {
             />
           )}
 
+          {isUserRoot(editingUser) && (
+            <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-blue-200">
+                  Administrador Principal (Root de Segurança)
+                </p>
+                <p className="mt-0.5 text-slate-300">
+                  Esta conta possui imunidade do sistema: o perfil de acesso é fixado como Administrador, o status é permanentemente Ativo e é impossível excluí-la.
+                </p>
+              </div>
+            </div>
+          )}
+
           <Select
             label="Perfil de Permissão (Role)"
             value={role}
+            disabled={isUserRoot(editingUser)}
             onChange={(e) => setRole(e.target.value)}
             options={[
               { value: 'OPERATOR', label: 'Operador de Chão de Fábrica' },
               { value: 'COMMERCIAL', label: 'Comercial / Atendimento' },
               { value: 'FINANCIAL', label: 'Financeiro' },
-              { value: 'ADMIN', label: 'Administrador do Sistema' },
+              { value: 'ADMIN', label: isUserRoot(editingUser) ? 'Administrador do Sistema (Root)' : 'Administrador do Sistema' },
             ]}
           />
 
-          {editingUser && (
+          {editingUser && !isUserRoot(editingUser) && (
             <Select
               label="Status da Conta"
               value={isActive ? 'true' : 'false'}

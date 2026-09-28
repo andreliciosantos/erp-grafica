@@ -30,6 +30,8 @@ async function main() {
       passwordHash: adminPassword,
       role: Role.ADMIN,
       isActive: true,
+      isRoot: true,
+      emailVerified: true,
     },
   });
   console.log('✅ Admin user created:', adminUser.email);

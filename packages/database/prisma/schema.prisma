@@ -83,6 +83,7 @@ model User {
   passwordHash           String?
   role                   Role      @default(OPERATOR)
   isActive               Boolean   @default(true)
+  isRoot                 Boolean   @default(false)
   emailVerified          Boolean   @default(false)
   activationToken        String?   @unique
   activationTokenExpires DateTime?

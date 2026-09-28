@@ -88,6 +88,28 @@ describe('Módulo de Autenticação e Segurança (Auth / Guards)', () => {
         }),
       ).rejects.toThrow(UnauthorizedException);
     });
+
+    it('deve permitir login do Administrador principal (root) sem exigir confirmação de e-mail', async () => {
+      const validHash = await bcrypt.hash('admin123', 10);
+      (prismaMock.user.findUnique as any).mockResolvedValueOnce({
+        id: 'u-root-1',
+        name: 'Administrador Principal',
+        email: 'admin@erpgrafica.com',
+        role: Role.ADMIN,
+        isActive: true,
+        isRoot: true,
+        emailVerified: false, // Mesmo que estivesse false, root é isento
+        passwordHash: validHash,
+      });
+
+      const response = await authService.login({
+        email: 'admin@erpgrafica.com',
+        password: 'admin123',
+      });
+
+      expect(response).toHaveProperty('accessToken');
+      expect(response.user.email).toBe('admin@erpgrafica.com');
+    });
   });
 
   describe('Fluxo de Ativação e Recuperação de Senha', () => {

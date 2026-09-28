@@ -67,26 +67,35 @@ export class OperatingExpensesController {
   @Get('summary')
   @Roles(Role.ADMIN, Role.FINANCIAL, Role.COMMERCIAL)
   @ApiOperation({
-    summary: 'Obter resumo consolidado de despesas operacionais do mês',
+    summary: 'Obter resumo consolidado de despesas operacionais do mês ou período',
     description: 'Retorna total gasto, total pendente, despesas vencidas e rateio percentual por categoria de custo.',
   })
   @ApiQuery({ name: 'competenceMonth', required: false, type: String, example: '2026-09', description: 'Mês de competência (YYYY-MM)' })
+  @ApiQuery({ name: 'startDate', required: false, type: String, example: '2026-09-01', description: 'Data inicial (YYYY-MM-DD)' })
+  @ApiQuery({ name: 'endDate', required: false, type: String, example: '2026-09-30', description: 'Data final (YYYY-MM-DD)' })
+  @ApiQuery({ name: 'dateField', required: false, enum: ['competenceDate', 'dueDate'], description: 'Campo de data a filtrar' })
   @ApiResponse({ status: 200, description: 'Resumo consolidado de despesas.' })
   getSummary(
     @Query('competenceMonth') competenceMonth?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('dateField') dateField?: 'competenceDate' | 'dueDate',
   ): Promise<OperatingExpensesSummaryDto> {
-    return this.operatingExpensesService.getSummary(competenceMonth);
+    return this.operatingExpensesService.getSummary(competenceMonth, startDate, endDate, dateField);
   }
 
   @Get()
   @Roles(Role.ADMIN, Role.FINANCIAL, Role.COMMERCIAL)
   @ApiOperation({
     summary: 'Listar despesas operacionais com filtros avançados',
-    description: 'Permite filtrar despesas por competência, categoria, tipo (FIXED / VARIABLE), status de quitação ou busca textual por fornecedor/descrição.',
+    description: 'Permite filtrar despesas por competência, período customizado, categoria, tipo (FIXED / VARIABLE), status de quitação ou busca textual por fornecedor/descrição.',
   })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1, description: 'Número da página' })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20, description: 'Itens por página' })
   @ApiQuery({ name: 'competenceMonth', required: false, type: String, example: '2026-09', description: 'Mês de competência (YYYY-MM)' })
+  @ApiQuery({ name: 'startDate', required: false, type: String, example: '2026-09-01', description: 'Data inicial (YYYY-MM-DD)' })
+  @ApiQuery({ name: 'endDate', required: false, type: String, example: '2026-09-30', description: 'Data final (YYYY-MM-DD)' })
+  @ApiQuery({ name: 'dateField', required: false, enum: ['competenceDate', 'dueDate'], description: 'Campo de data a filtrar' })
   @ApiQuery({ name: 'category', required: false, enum: ExpenseCategory, description: 'Categoria de despesa' })
   @ApiQuery({ name: 'expenseType', required: false, enum: ExpenseType, description: 'Tipo: FIXED ou VARIABLE' })
   @ApiQuery({ name: 'status', required: false, enum: PaymentStatus, description: 'Status de quitação' })
@@ -100,6 +109,9 @@ export class OperatingExpensesController {
     @Query('expenseType') expenseType?: ExpenseType,
     @Query('status') status?: PaymentStatus,
     @Query('search') search?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('dateField') dateField?: 'competenceDate' | 'dueDate',
   ): Promise<PaginatedExpensesResponse> {
     return this.operatingExpensesService.findAll(
       page,
@@ -109,6 +121,9 @@ export class OperatingExpensesController {
       expenseType,
       status,
       search,
+      startDate,
+      endDate,
+      dateField,
     );
   }
 

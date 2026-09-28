@@ -154,17 +154,24 @@ export class OperatingExpensesService {
     return this.mapToItem(created);
   }
 
-  async findAll(
-    page = 1,
-    limit = 20,
+  private buildDateFilter(
     competenceMonth?: string,
-    category?: ExpenseCategory,
-    expenseType?: ExpenseType,
-    status?: PaymentStatus,
-    search?: string,
-  ): Promise<PaginatedExpensesResponse> {
-    const skip = (page - 1) * limit;
-    const where: Prisma.OperatingExpenseWhereInput = {};
+    startDate?: string,
+    endDate?: string,
+    dateField: 'competenceDate' | 'dueDate' = 'competenceDate',
+  ): Prisma.OperatingExpenseWhereInput {
+    const targetField = dateField === 'dueDate' ? 'dueDate' : 'competenceDate';
+
+    if (startDate || endDate) {
+      const dateFilter: Prisma.DateTimeFilter = {};
+      if (startDate) {
+        dateFilter.gte = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00.000Z`);
+      }
+      if (endDate) {
+        dateFilter.lte = new Date(endDate.includes('T') ? endDate : `${endDate}T23:59:59.999Z`);
+      }
+      return { [targetField]: dateFilter };
+    }
 
     if (competenceMonth && /^\d{4}-\d{2}$/.test(competenceMonth)) {
       const [yearStr, monthStr] = competenceMonth.split('-');
@@ -173,11 +180,33 @@ export class OperatingExpensesService {
       const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
       const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
-      where.competenceDate = {
-        gte: startOfMonth,
-        lte: endOfMonth,
+      return {
+        competenceDate: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
       };
     }
+
+    return {};
+  }
+
+  async findAll(
+    page = 1,
+    limit = 20,
+    competenceMonth?: string,
+    category?: ExpenseCategory,
+    expenseType?: ExpenseType,
+    status?: PaymentStatus,
+    search?: string,
+    startDate?: string,
+    endDate?: string,
+    dateField: 'competenceDate' | 'dueDate' = 'competenceDate',
+  ): Promise<PaginatedExpensesResponse> {
+    const skip = (page - 1) * limit;
+    const where: Prisma.OperatingExpenseWhereInput = {
+      ...this.buildDateFilter(competenceMonth, startDate, endDate, dateField),
+    };
 
     if (category) {
       where.category = category;
@@ -237,21 +266,15 @@ export class OperatingExpensesService {
     };
   }
 
-  async getSummary(competenceMonth?: string): Promise<OperatingExpensesSummaryDto> {
-    const where: Prisma.OperatingExpenseWhereInput = {};
-
-    if (competenceMonth && /^\d{4}-\d{2}$/.test(competenceMonth)) {
-      const [yearStr, monthStr] = competenceMonth.split('-');
-      const year = parseInt(yearStr, 10);
-      const month = parseInt(monthStr, 10);
-      const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
-      const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
-
-      where.competenceDate = {
-        gte: startOfMonth,
-        lte: endOfMonth,
-      };
-    }
+  async getSummary(
+    competenceMonth?: string,
+    startDate?: string,
+    endDate?: string,
+    dateField: 'competenceDate' | 'dueDate' = 'competenceDate',
+  ): Promise<OperatingExpensesSummaryDto> {
+    const where: Prisma.OperatingExpenseWhereInput = {
+      ...this.buildDateFilter(competenceMonth, startDate, endDate, dateField),
+    };
 
     const expenses = await this.prisma.operatingExpense.findMany({
       where,

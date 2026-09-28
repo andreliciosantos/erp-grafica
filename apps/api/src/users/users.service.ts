@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,6 +13,7 @@ export interface UserSummary {
   email: string;
   role: Role;
   isActive: boolean;
+  isRoot: boolean;
   emailVerified: boolean;
   hasPassword?: boolean;
   createdAt?: Date;
@@ -90,6 +91,7 @@ export class UsersService {
     return {
       ...created,
       role: created.role as Role,
+      isRoot: false,
       hasPassword: Boolean(passwordHash),
     };
   }
@@ -98,6 +100,9 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
+    }
+    if (user.isRoot || user.email === 'admin@erpgrafica.com') {
+      throw new ConflictException('O Administrador principal (root) já possui acesso permanente e não necessita de convite.');
     }
     if (user.emailVerified && user.passwordHash) {
       throw new ConflictException('Este usuário já confirmou seu e-mail e definiu uma senha.');
@@ -140,6 +145,7 @@ export class UsersService {
           email: true,
           role: true,
           isActive: true,
+          isRoot: true,
           emailVerified: true,
           passwordHash: true,
           createdAt: true,
@@ -148,16 +154,20 @@ export class UsersService {
     ]);
 
     return {
-      data: users.map((u) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        role: u.role as Role,
-        isActive: u.isActive,
-        emailVerified: u.emailVerified,
-        hasPassword: Boolean(u.passwordHash),
-        createdAt: u.createdAt,
-      })),
+      data: users.map((u) => {
+        const isRoot = Boolean(u.isRoot || u.email === 'admin@erpgrafica.com');
+        return {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role as Role,
+          isActive: u.isActive,
+          isRoot,
+          emailVerified: isRoot ? true : u.emailVerified,
+          hasPassword: Boolean(u.passwordHash),
+          createdAt: u.createdAt,
+        };
+      }),
       meta: {
         total,
         page,
@@ -176,6 +186,7 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        isRoot: true,
         emailVerified: true,
         passwordHash: true,
         createdAt: true,
@@ -186,20 +197,33 @@ export class UsersService {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
     }
 
+    const isRoot = Boolean(user.isRoot || user.email === 'admin@erpgrafica.com');
+
     return {
       id: user.id,
       name: user.name,
       email: user.email,
       role: user.role as Role,
       isActive: user.isActive,
-      emailVerified: user.emailVerified,
+      isRoot,
+      emailVerified: isRoot ? true : user.emailVerified,
       hasPassword: Boolean(user.passwordHash),
       createdAt: user.createdAt,
     };
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<UserSummary> {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
+    const isRoot = Boolean(existing.isRoot || existing.email === 'admin@erpgrafica.com');
+
+    if (isRoot) {
+      if (dto.isActive === false) {
+        throw new ForbiddenException('O Administrador principal (root) do sistema não pode ser desativado.');
+      }
+      if (dto.role && dto.role !== Role.ADMIN) {
+        throw new ForbiddenException('O perfil do Administrador principal (root) não pode ser alterado.');
+      }
+    }
 
     const dataToUpdate: Record<string, unknown> = {};
     if (dto.name) dataToUpdate['name'] = dto.name;
@@ -220,11 +244,14 @@ export class UsersService {
         email: true,
         role: true,
         isActive: true,
+        isRoot: true,
         emailVerified: true,
         passwordHash: true,
         updatedAt: true,
       },
     });
+
+    const isRootUpdated = Boolean(updated.isRoot || updated.email === 'admin@erpgrafica.com');
 
     return {
       id: updated.id,
@@ -232,14 +259,19 @@ export class UsersService {
       email: updated.email,
       role: updated.role as Role,
       isActive: updated.isActive,
-      emailVerified: updated.emailVerified,
+      isRoot: isRootUpdated,
+      emailVerified: isRootUpdated ? true : updated.emailVerified,
       hasPassword: Boolean(updated.passwordHash),
       updatedAt: updated.updatedAt,
     };
   }
 
   async remove(id: string): Promise<{ success: boolean; message: string }> {
-    await this.findOne(id);
+    const user = await this.findOne(id);
+
+    if (user.isRoot || user.email === 'admin@erpgrafica.com') {
+      throw new ForbiddenException('O Administrador principal (root) do sistema não pode ser excluído ou desativado.');
+    }
 
     const [quotesCount, workOrdersCount, stageLogsCount] = await Promise.all([
       this.prisma.quote.count({ where: { userId: id } }),

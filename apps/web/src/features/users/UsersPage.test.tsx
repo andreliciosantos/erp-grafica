@@ -56,9 +56,31 @@ describe('UsersPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Carlos Admin')).toBeInTheDocument();
       expect(screen.getByText('João Operador')).toBeInTheDocument();
-      expect(screen.getByText('Confirmado')).toBeInTheDocument();
+      expect(screen.getByText('Root Permanente')).toBeInTheDocument();
       expect(screen.getByText('Pendente')).toBeInTheDocument();
     });
+  });
+
+  it('should display lock icon for root admin and prevent deletion modal from opening', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        data: mockUsers,
+        total: 2,
+      },
+    });
+
+    renderWithProviders(<UsersPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Carlos Admin')).toBeInTheDocument();
+    });
+
+    // Root admin has lock icon and cannot be deleted
+    expect(screen.getByTitle(/conta root protegida \(impossível excluir ou desativar\)/i)).toBeInTheDocument();
+
+    // Normal user has trash button
+    const trashButtons = screen.getAllByTitle(/excluir ou desativar usuário/i);
+    expect(trashButtons).toHaveLength(1);
   });
 
   it('should open modal for new user without password field and show email invitation notice', async () => {

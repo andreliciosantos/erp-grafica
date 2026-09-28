@@ -698,7 +698,21 @@ Para atender aos mais elevados padrões de segurança da informação e governan
 * **Fallback Inteligente em Ambiente de Desenvolvimento:** Na ausência de credenciais SMTP, o serviço registra os links de ativação e redefinição com destaque nos logs do terminal com formatação visual limpa, viabilizando testes locais sem necessidade de servidores externos.
 
 ### 25.6. Garantia de Qualidade e Cobertura de Testes
-* Suíte de testes do Backend (`test/auth.spec.ts`): 13 testes cobrindo todo o ciclo de tokens, bloqueios de login, ativação e expiração.
-* Suíte de testes do Frontend (`LoginPage.test.tsx`, `ActivateAccountPage.test.tsx`, `ResetPasswordPage.test.tsx`, `UsersPage.test.tsx`): 15 testes cobrindo renderização, validações de URL, preenchimento de senhas e mutações de reenvio de convite.
-* **Resultado Consolidado:** 100% de testes aprovados em todo o ecossistema (198 testes automatizados).
+* Suíte de testes do Backend (`test/auth.spec.ts` e `test/users.spec.ts`): 19 testes cobrindo todo o ciclo de tokens, bloqueios de login, ativação, expiração e proteções de exclusão/desativação do Root.
+* Suíte de testes do Frontend (`LoginPage.test.tsx`, `ActivateAccountPage.test.tsx`, `ResetPasswordPage.test.tsx`, `UsersPage.test.tsx`): 16 testes cobrindo renderização, validações de URL, preenchimento de senhas, mutações de reenvio de convite e bloqueio de exclusão da conta Root.
+* **Resultado Consolidado:** 100% de testes aprovados em todo o ecossistema (213 testes automatizados).
+
+### 25.7. Administrador Principal (Root de Segurança) e Imunidade de Conta
+Para evitar acidentes operacionais, autodesativação inadvertida ou perda irreversível de governança do ERP, o **Administrador Principal (`admin@erpgrafica.com`)** foi blindado arquiteturalmente como a **conta Root de Segurança** do sistema:
+1. **Isenção de Confirmação por E-mail:**
+   - O Administrador Principal não depende de fluxos de convite ou ativação prévia. O login em `/auth/login` permite sua autenticação imediata e irrestrita com sua senha oficial.
+2. **Impossibilidade de Exclusão ou Desativação no Backend (`UsersService`):**
+   - Tentativas de exclusão via `DELETE /api/v1/users/:id` em contas Root disparam `ForbiddenException` (*"O Administrador principal (root) do sistema não pode ser excluído ou desativado"*).
+   - Tentativas de desativação (`isActive: false`) ou de alteração de perfil (`role !== ADMIN`) via `PUT /api/v1/users/:id` são terminantemente rejeitadas pelo backend.
+3. **Ergonomia e Proteção Visual no Painel (`UsersPage`):**
+   - O usuário Root é identificado pelo selo `Root` ao lado de seu nome e badge `ADMIN ROOT`.
+   - Na coluna de Confirmação, exibe o distintivo `Root Permanente`.
+   - O botão de exclusão (`Trash2`) é desabilitado e substituído pelo ícone de cadeado (`Lock`) com o tooltip explicativo *"Conta Root Protegida (impossível excluir ou desativar)"*.
+   - No modal de edição, o status da conta é omitido (sempre Ativo) e o seletor de permissão (Role) permanece bloqueado com mensagem de segurança.
+
 

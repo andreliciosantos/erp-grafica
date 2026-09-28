@@ -12,6 +12,7 @@ export function createMockPrismaService() {
       passwordHash: validHash,
       role: Role.ADMIN,
       isActive: true,
+      isRoot: true,
       emailVerified: true,
       createdAt: new Date(),
     },
@@ -22,6 +23,7 @@ export function createMockPrismaService() {
       passwordHash: validHash,
       role: Role.OPERATOR,
       isActive: true,
+      isRoot: false,
       emailVerified: true,
       createdAt: new Date(),
     },
@@ -103,6 +105,14 @@ export function createMockPrismaService() {
           return u;
         }
         return { id: where.id, ...data };
+      }),
+      delete: vi.fn(async ({ where }: any) => {
+        const idx = users.findIndex((x) => x.id === where.id);
+        if (idx !== -1) {
+          const [removed] = users.splice(idx, 1);
+          return removed;
+        }
+        return { id: where.id };
       }),
     },
     party: {
@@ -290,6 +300,7 @@ export function createMockPrismaService() {
         if (l) Object.assign(l, data);
         return l;
       }),
+      count: vi.fn(async () => stageLogs.length),
     },
     stockMovement: {
       findFirst: vi.fn(async ({ where }: any) => {
@@ -430,10 +441,20 @@ export function createMockPrismaService() {
         if (where?.status?.not) {
           list = list.filter((e) => e.status !== where.status.not);
         }
-        if (where?.competenceDate?.gte && where?.competenceDate?.lte) {
+        if (where?.competenceDate?.gte || where?.competenceDate?.lte) {
           list = list.filter((e) => {
             const d = new Date(e.competenceDate);
-            return d >= where.competenceDate.gte && d <= where.competenceDate.lte;
+            if (where.competenceDate.gte && d < where.competenceDate.gte) return false;
+            if (where.competenceDate.lte && d > where.competenceDate.lte) return false;
+            return true;
+          });
+        }
+        if (where?.dueDate?.gte || where?.dueDate?.lte) {
+          list = list.filter((e) => {
+            const d = new Date(e.dueDate);
+            if (where.dueDate.gte && d < where.dueDate.gte) return false;
+            if (where.dueDate.lte && d > where.dueDate.lte) return false;
+            return true;
           });
         }
         if (where?.OR) {
