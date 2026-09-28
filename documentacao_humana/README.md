@@ -17,7 +17,7 @@ Para facilitar o seu aprendizado, preparamos trilhas rápidas de leitura de acor
 | **🏭 Gerente de Produção / PCP** | [03 - Produção e PCP](03_manual_producao_pcp_e_chao_de_fabrica.md)<br>[04 - Estoque e Máquinas](04_manual_estoque_insumos_e_maquinas.md) | Quadro Kanban, máquina de estados da OS, esteira de etapas, capacidade de máquinas, tempos de setup e controle de refugo. |
 | **🖨️ Operador de Máquina / Chão de Fábrica** | [03 - Produção e PCP](03_manual_producao_pcp_e_chao_de_fabrica.md) | Apontamento em tempo real (`START`, `PAUSE`, `COMPLETE`), registro de desperdício/acerto e tempos operacionais. |
 | **💰 Financeiro / Faturamento** | [05 - Financeiro e DRE](05_manual_financeiro_contas_e_dre.md) | Parcelamento automático de ordens de serviço, baixa de recebíveis via PIX/Boleto, despesas fixas/variáveis e DRE contábil. |
-| **💻 Administrador de TI / Integrador** | [06 - FAQ e Swagger UI](06_faq_e_guia_de_testes_swagger.md)<br>[01 - Visão Geral](01_visao_geral_e_guia_de_inicio_rapido.md) | Permissões de usuários (RBAC), integração via API REST, testes interativos com Swagger OpenAPI e autenticação JWT. |
+| **💻 Administrador de TI / Integrador** | [06 - FAQ e Swagger UI](06_faq_e_guia_de_testes_swagger.md)<br>[07 - DER e Arquitetura de Dados](07_diagrama_entidade_relacionamento_e_arquitetura_de_dados.md)<br>[01 - Visão Geral](01_visao_geral_e_guia_de_inicio_rapido.md) | Permissões de usuários (RBAC), integração via API REST, testes com Swagger, modelagem do banco (DER), integridade referencial e migrações. |
 
 ---
 
@@ -56,6 +56,12 @@ Clique no capítulo desejado para iniciar a sua leitura:
 6. [**06. Perguntas Frequentes (FAQ) e Guia de Testes no Swagger**](06_faq_e_guia_de_testes_swagger.md)
    - Dúvidas mais frequentes e como resolver impedimentos do dia a dia.
    - Guia visual passo a passo para testar a API no Swagger UI (`/docs`), gerar token JWT e simular operações no navegador.
+
+7. [**07. Diagrama Entidade-Relacionamento (DER) e Arquitetura de Dados**](07_diagrama_entidade_relacionamento_e_arquitetura_de_dados.md)
+   - Diagrama formal ERD em Mermaid com todas as 15 tabelas, chaves e relacionamentos.
+   - Mapa conceitual de fluxo de dados entre os 4 eixos (Comercial, PCP, Estoque e Financeiro).
+   - Dicionário de dados completo campo a campo de todas as entidades e enums.
+   - Regras de integridade referencial, transações atômicas de baixa/estorno de estoque e rotinas de backup.
 
 ---
 

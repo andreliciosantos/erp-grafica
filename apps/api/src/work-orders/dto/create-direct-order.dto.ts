@@ -36,6 +36,24 @@ export class QuickOrderItemDto {
   @IsNumber({}, { message: 'Subtotal deve ser um número.' })
   @IsOptional()
   itemTotalAmount?: number;
+
+  @ApiPropertyOptional({
+    description: 'ID do insumo / matéria-prima consumida do estoque',
+    example: 'cm123rawmat456',
+  })
+  @IsString()
+  @IsOptional()
+  rawMaterialId?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Quantidade de insumo gasta por unidade de serviço (ex: 1 folha por cópia)',
+    example: 1,
+    minimum: 0,
+  })
+  @IsNumber({}, { message: 'Quantidade de material deve ser um número.' })
+  @Min(0, { message: 'Quantidade de material não pode ser negativa.' })
+  @IsOptional()
+  materialQuantity?: number;
 }
 
 export class CreateDirectOrderDto {

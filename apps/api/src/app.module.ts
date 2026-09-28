@@ -16,6 +16,7 @@ import { ReceivablesModule } from './receivables/receivables.module';
 import { FinancialModule } from './financial/financial.module';
 import { ProductTemplatesModule } from './product-templates/product-templates.module';
 import { PaymentConditionsModule } from './payment-conditions/payment-conditions.module';
+import { QuickServicePresetsModule } from './quick-service-presets/quick-service-presets.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { PaymentConditionsModule } from './payment-conditions/payment-conditions
     FinancialModule,
     ProductTemplatesModule,
     PaymentConditionsModule,
+    QuickServicePresetsModule,
   ],
 })
 export class AppModule {}

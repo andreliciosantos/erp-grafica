@@ -75,6 +75,7 @@ export function createMockPrismaService() {
   let receivables: any[] = [];
   let operatingExpenses: any[] = [];
   let paymentConditions: any[] = [];
+  let quickServicePresets: any[] = [];
   let quoteCounter = 100;
 
   const mock = {
@@ -543,6 +544,40 @@ export function createMockPrismaService() {
       }),
       count: vi.fn(async () => paymentConditions.length),
     },
+    quickServicePreset: {
+      findMany: vi.fn(async ({ where }: any = {}) => {
+        let res = [...quickServicePresets];
+        if (where?.isActive !== undefined) res = res.filter((c) => c.isActive === where.isActive);
+        return res;
+      }),
+      findUnique: vi.fn(async ({ where }: any) => {
+        return quickServicePresets.find((c) => c.id === where.id) || null;
+      }),
+      create: vi.fn(async ({ data }: any) => {
+        const item = {
+          id: `qsp-${quickServicePresets.length + 1}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ...data,
+          rawMaterial: rawMaterials.find((r) => r.id === data.rawMaterialId) || null,
+        };
+        quickServicePresets.push(item);
+        return item;
+      }),
+      update: vi.fn(async ({ where, data }: any) => {
+        const idx = quickServicePresets.findIndex((c) => c.id === where.id);
+        if (idx === -1) throw new Error('Not found');
+        quickServicePresets[idx] = { ...quickServicePresets[idx], ...data, updatedAt: new Date() };
+        return quickServicePresets[idx];
+      }),
+      delete: vi.fn(async ({ where }: any) => {
+        const idx = quickServicePresets.findIndex((c) => c.id === where.id);
+        if (idx === -1) throw new Error('Not found');
+        const [deleted] = quickServicePresets.splice(idx, 1);
+        return deleted;
+      }),
+      count: vi.fn(async () => quickServicePresets.length),
+    },
     $transaction: vi.fn(async (cb: any) => {
       return cb(mock);
     }),
@@ -559,6 +594,7 @@ export function createMockPrismaService() {
       receivables,
       operatingExpenses,
       paymentConditions,
+      quickServicePresets,
     },
   };
 

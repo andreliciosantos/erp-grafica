@@ -136,4 +136,73 @@ describe('QuickProductionModal', () => {
       expect(screen.getByText('OS-2026-00088')).toBeInTheDocument();
     });
   });
+
+  it('allows selecting raw material in item box and includes rawMaterialId and materialQuantity in order payload', async () => {
+    vi.mocked(api.get).mockImplementation((url: string) => {
+      if (url.includes('/raw-materials')) {
+        return Promise.resolve({
+          data: {
+            data: [
+              {
+                id: 'rm-sulfite-a4',
+                name: 'Papel Sulfite A4 75g',
+                unitOfMeasure: 'FL',
+                currentStock: 2500,
+              },
+            ],
+            meta: { total: 1, page: 1, limit: 100, totalPages: 1 },
+          },
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
+
+    vi.mocked(api.post).mockResolvedValueOnce({
+      data: {
+        id: 'wo-quick-2',
+        orderNumber: 'OS-2026-00089',
+        totalAmount: 1.0,
+      },
+    });
+
+    renderWithProviders(<QuickProductionModal isOpen={true} onClose={vi.fn()} />);
+
+    // Add Xerox P&B A4
+    const xeroxBtn = screen.getByRole('button', { name: /xerox p&b a4/i });
+    await userEvent.click(xeroxBtn);
+    await userEvent.click(xeroxBtn); // quantity = 2, total = 1.00
+
+    // Material selector should be rendered in the item box
+    await waitFor(() => {
+      expect(screen.getByText(/material gasto:/i)).toBeInTheDocument();
+    });
+
+    const materialSelect = screen.getByRole('combobox');
+    await userEvent.selectOptions(materialSelect, 'rm-sulfite-a4');
+
+    // Total consumed calculation should appear
+    await waitFor(() => {
+      expect(screen.getByText(/total:/i)).toBeInTheDocument();
+      expect(screen.getByText('2 FL')).toBeInTheDocument();
+    });
+
+    const submitBtn = screen.getByRole('button', { name: /concluir produção rápida/i });
+    await userEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith(
+        '/work-orders',
+        expect.objectContaining({
+          items: expect.arrayContaining([
+            expect.objectContaining({
+              productName: 'Xerox P&B A4',
+              quantity: 2,
+              rawMaterialId: 'rm-sulfite-a4',
+              materialQuantity: 1,
+            }),
+          ]),
+        })
+      );
+    });
+  });
 });

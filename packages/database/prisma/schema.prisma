@@ -149,6 +149,7 @@ model RawMaterial {
   stockMovements StockMovement[]
   quoteItems     QuoteItem[]
   productTemplates ProductTemplate[]
+  quickPresets   QuickServicePreset[]
 
   @@map("raw_materials")
 }
@@ -485,4 +486,24 @@ model PaymentCondition {
 
   @@map("payment_conditions")
 }
+
+// -------------------------------------------------------------
+// MODELOS PRONTOS DE SERVIÇOS RÁPIDOS DE BALCÃO
+// -------------------------------------------------------------
+model QuickServicePreset {
+  id                   String        @id @default(uuid())
+  name                 String        // Ex: "Xerox P&B A4", "Plastificação Polaseal A4"
+  category             String        @default("Outros") // "Xerox", "Impressão", "Acabamento", "Foto & Scan", "Outros"
+  defaultPrice         Decimal       @default(0) @db.Decimal(10, 2)
+  rawMaterialId        String?
+  materialConsumeQty   Decimal       @default(1) @db.Decimal(10, 4) // Quantidade de matéria-prima gasta por unidade de serviço
+  isActive             Boolean       @default(true)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  rawMaterial          RawMaterial?  @relation(fields: [rawMaterialId], references: [id], onDelete: SetNull)
+
+  @@map("quick_service_presets")
+}
+
 

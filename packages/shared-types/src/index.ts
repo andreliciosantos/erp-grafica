@@ -715,3 +715,65 @@ export interface UserItem {
   emailVerified: boolean;
   createdAt: string;
 }
+
+// -------------------------------------------------------------
+// Modelos Prontos de Serviços Rápidos e Produção Rápida Balcão
+// -------------------------------------------------------------
+export interface QuickOrderItemDto {
+  productName: string;
+  quantity: number;
+  unitPrice?: number;
+  itemTotalAmount?: number;
+  rawMaterialId?: string | null;
+  materialQuantity?: number;
+}
+
+export interface CreateDirectOrderDto {
+  partyId?: string;
+  productName?: string;
+  quantity?: number;
+  priority?: number;
+  deliveryDays?: number;
+  totalAmount: number;
+  notes?: string;
+  items?: QuickOrderItemDto[];
+  paymentMethod?: string;
+  paymentStatus?: string;
+  status?: string;
+}
+
+export interface QuickServicePresetItem {
+  id: string;
+  name: string;
+  category: string;
+  defaultPrice: number;
+  rawMaterialId?: string | null;
+  rawMaterial?: {
+    id: string;
+    name: string;
+    unitOfMeasure: string;
+    currentStock: number;
+  } | null;
+  materialConsumeQty?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateQuickServicePresetDto {
+  name: string;
+  category?: string;
+  defaultPrice: number;
+  rawMaterialId?: string | null;
+  materialConsumeQty?: number;
+  isActive?: boolean;
+}
+
+export interface UpdateQuickServicePresetDto {
+  name?: string;
+  category?: string;
+  defaultPrice?: number;
+  rawMaterialId?: string | null;
+  materialConsumeQty?: number;
+  isActive?: boolean;
+}

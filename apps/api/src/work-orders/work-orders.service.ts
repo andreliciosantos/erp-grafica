@@ -521,15 +521,18 @@ export class WorkOrdersService {
         ? dto.items!.map((it) => {
             const uPrice = it.unitPrice ?? (it.quantity > 0 && it.itemTotalAmount ? it.itemTotalAmount / it.quantity : 0);
             const iTotal = it.itemTotalAmount ?? (it.quantity * uPrice);
+            const consumePerUnit = it.materialQuantity ?? 1;
+            const sheetsRequired = it.rawMaterialId ? Math.ceil(it.quantity * consumePerUnit) : 0;
             return {
               productName: it.productName,
+              rawMaterialId: it.rawMaterialId || null,
               quantity: it.quantity,
               widthMm: 0,
               heightMm: 0,
               colorsFront: 4,
               colorsBack: 0,
               finishingOptions: [],
-              sheetsRequired: 0,
+              sheetsRequired,
               itemsPerSheet: 1,
               paperCostCalculated: 0,
               finishingCostTotal: 0,
@@ -541,6 +544,7 @@ export class WorkOrdersService {
         : [
             {
               productName: resolvedProductName,
+              rawMaterialId: null,
               quantity: totalQuantity,
               widthMm: 0,
               heightMm: 0,
@@ -605,6 +609,39 @@ export class WorkOrdersService {
           party: { select: { id: true, name: true, phone: true } },
         },
       });
+
+      // Baixa imediata de estoque para serviços de produção rápida
+      if (hasItems) {
+        for (const it of dto.items!) {
+          if (it.rawMaterialId) {
+            const consumePerUnit = it.materialQuantity ?? 1;
+            const totalToConsume = Math.ceil(it.quantity * consumePerUnit);
+            if (totalToConsume > 0) {
+              await tx.stockMovement.create({
+                data: {
+                  rawMaterialId: it.rawMaterialId,
+                  workOrderId: workOrder.id,
+                  quantity: -totalToConsume,
+                  reason: 'CONSUMO_PRODUCAO',
+                },
+              });
+
+              await tx.rawMaterial.update({
+                where: { id: it.rawMaterialId },
+                data: {
+                  currentStock: {
+                    decrement: totalToConsume,
+                  },
+                },
+              });
+
+              this.logger.log(
+                `📦 [Produção Rápida] Estoque baixado: ${totalToConsume} unidades de ${it.rawMaterialId} para OS ${workOrder.orderNumber}`
+              );
+            }
+          }
+        }
+      }
 
       if (initialPaymentStatus === PaymentStatus.PAID && dto.totalAmount > 0) {
         await tx.receivable.create({

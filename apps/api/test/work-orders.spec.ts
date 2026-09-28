@@ -254,6 +254,53 @@ describe('Máquina de Estados e Chão de Fábrica (WorkOrdersService)', () => {
       expect(order.status).toBe(WorkOrderStatus.DELIVERED);
       expect(eventsGatewayMock.emitWorkOrderStatusChanged).toHaveBeenCalled();
     });
+
+    it('deve debitar o estoque e registrar StockMovement ao criar OS de balcão com insumo vinculado', async () => {
+      const initialStock = prismaMock._state.rawMaterials[0].currentStock;
+
+      const order = await workOrdersService.createDirect(
+        {
+          items: [
+            {
+              productName: 'Xerox P&B Folha Couchê',
+              quantity: 20,
+              unitPrice: 1.0,
+              itemTotalAmount: 20.0,
+              rawMaterialId: 'rm-couche-1',
+              materialQuantity: 1, // 1 por cópia = 20 folhas
+            },
+          ],
+          totalAmount: 20.0,
+          paymentMethod: 'CASH',
+          paymentStatus: 'PAID',
+          status: WorkOrderStatus.DELIVERED,
+        },
+        'u-admin-1',
+      );
+
+      expect(order).toBeDefined();
+      expect(prismaMock.stockMovement.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            rawMaterialId: 'rm-couche-1',
+            workOrderId: order.id,
+            quantity: -20,
+            reason: 'CONSUMO_PRODUCAO',
+          }),
+        }),
+      );
+      expect(prismaMock.rawMaterial.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'rm-couche-1' },
+          data: {
+            currentStock: {
+              decrement: 20,
+            },
+          },
+        }),
+      );
+      expect(prismaMock._state.rawMaterials[0].currentStock).toBe(initialStock - 20);
+    });
   });
 });
 
