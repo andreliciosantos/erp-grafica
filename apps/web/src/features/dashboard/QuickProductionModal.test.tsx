@@ -260,4 +260,45 @@ describe('QuickProductionModal', () => {
     expect(materialInput.value).toBe('2');
     expect(screen.getByText('2 FL')).toBeInTheDocument();
   });
+
+  it('submits quick order when pressing ENTER key', async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({
+      data: {
+        id: 'wo-quick-enter',
+        orderNumber: 'OS-2026-ENTER',
+        totalAmount: 0.5,
+      },
+    });
+
+    renderWithProviders(<QuickProductionModal isOpen={true} onClose={vi.fn()} />);
+
+    // Add Xerox P&B A4
+    const xeroxBtn = screen.getByRole('button', { name: /xerox p&b a4/i });
+    await userEvent.click(xeroxBtn);
+
+    expect(screen.getByText('Serviços no Atendimento (1)')).toBeInTheDocument();
+
+    // Press ENTER key anywhere in the document
+    await userEvent.keyboard('{Enter}');
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith(
+        '/work-orders',
+        expect.objectContaining({
+          totalAmount: 0.5,
+          items: expect.arrayContaining([
+            expect.objectContaining({
+              productName: 'Xerox P&B A4',
+              quantity: 1,
+            }),
+          ]),
+        })
+      );
+    });
+
+    // Check that success screen appears
+    await waitFor(() => {
+      expect(screen.getByText('OS-2026-ENTER')).toBeInTheDocument();
+    });
+  });
 });

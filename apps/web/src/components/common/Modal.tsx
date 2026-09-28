@@ -76,7 +76,7 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
 
           {/* Body Compacto com Scroll Suave */}
-          <div className="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0 text-xs">{children}</div>
+          <div className="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0 text-sm text-slate-700 dark:text-slate-200">{children}</div>
 
           {/* Footer Fixo na Base */}
           {footer && (
