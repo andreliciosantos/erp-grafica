@@ -53,15 +53,6 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const fillCredentials = (type: 'admin' | 'operador') => {
-    if (type === 'admin') {
-      setEmail('admin@erpgrafica.com');
-      setPassword('admin123');
-    } else {
-      setEmail('operador@erpgrafica.com');
-      setPassword('operador123');
-    }
-  };
 
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
@@ -130,32 +121,6 @@ export const LoginPage: React.FC = () => {
             </Button>
           </form>
 
-          {/* Quick fills for testing */}
-          <div className="mt-6 pt-4 border-t border-slate-800 text-center">
-            <p className="text-[11px] text-slate-500 font-medium mb-2.5">
-              Ambiente de Demonstração / Teste Rápido:
-            </p>
-            <div className="flex justify-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fillCredentials('admin')}
-                className="text-xs"
-              >
-                Preencher Administrador
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fillCredentials('operador')}
-                className="text-xs"
-              >
-                Preencher Operador
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
 

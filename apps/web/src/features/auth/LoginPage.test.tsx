@@ -25,28 +25,8 @@ describe('LoginPage', () => {
     expect(screen.getByLabelText(/e-mail de acesso/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/senha/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /entrar no sistema/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /preencher administrador/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /preencher operador/i })).toBeInTheDocument();
-  });
-
-  it('should autofill credentials when clicking Preencher Administrador', async () => {
-    renderWithProviders(<LoginPage />);
-
-    const adminBtn = screen.getByRole('button', { name: /preencher administrador/i });
-    await userEvent.click(adminBtn);
-
-    expect(screen.getByLabelText(/e-mail de acesso/i)).toHaveValue('admin@erpgrafica.com');
-    expect(screen.getByLabelText(/senha/i)).toHaveValue('admin123');
-  });
-
-  it('should autofill credentials when clicking Preencher Operador', async () => {
-    renderWithProviders(<LoginPage />);
-
-    const operadorBtn = screen.getByRole('button', { name: /preencher operador/i });
-    await userEvent.click(operadorBtn);
-
-    expect(screen.getByLabelText(/e-mail de acesso/i)).toHaveValue('operador@erpgrafica.com');
-    expect(screen.getByLabelText(/senha/i)).toHaveValue('operador123');
+    expect(screen.queryByRole('button', { name: /preencher administrador/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /preencher operador/i })).not.toBeInTheDocument();
   });
 
   it('should display error message on login failure', async () => {
@@ -87,7 +67,8 @@ describe('LoginPage', () => {
 
     renderWithProviders(<LoginPage />);
 
-    await userEvent.click(screen.getByRole('button', { name: /preencher administrador/i }));
+    await userEvent.type(screen.getByLabelText(/e-mail de acesso/i), 'admin@erpgrafica.com');
+    await userEvent.type(screen.getByLabelText(/senha/i), 'admin123');
     await userEvent.click(screen.getByRole('button', { name: /entrar no sistema/i }));
 
     await waitFor(() => {

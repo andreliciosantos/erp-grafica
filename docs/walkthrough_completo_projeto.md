@@ -715,4 +715,15 @@ Para evitar acidentes operacionais, autodesativação inadvertida ou perda irrev
    - O botão de exclusão (`Trash2`) é desabilitado e substituído pelo ícone de cadeado (`Lock`) com o tooltip explicativo *"Conta Root Protegida (impossível excluir ou desativar)"*.
    - No modal de edição, o status da conta é omitido (sempre Ativo) e o seletor de permissão (Role) permanece bloqueado com mensagem de segurança.
 
+### 25.8. Endurecimento da Tela de Login (Remoção de Credenciais Rápidas / Demonstração)
+Para preparar o ERP para ambientes de produção e mitigar riscos de segurança e acessos indevidos:
+1. **Remoção de Atalhos Rápidos no Frontend (`LoginPage.tsx`):**
+   - Removida a seção de botões de atalho (*"Ambiente de Demonstração / Teste Rápido"* com *"Preencher Administrador"* e *"Preencher Operador"*).
+   - Eliminada a função auxiliar `fillCredentials` que continha credenciais em texto puro no bundle da página.
+2. **Atualização da Cobertura de Testes (`LoginPage.test.tsx`):**
+   - Suíte de testes atualizada para garantir que nenhum botão de demonstração seja renderizado em tela.
+   - Fluxos de autenticação testados com digitação de credenciais legítimas via `userEvent.type`.
+   - Mantido o formulário limpo, o suporte à recuperação de senha via e-mail e a validação estrita de credenciais.
+
+
 

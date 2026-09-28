@@ -10,6 +10,7 @@ import { Select } from '../../components/common/Select';
 import { Modal } from '../../components/common/Modal';
 import { ExpenseModal } from './ExpenseModal';
 import { PayExpenseModal } from './PayExpenseModal';
+import { ExpenseDateFilter, DateFilterValue } from './ExpenseDateFilter';
 import {
   formatCurrency,
   formatDate,
@@ -36,12 +37,9 @@ import {
   Edit2,
   Trash2,
   Repeat,
-  Calendar,
   Layers,
   Building2,
   CalendarPlus,
-  ChevronLeft,
-  ChevronRight,
   Copy,
   Check,
   X,
@@ -63,7 +61,13 @@ export const OperatingExpensesPage: React.FC = () => {
 
   // Current year-month in YYYY-MM
   const currentMonthStr = new Date().toISOString().slice(0, 7);
-  const [competenceMonth, setCompetenceMonth] = useState<string>(currentMonthStr);
+  const [dateFilter, setDateFilter] = useState<DateFilterValue>({
+    mode: 'month',
+    competenceMonth: currentMonthStr,
+    startDate: '',
+    endDate: '',
+    dateField: 'competenceDate',
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
@@ -105,24 +109,6 @@ export const OperatingExpensesPage: React.FC = () => {
     onConfirm: () => {},
   });
 
-  // Navegação rápida de competência mensal
-  const handleNavigateMonth = (offsetMonths: number) => {
-    if (!competenceMonth || !/^\d{4}-\d{2}$/.test(competenceMonth)) {
-      setCompetenceMonth(currentMonthStr);
-      setPage(1);
-      return;
-    }
-    const [y, m] = competenceMonth.split('-').map(Number);
-    const date = new Date(Date.UTC(y, m - 1 + offsetMonths, 1));
-    setCompetenceMonth(date.toISOString().slice(0, 7));
-    setPage(1);
-  };
-
-  const handleResetToCurrentMonth = () => {
-    setCompetenceMonth(currentMonthStr);
-    setPage(1);
-  };
-
   const handleCopyBarcode = (id: string, code: string) => {
     navigator.clipboard.writeText(code);
     setCopiedId(id);
@@ -133,9 +119,25 @@ export const OperatingExpensesPage: React.FC = () => {
 
   // Summary Metrics Query
   const { data: summary } = useQuery<OperatingExpensesSummaryDto>({
-    queryKey: ['operating-expenses-summary', competenceMonth],
+    queryKey: [
+      'operating-expenses-summary',
+      dateFilter.mode,
+      dateFilter.competenceMonth,
+      dateFilter.startDate,
+      dateFilter.endDate,
+      dateFilter.dateField,
+    ],
     queryFn: async () => {
-      const res = await api.get(`/operating-expenses/summary?competenceMonth=${competenceMonth}`);
+      const params = new URLSearchParams();
+      if (dateFilter.mode === 'month' && dateFilter.competenceMonth) {
+        params.append('competenceMonth', dateFilter.competenceMonth);
+      } else if (dateFilter.mode === 'custom') {
+        if (dateFilter.startDate) params.append('startDate', dateFilter.startDate);
+        if (dateFilter.endDate) params.append('endDate', dateFilter.endDate);
+      }
+      if (dateFilter.dateField) params.append('dateField', dateFilter.dateField);
+
+      const res = await api.get(`/operating-expenses/summary?${params.toString()}`);
       return res.data;
     },
   });
@@ -145,7 +147,11 @@ export const OperatingExpensesPage: React.FC = () => {
     queryKey: [
       'operating-expenses',
       page,
-      competenceMonth,
+      dateFilter.mode,
+      dateFilter.competenceMonth,
+      dateFilter.startDate,
+      dateFilter.endDate,
+      dateFilter.dateField,
       selectedCategory,
       selectedType,
       selectedStatus,
@@ -155,7 +161,13 @@ export const OperatingExpensesPage: React.FC = () => {
       const params = new URLSearchParams();
       params.append('page', String(page));
       params.append('limit', '25');
-      if (competenceMonth) params.append('competenceMonth', competenceMonth);
+      if (dateFilter.mode === 'month' && dateFilter.competenceMonth) {
+        params.append('competenceMonth', dateFilter.competenceMonth);
+      } else if (dateFilter.mode === 'custom') {
+        if (dateFilter.startDate) params.append('startDate', dateFilter.startDate);
+        if (dateFilter.endDate) params.append('endDate', dateFilter.endDate);
+      }
+      if (dateFilter.dateField) params.append('dateField', dateFilter.dateField);
       if (selectedCategory) params.append('category', selectedCategory);
       if (selectedType) params.append('expenseType', selectedType);
       if (selectedStatus) params.append('status', selectedStatus);
@@ -256,48 +268,15 @@ export const OperatingExpensesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Controles de Topo: Navegação Rápida de Competência e Botão Nova Despesa */}
+        {/* Controles de Topo: Seletor Avançado de Calendário / Período e Botão Nova Despesa */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-2 py-1 text-xs shadow-xs">
-            <button
-              type="button"
-              onClick={() => handleNavigateMonth(-1)}
-              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
-              title="Mês anterior"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <span className="text-slate-500 dark:text-slate-400 font-medium text-[11px]">Mês:</span>
-            <input
-              type="month"
-              aria-label="Mês de competência"
-              value={competenceMonth}
-              onChange={(e) => {
-                setCompetenceMonth(e.target.value);
-                setPage(1);
-              }}
-              className="bg-transparent font-semibold text-slate-800 dark:text-slate-200 outline-none text-xs cursor-pointer"
-            />
-            <button
-              type="button"
-              onClick={() => handleNavigateMonth(1)}
-              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
-              title="Próximo mês"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-            {competenceMonth !== currentMonthStr && (
-              <button
-                type="button"
-                onClick={handleResetToCurrentMonth}
-                className="ml-1 px-1.5 py-0.5 text-[10px] font-medium rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                title="Voltar para o mês atual"
-              >
-                Hoje
-              </button>
-            )}
-          </div>
+          <ExpenseDateFilter
+            value={dateFilter}
+            onChange={(newFilter) => {
+              setDateFilter(newFilter);
+              setPage(1);
+            }}
+          />
 
           <Button size="sm" onClick={handleOpenCreateModal} className="bg-emerald-600 hover:bg-emerald-500 text-white">
             <Plus className="w-4 h-4 mr-1.5" />
@@ -343,7 +322,13 @@ export const OperatingExpensesPage: React.FC = () => {
           <CardHeader className="py-3 px-4 border-b border-slate-200/80 dark:border-slate-800">
             <CardTitle className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
               <Layers className="w-4 h-4 text-emerald-500" />
-              <span>Distribuição dos Gastos por Categoria ({competenceMonth})</span>
+              <span>
+                Distribuição dos Gastos por Categoria (
+                {dateFilter.mode === 'month'
+                  ? dateFilter.competenceMonth
+                  : `${dateFilter.startDate || 'Início'} a ${dateFilter.endDate || 'Fim'}`}
+                )
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
