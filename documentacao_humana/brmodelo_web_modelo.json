@@ -1,0 +1,352 @@
+{
+  "generator": "brModelo Web Converter / ERP Gráfica Modular",
+  "version": "3.0",
+  "type": "conceptual_and_logical",
+  "projectName": "ERP Gráfica Modular - DER Completo",
+  "createdAt": "2026-09-28T13:40:00.000Z",
+  "entities": [
+    {
+      "id": "ent_user",
+      "name": "USUARIO",
+      "table": "users",
+      "position": { "x": 80, "y": 80 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "name", "type": "VARCHAR(255)" },
+        { "name": "email", "type": "VARCHAR(255)", "isUnique": true },
+        { "name": "role", "type": "Role (ENUM)" },
+        { "name": "isActive", "type": "BOOLEAN" }
+      ]
+    },
+    {
+      "id": "ent_party",
+      "name": "PARCEIRO",
+      "table": "parties",
+      "position": { "x": 480, "y": 80 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "name", "type": "VARCHAR(255)" },
+        { "name": "document", "type": "VARCHAR(30)", "isUnique": true },
+        { "name": "phone", "type": "VARCHAR(50)" },
+        { "name": "isCustomer", "type": "BOOLEAN" },
+        { "name": "isSupplier", "type": "BOOLEAN" }
+      ]
+    },
+    {
+      "id": "ent_quote",
+      "name": "ORCAMENTO",
+      "table": "quotes",
+      "position": { "x": 280, "y": 300 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "code", "type": "SERIAL", "isUnique": true },
+        { "name": "partyId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "userId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "status", "type": "QuoteStatus (ENUM)" },
+        { "name": "totalAmount", "type": "DECIMAL(12,2)" }
+      ]
+    },
+    {
+      "id": "ent_quote_item",
+      "name": "ITEM_ORCAMENTO",
+      "table": "quote_items",
+      "position": { "x": 680, "y": 300 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "quoteId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "rawMaterialId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "productName", "type": "VARCHAR(255)" },
+        { "name": "quantity", "type": "INTEGER" },
+        { "name": "sheetsRequired", "type": "INTEGER" },
+        { "name": "itemTotalAmount", "type": "DECIMAL(12,2)" }
+      ]
+    },
+    {
+      "id": "ent_raw_material",
+      "name": "MATERIA_PRIMA",
+      "table": "raw_materials",
+      "position": { "x": 1080, "y": 300 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "name", "type": "VARCHAR(255)" },
+        { "name": "category", "type": "RawMaterialCategory" },
+        { "name": "costPerUnit", "type": "DECIMAL(12,4)" },
+        { "name": "currentStock", "type": "DECIMAL(12,4)" },
+        { "name": "minStock", "type": "DECIMAL(12,4)" }
+      ]
+    },
+    {
+      "id": "ent_work_order",
+      "name": "ORDEM_SERVICO",
+      "table": "work_orders",
+      "position": { "x": 280, "y": 550 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "orderNumber", "type": "VARCHAR(50)", "isUnique": true },
+        { "name": "quoteId", "type": "VARCHAR(36)", "isFk": true, "isUnique": true },
+        { "name": "partyId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "barcode", "type": "VARCHAR(100)", "isUnique": true },
+        { "name": "status", "type": "WorkOrderStatus" },
+        { "name": "paymentStatus", "type": "PaymentStatus" }
+      ]
+    },
+    {
+      "id": "ent_work_order_stage",
+      "name": "ETAPA_OS",
+      "table": "work_order_stages",
+      "position": { "x": 280, "y": 800 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "workOrderId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "stepOrder", "type": "INTEGER" },
+        { "name": "name", "type": "VARCHAR(100)" },
+        { "name": "status", "type": "StageStatus" }
+      ]
+    },
+    {
+      "id": "ent_stage_log",
+      "name": "APONTAMENTO_ETAPA",
+      "table": "stage_execution_logs",
+      "position": { "x": 80, "y": 800 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "stageId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "operatorId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "machineId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "startedAt", "type": "TIMESTAMP" },
+        { "name": "wasteQuantity", "type": "INTEGER" }
+      ]
+    },
+    {
+      "id": "ent_machine",
+      "name": "MAQUINA",
+      "table": "machines",
+      "position": { "x": 80, "y": 1050 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "name", "type": "VARCHAR(255)" },
+        { "name": "hourlyRate", "type": "DECIMAL(10,2)" },
+        { "name": "setupMinutes", "type": "INTEGER" },
+        { "name": "isActive", "type": "BOOLEAN" }
+      ]
+    },
+    {
+      "id": "ent_stock_movement",
+      "name": "MOVIMENTACAO_ESTOQUE",
+      "table": "stock_movements",
+      "position": { "x": 680, "y": 550 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "rawMaterialId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "workOrderId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "quantity", "type": "DECIMAL(12,4)" },
+        { "name": "reason", "type": "VARCHAR(100)" }
+      ]
+    },
+    {
+      "id": "ent_receivable",
+      "name": "RECEBIVEL",
+      "table": "receivables",
+      "position": { "x": 480, "y": 800 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "workOrderId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "partyId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "amount", "type": "DECIMAL(12,2)" },
+        { "name": "dueDate", "type": "TIMESTAMP" },
+        { "name": "status", "type": "PaymentStatus" }
+      ]
+    },
+    {
+      "id": "ent_expense",
+      "name": "DESPESA_OPERACIONAL",
+      "table": "operating_expenses",
+      "position": { "x": 880, "y": 80 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "description", "type": "VARCHAR(255)" },
+        { "name": "amount", "type": "DECIMAL(12,2)" },
+        { "name": "category", "type": "ExpenseCategory" },
+        { "name": "supplierId", "type": "VARCHAR(36)", "isFk": true }
+      ]
+    },
+    {
+      "id": "ent_employee",
+      "name": "COLABORADOR",
+      "table": "employees",
+      "position": { "x": 880, "y": 1050 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "name", "type": "VARCHAR(255)" },
+        { "name": "document", "type": "VARCHAR(30)", "isUnique": true },
+        { "name": "role", "type": "VARCHAR(100)" },
+        { "name": "department", "type": "EmployeeDepartment" },
+        { "name": "monthlySalary", "type": "DECIMAL(10,2)" }
+      ]
+    },
+    {
+      "id": "ent_product_template",
+      "name": "MODELO_PRODUTO",
+      "table": "product_templates",
+      "position": { "x": 1080, "y": 550 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "name", "type": "VARCHAR(255)" },
+        { "name": "defaultRawMaterialId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "defaultMachineId", "type": "VARCHAR(36)", "isFk": true },
+        { "name": "defaultMarkupPercent", "type": "DECIMAL(5,2)" }
+      ]
+    },
+    {
+      "id": "ent_payment_condition",
+      "name": "CONDICAO_PAGAMENTO",
+      "table": "payment_conditions",
+      "position": { "x": 480, "y": 1050 },
+      "attributes": [
+        { "name": "id", "type": "VARCHAR(36)", "isPk": true },
+        { "name": "name", "type": "VARCHAR(255)" },
+        { "name": "installmentsCount", "type": "INTEGER" },
+        { "name": "downPaymentPercent", "type": "DECIMAL(5,2)" },
+        { "name": "intervalDays", "type": "INTEGER" }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel_quote_party",
+      "verb": "SOLICITA",
+      "source": "ent_party",
+      "target": "ent_quote",
+      "sourceCardinality": "(1,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_quote_user",
+      "verb": "EMITE",
+      "source": "ent_user",
+      "target": "ent_quote",
+      "sourceCardinality": "(1,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_quote_items",
+      "verb": "CONTEM",
+      "source": "ent_quote",
+      "target": "ent_quote_item",
+      "sourceCardinality": "(1,1)",
+      "targetCardinality": "(1,n)"
+    },
+    {
+      "id": "rel_item_raw_material",
+      "verb": "UTILIZA",
+      "source": "ent_raw_material",
+      "target": "ent_quote_item",
+      "sourceCardinality": "(0,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_quote_work_order",
+      "verb": "GERA",
+      "source": "ent_quote",
+      "target": "ent_work_order",
+      "sourceCardinality": "(1,1)",
+      "targetCardinality": "(0,1)"
+    },
+    {
+      "id": "rel_wo_party",
+      "verb": "CONTRATA",
+      "source": "ent_party",
+      "target": "ent_work_order",
+      "sourceCardinality": "(1,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_wo_stages",
+      "verb": "POSSUI",
+      "source": "ent_work_order",
+      "target": "ent_work_order_stage",
+      "sourceCardinality": "(1,1)",
+      "targetCardinality": "(1,n)"
+    },
+    {
+      "id": "rel_stage_logs",
+      "verb": "REGISTRA",
+      "source": "ent_work_order_stage",
+      "target": "ent_stage_log",
+      "sourceCardinality": "(1,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_log_operator",
+      "verb": "EXECUTA",
+      "source": "ent_user",
+      "target": "ent_stage_log",
+      "sourceCardinality": "(1,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_log_machine",
+      "verb": "ALOCA",
+      "source": "ent_machine",
+      "target": "ent_stage_log",
+      "sourceCardinality": "(0,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_wo_stock",
+      "verb": "BAIXA_ESTOQUE",
+      "source": "ent_work_order",
+      "target": "ent_stock_movement",
+      "sourceCardinality": "(0,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_mat_stock",
+      "verb": "MOVIMENTA",
+      "source": "ent_raw_material",
+      "target": "ent_stock_movement",
+      "sourceCardinality": "(1,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_wo_receivable",
+      "verb": "FATURA",
+      "source": "ent_work_order",
+      "target": "ent_receivable",
+      "sourceCardinality": "(0,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_party_receivable",
+      "verb": "DEVEDOR",
+      "source": "ent_party",
+      "target": "ent_receivable",
+      "sourceCardinality": "(1,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_party_expense",
+      "verb": "FORNECE",
+      "source": "ent_party",
+      "target": "ent_expense",
+      "sourceCardinality": "(0,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_mat_template",
+      "verb": "SUGERIDO",
+      "source": "ent_raw_material",
+      "target": "ent_product_template",
+      "sourceCardinality": "(0,1)",
+      "targetCardinality": "(0,n)"
+    },
+    {
+      "id": "rel_machine_template",
+      "verb": "PADRAO",
+      "source": "ent_machine",
+      "target": "ent_product_template",
+      "sourceCardinality": "(0,1)",
+      "targetCardinality": "(0,n)"
+    }
+  ]
+}

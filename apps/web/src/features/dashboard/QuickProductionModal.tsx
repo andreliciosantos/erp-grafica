@@ -691,57 +691,73 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
                         </div>
 
                         {/* Linha do Material Consumido na Mesma Caixa */}
-                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70 dark:bg-slate-800/40 -mx-3 -mb-3 p-2.5 rounded-b-2xl text-[11px]">
-                          <div className="flex items-center gap-1.5 flex-1 min-w-[240px]">
-                            <Package className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                            <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">
-                              Material gasto:
-                            </span>
-                            <select
-                              value={item.rawMaterialId || ''}
-                              onChange={(e) => handleUpdateItemMaterial(item.id, e.target.value || null)}
-                              className="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-700 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-emerald-500 flex-1 truncate"
-                            >
-                              <option value="">(Sem consumo de matéria-prima)</option>
-                              {rawMaterials.map((m) => (
-                                <option key={m.id} value={m.id}>
-                                  {m.name} — Estoque: {Number(m.currentStock).toLocaleString()} {m.unitOfMeasure}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                        <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/40 -mx-3 -mb-3 p-3 rounded-b-2xl space-y-2 text-[11px]">
+                          {/* Cabeçalho da seção com identificação e status do estoque */}
+                          <div className="flex flex-wrap items-center justify-between gap-1.5">
+                            <div className="flex items-center gap-1.5 font-semibold text-slate-600 dark:text-slate-300">
+                              <Package className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                              <span>Material gasto:</span>
+                            </div>
 
-                          {item.rawMaterialId && selectedMat && (
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-slate-500 dark:text-slate-400">Gasto/un:</span>
-                              <input
-                                type="number"
-                                min="0.01"
-                                step="1"
-                                value={item.materialQuantity ?? 1}
-                                onChange={(e) =>
-                                  handleUpdateItemMaterialQty(item.id, parseFloat(e.target.value) || 1)
-                                }
-                                className="w-14 text-center text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-0.5 px-1 font-semibold text-slate-800 dark:text-slate-200"
-                                title="Quantidade de material gasta por unidade deste serviço"
-                              />
-
-                              <div className="flex items-center gap-1.5 pl-1">
+                            {item.rawMaterialId && selectedMat && (
+                              <div className="flex flex-wrap items-center gap-2 text-[11px]">
                                 <span className="font-semibold text-slate-700 dark:text-slate-300">
-                                  Total: <strong>{totalConsumed} {selectedMat.unitOfMeasure}</strong>
+                                  Total: <strong className="text-slate-900 dark:text-slate-100">{totalConsumed} {selectedMat.unitOfMeasure}</strong>
                                 </span>
                                 {isStockShortage ? (
-                                  <span className="text-[10px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-900">
-                                    ⚠️ Saldo: {Number(selectedMat.currentStock).toLocaleString()}
+                                  <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
+                                    ⚠️ Saldo insuficiente ({Number(selectedMat.currentStock).toLocaleString()} {selectedMat.unitOfMeasure})
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded font-medium">
-                                    ✓ Estoque: {Number(selectedMat.currentStock).toLocaleString()}
+                                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md font-medium border border-emerald-200/50 dark:border-emerald-800/50">
+                                    ✓ Estoque: {Number(selectedMat.currentStock).toLocaleString()} {selectedMat.unitOfMeasure}
                                   </span>
                                 )}
                               </div>
+                            )}
+                          </div>
+
+                          {/* Controles: Seletor de Matéria-Prima e Quantidade por Unidade em Grid Sem Sobreposição */}
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                            <div className={item.rawMaterialId && selectedMat ? 'sm:col-span-8' : 'sm:col-span-12'}>
+                              <select
+                                value={item.rawMaterialId || ''}
+                                onChange={(e) => handleUpdateItemMaterial(item.id, e.target.value || null)}
+                                className="w-full text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-emerald-500 shadow-2xs"
+                              >
+                                <option value="">(Sem consumo de matéria-prima)</option>
+                                {rawMaterials.map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    {m.name} — Estoque: {Number(m.currentStock).toLocaleString()} {m.unitOfMeasure}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
-                          )}
+
+                            {item.rawMaterialId && selectedMat && (
+                              <div className="sm:col-span-4 flex items-center justify-between sm:justify-end gap-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1 shadow-2xs">
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
+                                  Gasto/un:
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="number"
+                                    min="0.01"
+                                    step="1"
+                                    value={item.materialQuantity ?? 1}
+                                    onChange={(e) =>
+                                      handleUpdateItemMaterialQty(item.id, parseFloat(e.target.value) || 1)
+                                    }
+                                    className="w-14 text-center text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-0.5 px-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    title="Quantidade de material gasta por unidade deste serviço"
+                                  />
+                                  <span className="text-[10px] text-slate-400 font-semibold whitespace-nowrap">
+                                    {selectedMat.unitOfMeasure}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

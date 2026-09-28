@@ -1,0 +1,285 @@
+/* ============================================================================
+   ERP GRÁFICA MODULAR — ESPECIFICAÇÃO CONCEITUAL BRMODELO (.BRM)
+   Versão: 3.0 / brModelo Web
+   Projeto: ERP Indústria Gráfica Modular
+   ============================================================================ */
+
+[PROJETO]
+Nome = "ERP Gráfica Modular"
+Autor = "Engenharia de Software & Banco de Dados"
+Data = "2026-09-28"
+Tipo = "Conceitual / Lógico"
+
+[ENTIDADES]
+USUARIO (
+  id: Caractere(36) [PK],
+  nome: Caractere(255),
+  email: Caractere(255) [UK],
+  senha_hash: Caractere(255),
+  papel_acesso: Caractere(50),
+  ativo: Booleano,
+  data_cadastro: DataHora
+)
+
+PARCEIRO (
+  id: Caractere(36) [PK],
+  tipo_pessoa: Caractere(20),
+  documento_cpf_cnpj: Caractere(30) [UK],
+  nome_razao_social: Caractere(255),
+  nome_fantasia: Caractere(255),
+  email: Caractere(255),
+  telefone: Caractere(50),
+  cidade: Caractere(100),
+  estado: Caractere(10),
+  eh_cliente: Booleano,
+  eh_fornecedor: Booleano
+)
+
+MATERIA_PRIMA (
+  id: Caractere(36) [PK],
+  nome_insumo: Caractere(255),
+  categoria: Caractere(50),
+  unidade_medida: Caractere(20),
+  custo_unitario: Decimal(12,4),
+  estoque_atual: Decimal(12,4),
+  estoque_minimo: Decimal(12,4),
+  largura_folha_mm: Inteiro,
+  altura_folha_mm: Inteiro,
+  gramatura: Inteiro
+)
+
+MAQUINA (
+  id: Caractere(36) [PK],
+  nome_equipamento: Caractere(255),
+  custo_hora_maquina: Decimal(10,2),
+  tempo_setup_minutos: Inteiro,
+  velocidade_nominal_folhas_h: Inteiro,
+  ativo: Booleano
+)
+
+ORCAMENTO (
+  id: Caractere(36) [PK],
+  codigo_proposta: Inteiro [UK],
+  id_cliente: Caractere(36) [FK],
+  id_vendedor: Caractere(36) [FK],
+  status_orcamento: Caractere(50),
+  origem_canal: Caractere(50),
+  custo_total: Decimal(12,2),
+  markup_aplicado: Decimal(6,3),
+  valor_total: Decimal(12,2),
+  validade: DataHora
+)
+
+ITEM_ORCAMENTO (
+  id: Caractere(36) [PK],
+  id_orcamento: Caractere(36) [FK],
+  id_materia_prima: Caractere(36) [FK],
+  produto_nome: Caractere(255),
+  quantidade_tiragem: Inteiro,
+  largura_aberto_mm: Inteiro,
+  altura_aberto_mm: Inteiro,
+  cores_frente: Inteiro,
+  cores_verso: Inteiro,
+  folhas_necessarias: Inteiro,
+  aproveitamento_por_folha: Inteiro,
+  custo_papel: Decimal(10,2),
+  custo_maquina: Decimal(10,2),
+  custo_acabamento: Decimal(10,2),
+  preco_unitario: Decimal(10,4),
+  valor_total_item: Decimal(12,2)
+)
+
+ORDEM_SERVICO (
+  id: Caractere(36) [PK],
+  numero_os: Caractere(50) [UK],
+  id_orcamento: Caractere(36) [FK, UK],
+  id_cliente: Caractere(36) [FK],
+  id_responsavel: Caractere(36) [FK],
+  codigo_barras: Caractere(100) [UK],
+  status_kanban: Caractere(50),
+  prioridade: Inteiro,
+  data_entrega: DataHora,
+  valor_total: Decimal(12,2),
+  status_pagamento: Caractere(50)
+)
+
+ETAPA_OS (
+  id: Caractere(36) [PK],
+  id_ordem_servico: Caractere(36) [FK],
+  ordem_passo: Inteiro,
+  nome_etapa: Caractere(100),
+  status_etapa: Caractere(50)
+)
+
+APONTAMENTO_ETAPA (
+  id: Caractere(36) [PK],
+  id_etapa: Caractere(36) [FK],
+  id_operador: Caractere(36) [FK],
+  id_maquina: Caractere(36) [FK],
+  data_hora_inicio: DataHora,
+  data_hora_fim: DataHora,
+  folhas_refugo_perda: Inteiro,
+  observacoes: Texto
+)
+
+MOVIMENTACAO_ESTOQUE (
+  id: Caractere(36) [PK],
+  id_materia_prima: Caractere(36) [FK],
+  id_ordem_servico: Caractere(36) [FK],
+  quantidade: Decimal(12,4),
+  motivo_movimentacao: Caractere(100),
+  data_hora: DataHora
+)
+
+COLABORADOR (
+  id: Caractere(36) [PK],
+  nome_completo: Caractere(255),
+  cpf: Caractere(30) [UK],
+  matricula: Caractere(50) [UK],
+  cargo: Caractere(100),
+  departamento: Caractere(50),
+  turno: Caractere(50),
+  status: Caractere(50),
+  salario_mensal: Decimal(10,2),
+  custo_hora_direta: Decimal(10,2)
+)
+
+DESPESA_OPERACIONAL (
+  id: Caractere(36) [PK],
+  descricao: Caractere(255),
+  categoria: Caractere(50),
+  tipo_custo: Caractere(20),
+  valor: Decimal(12,2),
+  vencimento: DataHora,
+  data_pagamento: DataHora,
+  status: Caractere(50),
+  competencia_mes: DataHora,
+  id_fornecedor: Caractere(36) [FK]
+)
+
+RECEBIVEL (
+  id: Caractere(36) [PK],
+  id_ordem_servico: Caractere(36) [FK],
+  id_cliente: Caractere(36) [FK],
+  descricao: Caractere(255),
+  numero_parcela: Inteiro,
+  total_parcelas: Inteiro,
+  valor: Decimal(12,2),
+  vencimento: DataHora,
+  data_recebimento: DataHora,
+  status: Caractere(50),
+  metodo_pagamento: Caractere(50)
+)
+
+MODELO_PRODUTO (
+  id: Caractere(36) [PK],
+  nome_produto: Caractere(255),
+  categoria: Caractere(100),
+  largura_padrao_mm: Inteiro,
+  altura_padrao_mm: Inteiro,
+  id_materia_prima_padrao: Caractere(36) [FK],
+  id_maquina_padrao: Caractere(36) [FK],
+  markup_padrao: Decimal(5,2),
+  ativo: Booleano
+)
+
+CONDICAO_PAGAMENTO (
+  id: Caractere(36) [PK],
+  nome_condicao: Caractere(255),
+  quantidade_parcelas: Inteiro,
+  percentual_entrada: Decimal(5,2),
+  intervalo_dias: Inteiro,
+  padrao: Booleano,
+  ativo: Booleano
+)
+
+[RELACIONAMENTOS]
+REL_USUARIO_ORCAMENTO:
+  Entidade1: USUARIO (1,1)
+  Verbo: "EMITE"
+  Entidade2: ORCAMENTO (0,n)
+
+REL_PARCEIRO_ORCAMENTO:
+  Entidade1: PARCEIRO (1,1)
+  Verbo: "SOLICITA"
+  Entidade2: ORCAMENTO (0,n)
+
+REL_ORCAMENTO_ITEM:
+  Entidade1: ORCAMENTO (1,1)
+  Verbo: "CONTEM"
+  Entidade2: ITEM_ORCAMENTO (1,n)
+
+REL_INSUMO_ITEM:
+  Entidade1: MATERIA_PRIMA (0,1)
+  Verbo: "ESPECIFICADO_EM"
+  Entidade2: ITEM_ORCAMENTO (0,n)
+
+REL_ORCAMENTO_ORDEM:
+  Entidade1: ORCAMENTO (1,1)
+  Verbo: "ORIGINA"
+  Entidade2: ORDEM_SERVICO (1,1)
+
+REL_PARCEIRO_ORDEM:
+  Entidade1: PARCEIRO (1,1)
+  Verbo: "CONTRATA"
+  Entidade2: ORDEM_SERVICO (0,n)
+
+REL_USUARIO_ORDEM:
+  Entidade1: USUARIO (1,1)
+  Verbo: "CADASTRA"
+  Entidade2: ORDEM_SERVICO (0,n)
+
+REL_ORDEM_ETAPA:
+  Entidade1: ORDEM_SERVICO (1,1)
+  Verbo: "DIVIDIDA_EM"
+  Entidade2: ETAPA_OS (1,n)
+
+REL_ETAPA_APONTAMENTO:
+  Entidade1: ETAPA_OS (1,1)
+  Verbo: "REGISTRA"
+  Entidade2: APONTAMENTO_ETAPA (0,n)
+
+REL_OPERADOR_APONTAMENTO:
+  Entidade1: USUARIO (1,1)
+  Verbo: "EXECUTA"
+  Entidade2: APONTAMENTO_ETAPA (0,n)
+
+REL_MAQUINA_APONTAMENTO:
+  Entidade1: MAQUINA (0,1)
+  Verbo: "ALOCADA_PARA"
+  Entidade2: APONTAMENTO_ETAPA (0,n)
+
+REL_ORDEM_ESTOQUE:
+  Entidade1: ORDEM_SERVICO (0,1)
+  Verbo: "DEMANDA_CONSUMO"
+  Entidade2: MOVIMENTACAO_ESTOQUE (0,n)
+
+REL_INSUMO_ESTOQUE:
+  Entidade1: MATERIA_PRIMA (1,1)
+  Verbo: "MOVIMENTADA_EM"
+  Entidade2: MOVIMENTACAO_ESTOQUE (0,n)
+
+REL_ORDEM_RECEBIVEL:
+  Entidade1: ORDEM_SERVICO (0,1)
+  Verbo: "GERA_TITULOS"
+  Entidade2: RECEBIVEL (0,n)
+
+REL_PARCEIRO_RECEBIVEL:
+  Entidade1: PARCEIRO (1,1)
+  Verbo: "DEVEDOR_DE"
+  Entidade2: RECEBIVEL (0,n)
+
+REL_PARCEIRO_DESPESA:
+  Entidade1: PARCEIRO (0,1)
+  Verbo: "CREDOR_DE"
+  Entidade2: DESPESA_OPERACIONAL (0,n)
+
+REL_INSUMO_MODELO:
+  Entidade1: MATERIA_PRIMA (0,1)
+  Verbo: "SUGERIDA_EM"
+  Entidade2: MODELO_PRODUTO (0,n)
+
+REL_MAQUINA_MODELO:
+  Entidade1: MAQUINA (0,1)
+  Verbo: "PADRAO_EM"
+  Entidade2: MODELO_PRODUTO (0,n)
