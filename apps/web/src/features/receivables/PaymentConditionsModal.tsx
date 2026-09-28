@@ -198,8 +198,13 @@ export const PaymentConditionsModal: React.FC<PaymentConditionsModalProps> = ({
       title="Condições de Pagamento e Parcelamento"
       description="Gerencie os padrões de parcelamento e faturamento de acesso rápido disponíveis na geração de orçamentos."
       maxWidth="3xl"
+      footer={
+        <Button variant="secondary" size="sm" onClick={onClose}>
+          Fechar
+        </Button>
+      }
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Toggle Form / List Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

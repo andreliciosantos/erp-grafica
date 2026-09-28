@@ -200,8 +200,34 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       title={expenseToEdit ? 'Editar Despesa Operacional' : 'Cadastrar Nova Despesa Operacional'}
       description="Gerencie os gastos fixos e variáveis de infraestrutura que não entram diretamente no custo da mercadoria final"
       maxWidth="lg"
+      footer={
+        <div className="flex items-center justify-end gap-2 w-full">
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="expense-modal-form"
+            size="sm"
+            disabled={saveMutation.isPending}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white"
+          >
+            {expenseToEdit ? (
+              <>
+                <Edit2 className="w-4 h-4 mr-1.5" />
+                {saveMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-1.5" />
+                {saveMutation.isPending ? 'Cadastrando...' : 'Cadastrar Despesa'}
+              </>
+            )}
+          </Button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form id="expense-modal-form" onSubmit={handleSubmit} className="space-y-3">
         {errorMessage && (
           <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -372,31 +398,6 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
-
-        {/* Rodapé de Ações */}
-        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={saveMutation.isPending}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white"
-          >
-            {expenseToEdit ? (
-              <>
-                <Edit2 className="w-4 h-4 mr-1.5" />
-                {saveMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 mr-1.5" />
-                {saveMutation.isPending ? 'Cadastrando...' : 'Cadastrar Despesa'}
-              </>
-            )}
-          </Button>
-        </div>
       </form>
     </Modal>
   );

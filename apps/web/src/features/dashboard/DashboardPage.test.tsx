@@ -76,6 +76,6 @@ describe('DashboardPage', () => {
     await userEvent.click(quickProdBtn);
 
     expect(screen.getByText('Produção Rápida de Balcão')).toBeInTheDocument();
-    expect(screen.getByText('Consumidor Avulso')).toBeInTheDocument();
+    expect(screen.getByText('Modelos Prontos de Serviços')).toBeInTheDocument();
   });
 });

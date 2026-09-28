@@ -20,8 +20,7 @@ describe('QuickProductionModal', () => {
     renderWithProviders(<QuickProductionModal isOpen={true} onClose={vi.fn()} />);
 
     expect(screen.getByText('Produção Rápida de Balcão')).toBeInTheDocument();
-    expect(screen.getByText(/Modo Balcão Ativo:/i)).toBeInTheDocument();
-    expect(screen.getByText('Consumidor Avulso')).toBeInTheDocument();
+    expect(screen.queryByText(/Modo Balcão Ativo:/i)).not.toBeInTheDocument();
 
     // Check presets are visible
     expect(screen.getByText('Xerox P&B A4')).toBeInTheDocument();

@@ -643,7 +643,8 @@ export class WorkOrdersService {
         }
       }
 
-      if (initialPaymentStatus === PaymentStatus.PAID && dto.totalAmount > 0) {
+      if (dto.totalAmount > 0) {
+        const isPaid = initialPaymentStatus === PaymentStatus.PAID;
         await tx.receivable.create({
           data: {
             workOrderId: workOrder.id,
@@ -652,10 +653,10 @@ export class WorkOrdersService {
             installmentNumber: 1,
             totalInstallments: 1,
             amount: dto.totalAmount,
-            dueDate: new Date(),
-            paidAt: new Date(),
-            status: PaymentStatus.PAID,
-            paymentMethod: (dto.paymentMethod as any) || PaymentMethod.CASH,
+            dueDate: deliveryDate || new Date(),
+            paidAt: isPaid ? new Date() : null,
+            status: isPaid ? PaymentStatus.PAID : PaymentStatus.PENDING,
+            paymentMethod: isPaid ? ((dto.paymentMethod as any) || PaymentMethod.CASH) : null,
           },
         });
       }

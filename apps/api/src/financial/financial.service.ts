@@ -266,7 +266,11 @@ export class FinancialService {
           OR: [
             {
               status: PaymentStatus.PAID,
-              paidAt: { gte: startOfMonth, lte: endOfMonth },
+              OR: [
+                { paidAt: { gte: startOfMonth, lte: endOfMonth } },
+                { paidAt: null, dueDate: { gte: startOfMonth, lte: endOfMonth } },
+                { paidAt: null, createdAt: { gte: startOfMonth, lte: endOfMonth } },
+              ],
             },
             {
               status: { in: [PaymentStatus.PENDING, PaymentStatus.OVERDUE] },
@@ -281,7 +285,11 @@ export class FinancialService {
           OR: [
             {
               status: PaymentStatus.PAID,
-              paidAt: { gte: startOfMonth, lte: endOfMonth },
+              OR: [
+                { paidAt: { gte: startOfMonth, lte: endOfMonth } },
+                { paidAt: null, dueDate: { gte: startOfMonth, lte: endOfMonth } },
+                { paidAt: null, createdAt: { gte: startOfMonth, lte: endOfMonth } },
+              ],
             },
             {
               status: { in: [PaymentStatus.PENDING, PaymentStatus.OVERDUE] },
@@ -306,8 +314,9 @@ export class FinancialService {
 
     receivables.forEach((r) => {
       const val = Number(r.amount);
-      if (r.status === PaymentStatus.PAID && r.paidAt) {
-        const day = new Date(r.paidAt).getUTCDate();
+      if (r.status === PaymentStatus.PAID) {
+        const dateObj = r.paidAt ? new Date(r.paidAt) : (r.dueDate ? new Date(r.dueDate) : new Date(r.createdAt));
+        const day = dateObj.getUTCDate();
         if (day >= 1 && day <= daysInMonth) {
           dailyRealizedInflows[day] = (dailyRealizedInflows[day] || 0) + val;
         }
@@ -321,8 +330,9 @@ export class FinancialService {
 
     expenses.forEach((e) => {
       const val = Number(e.amount);
-      if (e.status === PaymentStatus.PAID && e.paidAt) {
-        const day = new Date(e.paidAt).getUTCDate();
+      if (e.status === PaymentStatus.PAID) {
+        const dateObj = e.paidAt ? new Date(e.paidAt) : (e.dueDate ? new Date(e.dueDate) : new Date(e.createdAt));
+        const day = dateObj.getUTCDate();
         if (day >= 1 && day <= daysInMonth) {
           dailyRealizedOutflows[day] = (dailyRealizedOutflows[day] || 0) + val;
         }

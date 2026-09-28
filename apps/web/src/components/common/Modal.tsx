@@ -46,41 +46,41 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Dialog */}
-      <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
+      <div className="flex min-h-full items-center justify-center p-2 sm:p-3">
         <div
           className={cn(
-            'relative w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-2xl transition-all',
+            'relative w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl transition-all flex flex-col max-h-[calc(100vh-1.5rem)] overflow-hidden',
             maxWidthStyles[maxWidth]
           )}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-start justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold text-slate-850 dark:text-slate-100">{title}</h3>
-              {description && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{description}</p>}
+          {/* Header Compacto */}
+          <div className="flex items-center justify-between px-3.5 py-2.5 sm:px-4 sm:py-2.5 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-slate-900">
+            <div className="min-w-0 pr-2">
+              <h3 className="text-sm sm:text-base font-bold text-slate-850 dark:text-slate-100 truncate">{title}</h3>
+              {description && <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{description}</p>}
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-100 transition-colors"
+              className="rounded-lg p-1 text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-100 transition-colors shrink-0"
               aria-label="Fechar"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Body */}
-          <div className="py-4 max-h-[75vh] overflow-y-auto pr-1">{children}</div>
+          {/* Body Compacto com Scroll Suave */}
+          <div className="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0 text-xs">{children}</div>
 
-          {/* Footer */}
+          {/* Footer Fixo na Base */}
           {footer && (
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-end gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 shrink-0">
               {footer}
             </div>
           )}

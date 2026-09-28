@@ -155,13 +155,40 @@ export const ReceivableFormModal: React.FC<ReceivableFormModalProps> = ({
           : 'Cadastre um recebimento de balcão, serviço avulso ou lançamento a prazo'
       }
       maxWidth="lg"
+      footer={
+        <div className="flex items-center justify-end gap-2 w-full">
+          <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={saveMutation.isPending}>
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="receivable-form"
+            size="sm"
+            isLoading={saveMutation.isPending}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            {receivableToEdit ? (
+              <>
+                <Edit2 className="w-4 h-4 mr-1.5" />
+                Salvar Alterações
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-1.5" />
+                Cadastrar Recebível
+              </>
+            )}
+          </Button>
+        </div>
+      }
     >
       <form
+        id="receivable-form"
         onSubmit={(e) => {
           e.preventDefault();
           saveMutation.mutate();
         }}
-        className="space-y-4"
+        className="space-y-3"
       >
         {errorMessage && (
           <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-xl text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
@@ -299,29 +326,6 @@ export const ReceivableFormModal: React.FC<ReceivableFormModalProps> = ({
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-          <Button type="button" variant="ghost" onClick={onClose} disabled={saveMutation.isPending}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            isLoading={saveMutation.isPending}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
-            {receivableToEdit ? (
-              <>
-                <Edit2 className="w-4 h-4 mr-1.5" />
-                Salvar Alterações
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 mr-1.5" />
-                Cadastrar Recebível
-              </>
-            )}
-          </Button>
         </div>
       </form>
     </Modal>

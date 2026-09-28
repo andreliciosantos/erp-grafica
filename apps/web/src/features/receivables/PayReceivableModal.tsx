@@ -96,8 +96,24 @@ export const PayReceivableModal: React.FC<PayReceivableModalProps> = ({
       onClose={onClose}
       title="Registrar Recebimento"
       maxWidth="md"
+      footer={
+        <div className="flex items-center justify-end gap-2 w-full">
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={payMutation.isPending}>
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => payMutation.mutate()}
+            isLoading={payMutation.isPending}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            <CheckCircle2 className="w-4 h-4 mr-1.5" />
+            Confirmar Recebimento
+          </Button>
+        </div>
+      }
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Info Banner */}
         <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-3.5 flex items-start gap-3">
           <div className="p-2 bg-emerald-100 dark:bg-emerald-900/60 rounded-lg text-emerald-700 dark:text-emerald-400 mt-0.5">
@@ -199,20 +215,6 @@ export const PayReceivableModal: React.FC<PayReceivableModalProps> = ({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
-        </div>
-
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-          <Button variant="ghost" onClick={onClose} disabled={payMutation.isPending}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={() => payMutation.mutate()}
-            isLoading={payMutation.isPending}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
-            <CheckCircle2 className="w-4 h-4 mr-1.5" />
-            Confirmar Recebimento
-          </Button>
         </div>
       </div>
     </Modal>

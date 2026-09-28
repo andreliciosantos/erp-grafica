@@ -83,13 +83,31 @@ export const PayExpenseModal: React.FC<PayExpenseModalProps> = ({
       title="Liquidar Despesa Operacional"
       description={`Confirmação de pagamento para: ${expense.description}`}
       maxWidth="md"
+      footer={
+        <div className="flex items-center justify-end gap-2 w-full">
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="pay-expense-form"
+            size="sm"
+            disabled={payMutation.isPending}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white"
+          >
+            <CheckCircle2 className="w-4 h-4 mr-1.5" />
+            {payMutation.isPending ? 'Liquidando...' : 'Confirmar Pagamento'}
+          </Button>
+        </div>
+      }
     >
       <form
+        id="pay-expense-form"
         onSubmit={(e) => {
           e.preventDefault();
           payMutation.mutate();
         }}
-        className="space-y-4"
+        className="space-y-3"
       >
         {errorMessage && (
           <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
@@ -167,21 +185,6 @@ export const PayExpenseModal: React.FC<PayExpenseModalProps> = ({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
-
-        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={payMutation.isPending}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white"
-          >
-            <CheckCircle2 className="w-4 h-4 mr-1.5" />
-            {payMutation.isPending ? 'Liquidando...' : 'Confirmar Pagamento'}
-          </Button>
-        </div>
       </form>
     </Modal>
   );

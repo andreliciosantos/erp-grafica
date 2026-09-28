@@ -194,8 +194,13 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
       title="Gerenciar Modelos Prontos de Serviços Rápidos"
       description="Crie, edite e exclua modelos predefinidos de balcão com vínculo de estoque automático"
       maxWidth="3xl"
+      footer={
+        <Button variant="secondary" onClick={onClose} size="sm">
+          Fechar
+        </Button>
+      }
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Alertas */}
         {errorMessage && (
           <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300">
@@ -363,7 +368,7 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
             </div>
           ) : (
             <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
-              <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
                 {presetsList.map((preset) => {
                   const isBeingEdited = editingPresetId === preset.id;
                   return (
@@ -454,12 +459,6 @@ export const QuickPresetsManagerModal: React.FC<QuickPresetsManagerModalProps> =
               </div>
             </div>
           )}
-        </div>
-
-        <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
-          <Button variant="secondary" onClick={onClose} size="sm">
-            Fechar
-          </Button>
         </div>
       </div>
     </Modal>

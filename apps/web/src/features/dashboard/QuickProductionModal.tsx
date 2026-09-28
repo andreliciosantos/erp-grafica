@@ -6,7 +6,6 @@ import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { CurrencyInput } from '../../components/common/CurrencyInput';
 import { NumberInput } from '../../components/common/NumberInput';
-import { Badge } from '../../components/common/Badge';
 import { formatCurrency } from '../../lib/utils';
 import {
   Zap,
@@ -321,6 +320,8 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
       queryClient.invalidateQueries({ queryKey: ['receivables'] });
       queryClient.invalidateQueries({ queryKey: ['financial-dre'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-flow'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
       queryClient.invalidateQueries({ queryKey: ['raw-materials-select'] });
       queryClient.invalidateQueries({ queryKey: ['raw-materials-list'] });
       queryClient.invalidateQueries({ queryKey: ['raw-materials'] });
@@ -355,6 +356,38 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
         title="Produção Rápida de Balcão"
         description="Lançamento expresso sem necessidade de cadastro de cliente e com baixa automática de estoque"
         maxWidth="3xl"
+        footer={
+          !successOrderNumber ? (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
+              <div>
+                <p className="text-[10px] text-slate-400 font-medium leading-none">Total a Cobrar</p>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 leading-none">
+                    {formatCurrency(totalAmount)}
+                  </span>
+                  <span className="text-xs text-slate-400 leading-none">({totalQuantity} unidades)</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="secondary" size="sm" onClick={handleResetModal}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => createQuickOrderMutation.mutate()}
+                  isLoading={createQuickOrderMutation.isPending}
+                  disabled={items.length === 0}
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-md shadow-amber-950/20 px-4"
+                >
+                  <Zap className="w-4 h-4 mr-1.5" />
+                  Concluir Produção Rápida
+                </Button>
+              </div>
+            </div>
+          ) : null
+        }
       >
         {successOrderNumber ? (
           <div className="py-8 text-center space-y-4">
@@ -396,20 +429,7 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
             </div>
           </div>
         ) : (
-          <div className="space-y-5">
-            {/* Header informativo */}
-            <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 px-3.5 py-2 rounded-xl text-xs text-amber-700 dark:text-amber-400">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>
-                  <strong>Modo Balcão Ativo:</strong> Sem burocracia de cliente. Ideal para cópias,
-                  plastificações e impressões na hora com débito direto no estoque.
-                </span>
-              </div>
-              <Badge variant="warning" size="sm">
-                Consumidor Avulso
-              </Badge>
-            </div>
+          <div className="space-y-3">
 
             {errorMessage && (
               <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300">
@@ -610,14 +630,14 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
               </div>
 
               {items.length === 0 ? (
-                <div className="p-6 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 dark:text-slate-500 space-y-1">
+                <div className="p-4 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 dark:text-slate-500 space-y-1">
                   <p className="text-xs font-medium">Nenhum serviço selecionado ainda.</p>
                   <p className="text-[11px]">
                     Clique nos modelos acima ou adicione um serviço avulso para iniciar o atendimento.
                   </p>
                 </div>
               ) : (
-                <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
                   {items.map((item) => {
                     const selectedMat = rawMaterials.find((m) => m.id === item.rawMaterialId);
                     const consumePerUnit = item.materialQuantity ?? 1;
@@ -806,7 +826,7 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
                 <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Forma de Pagamento
                 </label>
-                <div className="grid grid-cols-3 gap-1 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 text-xs">
                   {[
                     { key: PaymentMethod.PIX, label: 'PIX', icon: <QrCode className="w-3 h-3" /> },
                     { key: PaymentMethod.CASH, label: 'Dinheiro', icon: <DollarSign className="w-3 h-3" /> },
@@ -818,7 +838,7 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
                       key={pm.key}
                       type="button"
                       onClick={() => setPaymentMethod(pm.key as any)}
-                      className={`py-1.5 px-2 rounded-xl font-medium border flex items-center justify-center gap-1 transition-all ${
+                      className={`py-1 px-1.5 rounded-xl font-medium border flex items-center justify-center gap-1 transition-all text-xs ${
                         paymentMethod === pm.key
                           ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                           : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -840,7 +860,7 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setDeliveryStatus(WorkOrderStatus.DELIVERED)}
-                    className={`py-2 px-2.5 rounded-xl font-medium border flex items-center gap-1.5 transition-all ${
+                    className={`py-1.5 px-2 rounded-xl font-medium border flex items-center gap-1.5 transition-all ${
                       deliveryStatus === WorkOrderStatus.DELIVERED
                         ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
                         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -849,13 +869,13 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
                     <Check className="w-3.5 h-3.5 shrink-0" />
                     <div className="text-left">
                       <p className="font-bold text-[11px]">Entregue na Hora</p>
-                      <p className="text-[9px] opacity-80">Retirada imediata balcão</p>
+                      <p className="text-[9px] opacity-80">Retirada imediata</p>
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeliveryStatus(WorkOrderStatus.PENDING)}
-                    className={`py-2 px-2.5 rounded-xl font-medium border flex items-center gap-1.5 transition-all ${
+                    className={`py-1.5 px-2 rounded-xl font-medium border flex items-center gap-1.5 transition-all ${
                       deliveryStatus === WorkOrderStatus.PENDING
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
                         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -879,35 +899,6 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
                 value={clientNotes}
                 onChange={(e) => setClientNotes(e.target.value)}
               />
-            </div>
-
-            {/* Footer de Ação com Totalizador */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <div>
-                <p className="text-[11px] text-slate-400 font-medium">Total a Cobrar</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-slate-900 dark:text-slate-100">
-                    {formatCurrency(totalAmount)}
-                  </span>
-                  <span className="text-xs text-slate-400">({totalQuantity} unidades)</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button type="button" variant="secondary" onClick={handleResetModal}>
-                  Cancelar
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => createQuickOrderMutation.mutate()}
-                  isLoading={createQuickOrderMutation.isPending}
-                  disabled={items.length === 0}
-                  className="bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-md shadow-amber-950/20 px-5"
-                >
-                  <Zap className="w-4 h-4 mr-1.5" />
-                  Concluir Produção Rápida
-                </Button>
-              </div>
             </div>
           </div>
         )}
