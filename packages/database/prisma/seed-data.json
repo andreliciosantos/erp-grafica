@@ -132,13 +132,13 @@
       "category": "PAPER",
       "unitOfMeasure": "FL",
       "costPerUnit": "0.05",
-      "currentStock": "9910",
+      "currentStock": "9909",
       "minStock": "1000",
       "sheetWidthMm": 210,
       "sheetHeightMm": 297,
       "grammage": 75,
       "createdAt": "2026-09-24T19:28:29.490Z",
-      "updatedAt": "2026-09-28T17:35:12.060Z"
+      "updatedAt": "2026-09-29T16:41:33.277Z"
     }
   ],
   "stockMovements": [
@@ -197,6 +197,14 @@
       "quantity": "-10",
       "reason": "CONSUMO_PRODUCAO",
       "createdAt": "2026-09-28T17:35:12.058Z"
+    },
+    {
+      "id": "d4c0d958-99fd-4634-84f5-7cb876852a2e",
+      "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+      "workOrderId": "ef3552f8-3a9c-4cba-9a14-a96098303efc",
+      "quantity": "-1",
+      "reason": "CONSUMO_PRODUCAO",
+      "createdAt": "2026-09-29T16:41:33.272Z"
     }
   ],
   "machines": [
@@ -655,6 +663,156 @@
           "machineCostTotal": "0",
           "unitPrice": "1",
           "itemTotalAmount": "10"
+        }
+      ]
+    },
+    {
+      "id": "b576bd46-6413-4c2a-9cb7-2c3639a82b32",
+      "code": 14,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "92",
+      "markupApplied": "0.3",
+      "totalAmount": "92",
+      "validUntil": "2026-09-29T16:41:33.220Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-09-29T16:41:33.229Z",
+      "updatedAt": "2026-09-29T16:41:33.229Z",
+      "items": [
+        {
+          "id": "422b7405-9430-4196-8ad1-ea3f3df04411",
+          "quoteId": "b576bd46-6413-4c2a-9cb7-2c3639a82b32",
+          "rawMaterialId": null,
+          "productName": "Plastificação Polaseal A4",
+          "quantity": 5,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "6",
+          "itemTotalAmount": "30"
+        },
+        {
+          "id": "f9f8b584-4569-4b3a-924f-959e3d277b9b",
+          "quoteId": "b576bd46-6413-4c2a-9cb7-2c3639a82b32",
+          "rawMaterialId": null,
+          "productName": "Impressão A3 Couchê 170g",
+          "quantity": 5,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "5",
+          "itemTotalAmount": "25"
+        },
+        {
+          "id": "957a73fd-1737-4edb-a844-91ff69622c22",
+          "quoteId": "b576bd46-6413-4c2a-9cb7-2c3639a82b32",
+          "rawMaterialId": null,
+          "productName": "Encadernação Espiral até 50 fls",
+          "quantity": 3,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "8",
+          "itemTotalAmount": "24"
+        },
+        {
+          "id": "b9dc63ee-44da-44fd-ba1d-1880d3d7d5a2",
+          "quoteId": "b576bd46-6413-4c2a-9cb7-2c3639a82b32",
+          "rawMaterialId": null,
+          "productName": "Digitalização / Scanner por página",
+          "quantity": 1,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "1",
+          "itemTotalAmount": "1"
+        },
+        {
+          "id": "d8bd5756-8dba-4f46-901f-3da5818d5ac1",
+          "quoteId": "b576bd46-6413-4c2a-9cb7-2c3639a82b32",
+          "rawMaterialId": null,
+          "productName": "Xerox Colorida A4",
+          "quantity": 3,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "2",
+          "itemTotalAmount": "6"
+        },
+        {
+          "id": "789c0bcc-86b8-4dc6-b846-13fbc1af7148",
+          "quoteId": "b576bd46-6413-4c2a-9cb7-2c3639a82b32",
+          "rawMaterialId": "f1247b16-610e-48a4-b469-4e66ddda988b",
+          "productName": "xerox básica",
+          "quantity": 1,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 1,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "1",
+          "itemTotalAmount": "1"
+        },
+        {
+          "id": "5e6e7024-d218-423f-a6ef-f6fed35bfa6f",
+          "quoteId": "b576bd46-6413-4c2a-9cb7-2c3639a82b32",
+          "rawMaterialId": null,
+          "productName": "Impressão A4 Sulfite 75g",
+          "quantity": 5,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "1",
+          "itemTotalAmount": "5"
         }
       ]
     }
@@ -1571,6 +1729,75 @@
           "logs": []
         }
       ]
+    },
+    {
+      "id": "ef3552f8-3a9c-4cba-9a14-a96098303efc",
+      "orderNumber": "OS-2026-00014",
+      "quoteId": "b576bd46-6413-4c2a-9cb7-2c3639a82b32",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-09-29T16:41:33.220Z",
+      "fileUrl": null,
+      "barcode": "OS202600014",
+      "totalAmount": "92",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-09-29T16:41:33.263Z",
+      "updatedAt": "2026-09-29T16:41:33.263Z",
+      "stages": [
+        {
+          "id": "2dfce229-c563-407d-9fa9-d6e8ce88e8d0",
+          "workOrderId": "ef3552f8-3a9c-4cba-9a14-a96098303efc",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-29T16:41:33.263Z",
+          "updatedAt": "2026-09-29T16:41:33.263Z",
+          "logs": []
+        },
+        {
+          "id": "d3b47119-e4c1-41b0-bc2e-6862d2bc75b8",
+          "workOrderId": "ef3552f8-3a9c-4cba-9a14-a96098303efc",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-29T16:41:33.263Z",
+          "updatedAt": "2026-09-29T16:41:33.263Z",
+          "logs": []
+        },
+        {
+          "id": "27ed09a7-dd47-4e95-867b-7719af10f609",
+          "workOrderId": "ef3552f8-3a9c-4cba-9a14-a96098303efc",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-29T16:41:33.263Z",
+          "updatedAt": "2026-09-29T16:41:33.263Z",
+          "logs": []
+        },
+        {
+          "id": "a22ddeea-15f3-4f20-8457-47e77ba86b17",
+          "workOrderId": "ef3552f8-3a9c-4cba-9a14-a96098303efc",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-29T16:41:33.263Z",
+          "updatedAt": "2026-09-29T16:41:33.263Z",
+          "logs": []
+        },
+        {
+          "id": "070324a9-7cd1-48b1-8785-fdae5d0821f7",
+          "workOrderId": "ef3552f8-3a9c-4cba-9a14-a96098303efc",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-29T16:41:33.263Z",
+          "updatedAt": "2026-09-29T16:41:33.263Z",
+          "logs": []
+        }
+      ]
     }
   ],
   "employees": [
@@ -1779,6 +2006,24 @@
       "notes": null,
       "createdAt": "2026-09-28T17:35:12.061Z",
       "updatedAt": "2026-09-28T17:35:12.061Z"
+    },
+    {
+      "id": "afb56647-1dd5-44ee-b6b1-0f2304f8cc95",
+      "workOrderId": "ef3552f8-3a9c-4cba-9a14-a96098303efc",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00014",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "92",
+      "dueDate": "2026-09-29T16:41:33.220Z",
+      "paidAt": "2026-09-29T16:41:33.284Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-29T16:41:33.286Z",
+      "updatedAt": "2026-09-29T16:41:33.286Z"
     },
     {
       "id": "db503455-de46-4e6b-b38e-5f1eefdba066",
