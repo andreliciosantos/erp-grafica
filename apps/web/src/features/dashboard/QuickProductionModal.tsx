@@ -359,19 +359,12 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
         // Se o usuário estiver dentro de textarea ou dentro do mini-form de serviço avulso, não submeter o pedido geral
         const target = e.target as HTMLElement | null;
         if (target) {
-          if (target.tagName === 'TEXTAREA') return;
-          if (target.closest('[data-custom-form="true"]')) return;
-          // Se estiver focado em um botão normal (que não seja o botão de submit do pedido), deixar o evento nativo do botão
-          if (
-            target.tagName === 'BUTTON' &&
-            target.getAttribute('type') === 'button' &&
-            !target.hasAttribute('data-submit-btn')
-          ) {
-            return;
-          }
+          const tagName = target.tagName.toLowerCase();
+          if (tagName === 'textarea') return;
+          // Se estiver focado em um input dentro do form de custom item, deixa o form submeter
+          if (target.closest('form')) return;
         }
 
-        // Submeter o pedido se houver itens e não estiver pendente
         if (items.length > 0 && !createQuickOrderMutation.isPending) {
           e.preventDefault();
           createQuickOrderMutation.mutate();
@@ -381,7 +374,7 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, successOrderNumber, items, createQuickOrderMutation.isPending]);
+  }, [isOpen, successOrderNumber, items, createQuickOrderMutation]);
 
   const filteredPresets =
     activeCategory === 'TODOS'
@@ -395,49 +388,34 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
         onClose={handleResetModal}
         title="Produção Rápida de Balcão"
         description="Lançamento expresso sem necessidade de cadastro de cliente e com baixa automática de estoque"
-        maxWidth="5xl"
+        maxWidth="3xl"
         footer={
           !successOrderNumber ? (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/60">
-                  <ShoppingBag className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-none">Total a Cobrar</p>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-2xl font-black text-slate-900 dark:text-slate-100 leading-none tracking-tight">
-                      {formatCurrency(totalAmount)}
-                    </span>
-                    <span className="text-xs text-slate-500 font-medium leading-none">
-                      ({totalQuantity} unidades)
-                    </span>
-                  </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
+              <div>
+                <p className="text-[10px] text-slate-400 font-medium leading-none">Total a Cobrar</p>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 leading-none">
+                    {formatCurrency(totalAmount)}
+                  </span>
+                  <span className="text-xs text-slate-400 leading-none">({totalQuantity} unidades)</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <Button type="button" variant="secondary" size="md" onClick={handleResetModal}>
+                <Button type="button" variant="secondary" size="sm" onClick={handleResetModal}>
                   Cancelar
                 </Button>
                 <Button
                   type="button"
-                  data-submit-btn="true"
-                  size="md"
-                  onClick={() => {
-                    if (items.length > 0 && !createQuickOrderMutation.isPending) {
-                      createQuickOrderMutation.mutate();
-                    }
-                  }}
+                  size="sm"
+                  onClick={() => createQuickOrderMutation.mutate()}
                   isLoading={createQuickOrderMutation.isPending}
                   disabled={items.length === 0}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-4 py-2.5 shadow-md shadow-emerald-950/20 flex items-center gap-2"
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-md shadow-amber-950/20 px-4"
                 >
-                  <Zap className="w-4 h-4" />
-                  <span>Concluir Produção Rápida</span>
-                  <span className="px-1.5 py-0.5 text-[10px] bg-emerald-800/80 text-emerald-100 rounded font-mono font-bold tracking-wider border border-emerald-400/40">
-                    ENTER ↵
-                  </span>
+                  <Zap className="w-4 h-4 mr-1.5" />
+                  Concluir Produção Rápida
                 </Button>
               </div>
             </div>
@@ -445,7 +423,7 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
         }
       >
         {successOrderNumber ? (
-          <div className="py-6 text-center space-y-4">
+          <div className="py-8 text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center shadow-lg shadow-emerald-950/20">
               <CheckCircle2 className="w-8 h-8" />
             </div>
@@ -455,22 +433,22 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 Ordem de Serviço gerada:{' '}
-                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-base">
+                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                   {successOrderNumber}
                 </span>
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Valor Total: <strong className="text-slate-900 dark:text-slate-100">{formatCurrency(totalAmount)}</strong> ({totalQuantity} itens) •{' '}
+              <p className="text-xs text-slate-400">
+                Valor Total: <strong>{formatCurrency(totalAmount)}</strong> ({totalQuantity} itens) •{' '}
                 {paymentMethod === 'PENDING' ? 'A Pagar' : `Pago via ${paymentMethod}`}
               </p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                 ✓ Insumos e materiais vinculados foram descontados do estoque com sucesso.
               </p>
             </div>
-            <div className="pt-2 flex justify-center gap-3">
+            <div className="pt-4 flex justify-center gap-3">
               <Button
                 variant="outline"
-                size="md"
+                size="sm"
                 onClick={() => {
                   setItems([]);
                   setSuccessOrderNumber(null);
@@ -478,14 +456,14 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
               >
                 Novo Atendimento Rápido
               </Button>
-              <Button size="md" onClick={handleResetModal} className="flex items-center gap-1.5">
-                <span>Fechar</span>
-                <span className="px-1.5 py-0.5 text-[10px] bg-white/20 rounded font-mono font-bold">ENTER ↵</span>
+              <Button size="sm" onClick={handleResetModal}>
+                Fechar
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
+
             {errorMessage && (
               <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300">
                 <AlertCircle className="w-4 h-4 shrink-0" />
@@ -493,465 +471,467 @@ export const QuickProductionModal: React.FC<QuickProductionModalProps> = ({
               </div>
             )}
 
-            {/* Layout em 2 Colunas para Tela Única (POS / Balcão) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-              {/* Coluna da Esquerda: Catálogo de Serviços Rápidos (lg:col-span-7) */}
-              <div className="lg:col-span-7 flex flex-col space-y-3 min-w-0">
-                {/* Cabeçalho da seção */}
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <Zap className="w-3.5 h-3.5 text-amber-500" />
-                      Modelos Prontos de Serviços
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setIsPresetsManagerOpen(true)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-lg border border-emerald-200 dark:border-emerald-800 transition-colors shadow-2xs"
-                      title="Criar ou excluir modelos prontos de serviços rápidos"
-                    >
-                      <SlidersHorizontal className="w-3 h-3" />
-                      Gerenciar Modelos
-                    </button>
-                  </div>
-
-                  {/* Categorias */}
-                  <div className="flex items-center gap-1 text-xs overflow-x-auto pb-1 max-w-full">
-                    {availableCategories.map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setActiveCategory(cat)}
-                        className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-colors text-xs ${
-                          activeCategory === cat
-                            ? 'bg-emerald-600 text-white shadow-xs font-semibold'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
+            {/* Atalhos Rápidos (Presets) */}
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Modelos Prontos de Serviços
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsPresetsManagerOpen(true)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-lg border border-emerald-200 dark:border-emerald-800 transition-colors shadow-2xs"
+                    title="Criar ou excluir modelos prontos de serviços rápidos"
+                  >
+                    <SlidersHorizontal className="w-3 h-3" />
+                    Gerenciar Modelos
+                  </button>
                 </div>
 
-                {/* Grid de Botões Rápidos */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[300px] overflow-y-auto pr-1">
-                  {filteredPresets.map((preset) => {
-                    const hasStockWarning = Boolean(
-                      preset.rawMaterial && Number(preset.rawMaterial.currentStock) <= 0
-                    );
-
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        data-preset-card="true"
-                        onClick={(e) => {
-                          handleAddPreset(preset);
-                          (e.currentTarget as HTMLElement).blur();
-                        }}
-                        className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20 transition-all text-left group shadow-xs cursor-pointer"
-                        title={
-                          preset.rawMaterial
-                            ? `Clique para adicionar. Consome ${Number(preset.materialConsumeQty || 1)} de ${preset.rawMaterial.name}`
-                            : 'Clique para adicionar +1 à lista'
-                        }
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <span className="shrink-0 p-2 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/60 transition-colors">
-                            {getPresetIcon(preset.category, preset.name)}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 truncate leading-snug">
-                              {preset.name}
-                            </p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-                                {formatCurrency(Number(preset.defaultPrice))}
-                              </span>
-                              {hasStockWarning && (
-                                <span className="text-[10px] text-rose-500 font-bold bg-rose-50 dark:bg-rose-950/50 px-1 rounded">Sem estoque</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <Plus className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 shrink-0 ml-1.5 transition-colors" />
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Adicionar serviço avulso personalizado */}
-                <div className="pt-1">
-                  {!showCustomInput ? (
+                {/* Categorias */}
+                <div className="flex items-center gap-1 text-[11px] overflow-x-auto pb-1 max-w-full">
+                  {availableCategories.map((cat) => (
                     <button
+                      key={cat}
                       type="button"
-                      onClick={() => setShowCustomInput(true)}
-                      className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-semibold inline-flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+                      onClick={() => setActiveCategory(cat)}
+                      className={`px-2 py-0.5 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                        activeCategory === cat
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                     >
-                      <Plus className="w-4 h-4" />
-                      + Adicionar outro serviço personalizado (avulso)
+                      {cat}
                     </button>
-                  ) : (
-                    <form
-                      data-custom-form="true"
-                      onSubmit={handleAddCustom}
-                      className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2.5"
-                    >
-                      <div className="flex items-end gap-2">
-                        <div className="flex-1">
-                          <Input
-                            label="Descrição do Serviço"
-                            placeholder="Ex: Impressão Plotter A1 vegetal"
-                            value={customName}
-                            onChange={(e) => setCustomName(e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div className="w-24">
-                          <NumberInput
-                            label="Qtd"
-                            min={1}
-                            value={customQty}
-                            onChangeValue={(val) => setCustomQty(val)}
-                          />
-                        </div>
-                        <div className="w-28">
-                          <CurrencyInput
-                            label="Valor Unit."
-                            value={customPrice}
-                            onChangeValue={(val) => setCustomPrice(val)}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                        <div>
-                          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                            Material Consumido do Estoque (Opcional)
-                          </label>
-                          <select
-                            value={customMaterialId}
-                            onChange={(e) => setCustomMaterialId(e.target.value)}
-                            className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-700 dark:text-slate-200"
-                          >
-                            <option value="">(Nenhum insumo / Somente mão de obra)</option>
-                            {rawMaterials.map((m) => (
-                              <option key={m.id} value={m.id}>
-                                {m.name} — Disp: {Number(m.currentStock).toLocaleString()} {m.unitOfMeasure}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {customMaterialId && (
-                          <div>
-                            <NumberInput
-                              label="Consumo por unidade de serviço"
-                              value={customMaterialQty}
-                              min={1}
-                              step={1}
-                              onChangeValue={(val) => setCustomMaterialQty(Math.max(1, Math.round(val)))}
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex justify-end gap-1.5 pt-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowCustomInput(false)}
-                        >
-                          Cancelar
-                        </Button>
-                        <Button type="submit" size="sm">
-                          Adicionar
-                        </Button>
-                      </div>
-                    </form>
-                  )}
+                  ))}
                 </div>
               </div>
 
-              {/* Coluna da Direita: Atendimento Atual / Comanda & Checkout (lg:col-span-5) */}
-              <div className="lg:col-span-5 flex flex-col bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 p-3.5 space-y-3 min-w-0">
-                {/* Cabeçalho do Carrinho */}
-                <div className="flex items-center justify-between shrink-0">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    Serviços no Atendimento ({items.length})
-                  </span>
-                  {items.length > 0 && (
+              {/* Grid de Botões Rápidos */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {filteredPresets.map((preset) => {
+                  const hasStockWarning = Boolean(
+                    preset.rawMaterial && Number(preset.rawMaterial.currentStock) <= 0
+                  );
+
+                  return (
                     <button
+                      key={preset.id}
                       type="button"
-                      onClick={handleClear}
-                      className="text-xs text-rose-600 dark:text-rose-400 hover:underline font-medium transition-colors cursor-pointer"
+                      onClick={() => handleAddPreset(preset)}
+                      className="flex items-center justify-between p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 transition-all text-left group shadow-2xs"
+                      title={
+                        preset.rawMaterial
+                          ? `Clique para adicionar. Consome ${Number(preset.materialConsumeQty || 1)} de ${preset.rawMaterial.name}`
+                          : 'Clique para adicionar +1 à lista'
+                      }
                     >
-                      Limpar lista
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="shrink-0 p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/60 transition-colors">
+                          {getPresetIcon(preset.category, preset.name)}
+                        </span>
+                        <div className="truncate">
+                          <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate leading-snug">
+                            {preset.name}
+                          </p>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                              {formatCurrency(Number(preset.defaultPrice))}
+                            </span>
+                            {hasStockWarning && (
+                              <span className="text-[9px] text-rose-500 font-bold">Sem estoque</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 shrink-0 ml-1 transition-colors" />
                     </button>
-                  )}
-                </div>
+                  );
+                })}
+              </div>
 
-                {/* Lista de itens no carrinho */}
-                {items.length === 0 ? (
-                  <div className="min-h-[140px] flex flex-col items-center justify-center p-4 text-center border-2 border-dashed border-slate-200 dark:border-slate-700/60 rounded-xl text-slate-400 dark:text-slate-500 space-y-1.5 bg-white/50 dark:bg-slate-900/30">
-                    <ShoppingBag className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-                    <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Nenhum serviço selecionado ainda.</p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                      Clique nos modelos ao lado para adicionar ao pedido.
-                    </p>
-                  </div>
+              {/* Linha para adicionar serviço avulso customizado */}
+              <div className="pt-1">
+                {!showCustomInput ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomInput(true)}
+                    className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium inline-flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    + Adicionar outro serviço personalizado (avulso)
+                  </button>
                 ) : (
-                  <div className="max-h-[160px] overflow-y-auto space-y-2 pr-1">
-                    {items.map((item) => {
-                      const selectedMat = rawMaterials.find((m) => m.id === item.rawMaterialId);
-                      const consumePerUnit = item.materialQuantity ?? 1;
-                      const totalConsumed = selectedMat ? Math.ceil(item.quantity * consumePerUnit) : 0;
-                      const isStockShortage = selectedMat && Number(selectedMat.currentStock) < totalConsumed;
+                  <form
+                    onSubmit={handleAddCustom}
+                    className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2"
+                  >
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <Input
+                          label="Descrição do Serviço"
+                          placeholder="Ex: Impressão Plotter A1 vegetal"
+                          value={customName}
+                          onChange={(e) => setCustomName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="w-24">
+                        <NumberInput
+                          label="Qtd"
+                          min={1}
+                          value={customQty}
+                          onChangeValue={(val) => setCustomQty(val)}
+                        />
+                      </div>
+                      <div className="w-28">
+                        <CurrencyInput
+                          label="Valor Unit."
+                          value={customPrice}
+                          onChangeValue={(val) => setCustomPrice(val)}
+                        />
+                      </div>
+                    </div>
 
-                      return (
-                        <div
-                          key={item.id}
-                          className="p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl shadow-2xs space-y-2 transition-all hover:border-slate-300 dark:hover:border-slate-600"
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">
+                          Material Consumido do Estoque (Opcional)
+                        </label>
+                        <select
+                          value={customMaterialId}
+                          onChange={(e) => setCustomMaterialId(e.target.value)}
+                          className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-700 dark:text-slate-200"
                         >
-                          {/* Linha Principal do Serviço */}
-                          <div className="flex items-center justify-between gap-2 text-xs">
-                            <div className="min-w-0 flex-1">
-                              <p className="font-semibold text-slate-800 dark:text-slate-100 truncate text-xs sm:text-sm">
-                                {item.name}
-                              </p>
-                              <p className="text-[11px] text-slate-400">
-                                {formatCurrency(item.unitPrice)} un.
-                              </p>
-                            </div>
+                          <option value="">(Nenhum insumo / Somente mão de obra)</option>
+                          {rawMaterials.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name} — Disp: {Number(m.currentStock).toLocaleString()} {m.unitOfMeasure}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                            {/* Controle de Quantidade */}
-                            <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                              <button
-                                type="button"
-                                onClick={() => handleUpdateQuantity(item.id, -1)}
-                                className="p-1 rounded text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-colors"
-                                title="Diminuir quantidade"
-                                aria-label={`Diminuir ${item.name}`}
-                              >
-                                <Minus className="w-3 h-3" />
-                              </button>
-                              <span className="w-7 text-center font-bold text-slate-800 dark:text-slate-100 text-xs">
-                                {item.quantity}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleUpdateQuantity(item.id, 1)}
-                                className="p-1 rounded text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-colors"
-                                title="Aumentar quantidade"
-                                aria-label={`Aumentar ${item.name}`}
-                              >
-                                <Plus className="w-3 h-3" />
-                              </button>
-                            </div>
+                      {customMaterialId && (
+                        <div>
+                          <NumberInput
+                            label="Consumo por unidade de serviço"
+                            value={customMaterialQty}
+                            min={1}
+                            step={1}
+                            onChangeValue={(val) => setCustomMaterialQty(Math.max(1, Math.round(val)))}
+                          />
+                        </div>
+                      )}
+                    </div>
 
-                            {/* Preço Unitário Editável */}
-                            <div className="w-20">
-                              <CurrencyInput
-                                value={item.unitPrice}
-                                onChangeValue={(val) => handleUpdateUnitPrice(item.id, val)}
-                                className="text-right py-0.5 h-7 text-xs"
-                              />
-                            </div>
+                    <div className="flex justify-end gap-1 pt-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowCustomInput(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button type="submit" size="sm">
+                        Adicionar
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
 
-                            {/* Subtotal */}
-                            <div className="w-16 text-right font-bold text-slate-800 dark:text-slate-100 text-xs">
-                              {formatCurrency(item.quantity * item.unitPrice)}
-                            </div>
+            {/* Lista de Itens Lançados (Caixa do Serviço com Material Consumido) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <ShoppingBag className="w-3.5 h-3.5 text-emerald-500" />
+                  Serviços no Atendimento ({items.length})
+                </span>
+                {items.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className="text-[11px] text-slate-400 hover:text-rose-500 transition-colors"
+                  >
+                    Limpar lista
+                  </button>
+                )}
+              </div>
 
-                            {/* Remover */}
+              {items.length === 0 ? (
+                <div className="p-4 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 dark:text-slate-500 space-y-1">
+                  <p className="text-xs font-medium">Nenhum serviço selecionado ainda.</p>
+                  <p className="text-[11px]">
+                    Clique nos modelos acima ou adicione um serviço avulso para iniciar o atendimento.
+                  </p>
+                </div>
+              ) : (
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  {items.map((item) => {
+                    const selectedMat = rawMaterials.find((m) => m.id === item.rawMaterialId);
+                    const consumePerUnit = item.materialQuantity ?? 1;
+                    const totalConsumed = selectedMat ? Math.ceil(item.quantity * consumePerUnit) : 0;
+                    const isStockShortage = selectedMat && Number(selectedMat.currentStock) < totalConsumed;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xs space-y-2.5 transition-all hover:border-slate-300 dark:hover:border-slate-700"
+                      >
+                        {/* Linha Principal do Serviço */}
+                        <div className="flex items-center justify-between gap-3 text-xs">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-slate-800 dark:text-slate-100 truncate text-xs">
+                              {item.name}
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              {formatCurrency(item.unitPrice)} un.
+                            </p>
+                          </div>
+
+                          {/* Controle de Quantidade */}
+                          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
                             <button
                               type="button"
-                              onClick={() => handleRemoveItem(item.id)}
-                              className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
-                              title="Remover serviço"
-                              aria-label={`Remover ${item.name}`}
+                              onClick={() => handleUpdateQuantity(item.id, -1)}
+                              className="p-1 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                              title="Diminuir quantidade"
+                              aria-label={`Diminuir ${item.name}`}
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="w-8 text-center font-bold text-slate-800 dark:text-slate-100 text-xs">
+                              {item.quantity}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateQuantity(item.id, 1)}
+                              className="p-1 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                              title="Aumentar quantidade"
+                              aria-label={`Aumentar ${item.name}`}
+                            >
+                              <Plus className="w-3 h-3" />
                             </button>
                           </div>
 
-                          {/* Linha do Material Consumido na Mesma Caixa */}
-                          <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/40 -mx-2.5 -mb-2.5 p-2 rounded-b-xl space-y-1.5 text-xs">
-                            <div className="flex flex-wrap items-center justify-between gap-1">
-                              <div className="flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-300 text-[11px]">
-                                <Package className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                                <span>Material gasto:</span>
-                              </div>
+                          {/* Preço Unitário Editável */}
+                          <div className="w-24">
+                            <CurrencyInput
+                              value={item.unitPrice}
+                              onChangeValue={(val) => handleUpdateUnitPrice(item.id, val)}
+                              className="text-right py-1 h-8 text-xs"
+                            />
+                          </div>
 
-                              {item.rawMaterialId && selectedMat && (
-                                <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                                  <span className="font-semibold text-slate-700 dark:text-slate-300">
-                                    Total: <strong className="text-slate-900 dark:text-slate-100">{totalConsumed} {selectedMat.unitOfMeasure}</strong>
-                                  </span>
-                                  {isStockShortage ? (
-                                    <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-900">
-                                      ⚠️ Saldo ({Number(selectedMat.currentStock).toLocaleString()} {selectedMat.unitOfMeasure})
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded font-medium border border-emerald-200/50 dark:border-emerald-800/50">
-                                      ✓ Estoque: {Number(selectedMat.currentStock).toLocaleString()} {selectedMat.unitOfMeasure}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                          {/* Subtotal */}
+                          <div className="w-20 text-right font-bold text-slate-800 dark:text-slate-100 text-xs">
+                            {formatCurrency(item.quantity * item.unitPrice)}
+                          </div>
+
+                          {/* Remover */}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItem(item.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                            title="Remover serviço"
+                            aria-label={`Remover ${item.name}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Linha do Material Consumido na Mesma Caixa */}
+                        <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/40 -mx-3 -mb-3 p-3 rounded-b-2xl space-y-2 text-[11px]">
+                          {/* Cabeçalho da seção com identificação e status do estoque */}
+                          <div className="flex flex-wrap items-center justify-between gap-1.5">
+                            <div className="flex items-center gap-1.5 font-semibold text-slate-600 dark:text-slate-300">
+                              <Package className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                              <span>Material gasto:</span>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-1.5 items-center">
-                              <div className={item.rawMaterialId && selectedMat ? 'sm:col-span-8' : 'sm:col-span-12'}>
-                                <select
-                                  value={item.rawMaterialId || ''}
-                                  onChange={(e) => handleUpdateItemMaterial(item.id, e.target.value || null)}
-                                  className="w-full text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-700 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-emerald-500 shadow-2xs"
-                                >
-                                  <option value="">(Sem consumo de matéria-prima)</option>
-                                  {rawMaterials.map((m) => (
-                                    <option key={m.id} value={m.id}>
-                                      {m.name} — Estoque: {Number(m.currentStock).toLocaleString()} {m.unitOfMeasure}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-
-                              {item.rawMaterialId && selectedMat && (
-                                <div className="sm:col-span-4 flex items-center justify-between sm:justify-end gap-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-0.5 shadow-2xs">
-                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
-                                    Gasto/un:
+                            {item.rawMaterialId && selectedMat && (
+                              <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                  Total: <strong className="text-slate-900 dark:text-slate-100">{totalConsumed} {selectedMat.unitOfMeasure}</strong>
+                                </span>
+                                {isStockShortage ? (
+                                  <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
+                                    ⚠️ Saldo insuficiente ({Number(selectedMat.currentStock).toLocaleString()} {selectedMat.unitOfMeasure})
                                   </span>
-                                  <div className="flex items-center gap-1">
-                                    <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded border border-slate-200 dark:border-slate-700">
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          handleUpdateItemMaterialQty(
-                                            item.id,
-                                            Math.max(1, (item.materialQuantity ?? 1) - 1)
-                                          )
-                                        }
-                                        className="p-0.5 rounded text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-colors"
-                                        title="Diminuir gasto por unidade"
-                                        aria-label="Diminuir gasto de material"
-                                      >
-                                        <Minus className="w-2.5 h-2.5" />
-                                      </button>
-                                      <input
-                                        type="number"
-                                        min={1}
-                                        step={1}
-                                        value={item.materialQuantity ?? 1}
-                                        onChange={(e) => {
-                                          const val = parseInt(e.target.value, 10);
-                                          handleUpdateItemMaterialQty(item.id, isNaN(val) ? 1 : Math.max(1, val));
-                                        }}
-                                        onWheel={(e) => (e.target as HTMLElement).blur()}
-                                        className="w-7 text-center text-xs font-bold text-slate-800 dark:text-slate-100 bg-transparent border-0 p-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        title="Quantidade de material gasta por unidade deste serviço"
-                                      />
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          handleUpdateItemMaterialQty(
-                                            item.id,
-                                            (item.materialQuantity ?? 1) + 1
-                                          )
-                                        }
-                                        className="p-0.5 rounded text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-colors"
-                                        title="Aumentar gasto por unidade"
-                                        aria-label="Aumentar gasto de material"
-                                      >
-                                        <Plus className="w-2.5 h-2.5" />
-                                      </button>
-                                    </div>
-                                    <span className="text-[10px] text-slate-400 font-semibold whitespace-nowrap">
-                                      {selectedMat.unitOfMeasure}
-                                    </span>
+                                ) : (
+                                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md font-medium border border-emerald-200/50 dark:border-emerald-800/50">
+                                    ✓ Estoque: {Number(selectedMat.currentStock).toLocaleString()} {selectedMat.unitOfMeasure}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Controles: Seletor de Matéria-Prima e Quantidade por Unidade em Grid Sem Sobreposição */}
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                            <div className={item.rawMaterialId && selectedMat ? 'sm:col-span-8' : 'sm:col-span-12'}>
+                              <select
+                                value={item.rawMaterialId || ''}
+                                onChange={(e) => handleUpdateItemMaterial(item.id, e.target.value || null)}
+                                className="w-full text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-emerald-500 shadow-2xs"
+                              >
+                                <option value="">(Sem consumo de matéria-prima)</option>
+                                {rawMaterials.map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    {m.name} — Estoque: {Number(m.currentStock).toLocaleString()} {m.unitOfMeasure}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {item.rawMaterialId && selectedMat && (
+                              <div className="sm:col-span-4 flex items-center justify-between sm:justify-end gap-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1 shadow-2xs">
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
+                                  Gasto/un:
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleUpdateItemMaterialQty(
+                                          item.id,
+                                          Math.max(1, (item.materialQuantity ?? 1) - 1)
+                                        )
+                                      }
+                                      className="p-1 rounded text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                                      title="Diminuir gasto por unidade"
+                                      aria-label="Diminuir gasto de material"
+                                    >
+                                      <Minus className="w-2.5 h-2.5" />
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      step={1}
+                                      value={item.materialQuantity ?? 1}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value, 10);
+                                        handleUpdateItemMaterialQty(item.id, isNaN(val) ? 1 : Math.max(1, val));
+                                      }}
+                                      onWheel={(e) => (e.target as HTMLElement).blur()}
+                                      className="w-8 text-center text-xs font-bold text-slate-800 dark:text-slate-100 bg-transparent border-0 p-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                      title="Quantidade de material gasta por unidade deste serviço"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleUpdateItemMaterialQty(
+                                          item.id,
+                                          (item.materialQuantity ?? 1) + 1
+                                        )
+                                      }
+                                      className="p-1 rounded text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                                      title="Aumentar gasto por unidade"
+                                      aria-label="Aumentar gasto de material"
+                                    >
+                                      <Plus className="w-2.5 h-2.5" />
+                                    </button>
                                   </div>
+                                  <span className="text-[10px] text-slate-400 font-semibold whitespace-nowrap">
+                                    {selectedMat.unitOfMeasure}
+                                  </span>
                                 </div>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Forma de Pagamento */}
-                <div className="space-y-1 pt-1">
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                    Forma de Pagamento
-                  </label>
-                  <div className="grid grid-cols-5 gap-1 text-xs">
-                    {[
-                      { key: PaymentMethod.PIX, label: 'PIX', icon: <QrCode className="w-3.5 h-3.5" /> },
-                      { key: PaymentMethod.CASH, label: 'Dinheiro', icon: <DollarSign className="w-3.5 h-3.5" /> },
-                      { key: PaymentMethod.DEBIT_CARD, label: 'Débito', icon: <CreditCard className="w-3.5 h-3.5" /> },
-                      { key: PaymentMethod.CREDIT_CARD, label: 'Crédito', icon: <CreditCard className="w-3.5 h-3.5" /> },
-                      { key: 'PENDING', label: 'Pendente', icon: <Clock className="w-3.5 h-3.5" /> },
-                    ].map((pm) => (
-                      <button
-                        key={pm.key}
-                        type="button"
-                        onClick={() => setPaymentMethod(pm.key as any)}
-                        className={`py-1.5 px-1 rounded-xl font-medium border flex flex-col items-center justify-center gap-1 transition-all text-xs cursor-pointer ${
-                          paymentMethod === pm.key
-                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs font-bold'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        {pm.icon}
-                        <span className="truncate text-[11px]">{pm.label}</span>
-                      </button>
-                    ))}
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
+              )}
+            </div>
 
-                {/* Situação da Entrega & Obs */}
-                <div className="space-y-2 pt-1">
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+            {/* Opções Rápidas de Finalização */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* Forma de Pagamento */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Forma de Pagamento
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 text-xs">
+                  {[
+                    { key: PaymentMethod.PIX, label: 'PIX', icon: <QrCode className="w-3 h-3" /> },
+                    { key: PaymentMethod.CASH, label: 'Dinheiro', icon: <DollarSign className="w-3 h-3" /> },
+                    { key: PaymentMethod.DEBIT_CARD, label: 'Débito', icon: <CreditCard className="w-3 h-3" /> },
+                    { key: PaymentMethod.CREDIT_CARD, label: 'Crédito', icon: <CreditCard className="w-3 h-3" /> },
+                    { key: 'PENDING', label: 'Pendente', icon: <Clock className="w-3 h-3" /> },
+                  ].map((pm) => (
                     <button
+                      key={pm.key}
                       type="button"
-                      onClick={() => setDeliveryStatus(WorkOrderStatus.DELIVERED)}
-                      className={`py-1.5 px-2 rounded-xl font-medium border flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                        deliveryStatus === WorkOrderStatus.DELIVERED
-                          ? 'bg-teal-600 text-white border-teal-600 shadow-xs font-semibold'
-                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      onClick={() => setPaymentMethod(pm.key as any)}
+                      className={`py-1 px-1.5 rounded-xl font-medium border flex items-center justify-center gap-1 transition-all text-xs ${
+                        paymentMethod === pm.key
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
-                      <Check className="w-3.5 h-3.5 shrink-0" />
-                      <span>Entregue na Hora</span>
+                      {pm.icon}
+                      <span className="truncate">{pm.label}</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeliveryStatus(WorkOrderStatus.PENDING)}
-                      className={`py-1.5 px-2 rounded-xl font-medium border flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                        deliveryStatus === WorkOrderStatus.PENDING
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs font-semibold'
-                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <Clock className="w-3.5 h-3.5 shrink-0" />
-                      <span>Fila de Produção</span>
-                    </button>
-                  </div>
-
-                  <div>
-                    <Input
-                      label="Nome do Solicitante ou Obs (Opcional)"
-                      placeholder="Ex: João da Silva / Retira às 17h"
-                      value={clientNotes}
-                      onChange={(e) => setClientNotes(e.target.value)}
-                    />
-                  </div>
+                  ))}
                 </div>
               </div>
+
+              {/* Situação da Entrega */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Situação da Entrega
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryStatus(WorkOrderStatus.DELIVERED)}
+                    className={`py-1.5 px-2 rounded-xl font-medium border flex items-center gap-1.5 transition-all ${
+                      deliveryStatus === WorkOrderStatus.DELIVERED
+                        ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Check className="w-3.5 h-3.5 shrink-0" />
+                    <div className="text-left">
+                      <p className="font-bold text-[11px]">Entregue na Hora</p>
+                      <p className="text-[9px] opacity-80">Retirada imediata</p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryStatus(WorkOrderStatus.PENDING)}
+                    className={`py-1.5 px-2 rounded-xl font-medium border flex items-center gap-1.5 transition-all ${
+                      deliveryStatus === WorkOrderStatus.PENDING
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                    <div className="text-left">
+                      <p className="font-bold text-[11px]">Fila de Produção</p>
+                      <p className="text-[9px] opacity-80">Aguardando fabricação</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Observação / Nome avulso */}
+            <div>
+              <Input
+                label="Nome do Solicitante ou Obs (Opcional)"
+                placeholder="Ex: João da Silva / Retira às 17h"
+                value={clientNotes}
+                onChange={(e) => setClientNotes(e.target.value)}
+              />
             </div>
           </div>
         )}

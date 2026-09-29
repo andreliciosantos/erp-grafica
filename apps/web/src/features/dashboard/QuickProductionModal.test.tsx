@@ -261,7 +261,7 @@ describe('QuickProductionModal', () => {
     expect(screen.getByText('2 FL')).toBeInTheDocument();
   });
 
-  it('submits quick order when pressing ENTER key', async () => {
+  it('submits quick order when pressing ENTER key without needing to click the button', async () => {
     vi.mocked(api.post).mockResolvedValueOnce({
       data: {
         id: 'wo-quick-enter',
@@ -278,7 +278,13 @@ describe('QuickProductionModal', () => {
 
     expect(screen.getByText('Serviços no Atendimento (1)')).toBeInTheDocument();
 
-    // Press ENTER key anywhere in the document
+    // Verify button has no ENTER indicator text
+    const submitBtn = screen.getByRole('button', { name: /concluir produção rápida/i });
+    expect(submitBtn).toBeInTheDocument();
+    expect(submitBtn).toHaveTextContent('Concluir Produção Rápida');
+    expect(submitBtn).not.toHaveTextContent('ENTER');
+
+    // Press ENTER key anywhere
     await userEvent.keyboard('{Enter}');
 
     await waitFor(() => {
