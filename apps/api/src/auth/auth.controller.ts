@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, HttpCode, HttpStatus, Req } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -12,6 +12,7 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ActivateAccountDto } from './dto/activate-account.dto';
+import { FirstLoginChangePasswordDto } from './dto/first-login-change-password.dto';
 import { AuthResponseDto, VerifyTokenResponseDto } from '@erp/shared-types';
 
 @ApiTags('Autenticação')
@@ -79,5 +80,25 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Token inválido ou expirado.' })
   async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ success: boolean; message: string }> {
     return this.authService.resetPassword(dto);
+  }
+
+  @Post('first-login-change-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Definir senha definitiva no primeiro acesso',
+    description: 'Atualiza a senha temporária para a senha definitiva pessoal do colaborador no primeiro login.',
+  })
+  @ApiResponse({ status: 200, description: 'Senha definitiva gravada e usuário autenticado.' })
+  @ApiBadRequestResponse({ description: 'Dados inválidos ou requisitos de senha não atendidos.' })
+  async firstLoginChangePassword(
+    @Body() dto: FirstLoginChangePasswordDto,
+    @Req() req: any,
+  ): Promise<AuthResponseDto> {
+    const authHeader = req.headers?.authorization;
+    const token = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+      ? authHeader.substring(7)
+      : undefined;
+
+    return this.authService.firstLoginChangePassword(dto, token);
   }
 }

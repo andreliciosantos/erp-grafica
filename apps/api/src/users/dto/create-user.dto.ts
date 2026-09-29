@@ -10,10 +10,10 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'E-mail é obrigatório.' })
   email!: string;
 
-  @IsString({ message: 'Senha deve ser uma string.' })
-  @MinLength(6, { message: 'Senha deve ter no mínimo 6 caracteres.' })
-  @IsOptional()
-  password?: string;
+  @IsString({ message: 'A senha temporária deve ser uma string.' })
+  @MinLength(6, { message: 'A senha temporária deve ter no mínimo 6 caracteres.' })
+  @IsNotEmpty({ message: 'A senha temporária é obrigatória.' })
+  password!: string;
 
   @IsEnum(Role, { message: 'Perfil inválido.' })
   @IsOptional()

@@ -107,4 +107,62 @@ describe('LoginPage', () => {
       expect(screen.getByText('Link de recuperação enviado com sucesso!')).toBeInTheDocument();
     });
   });
+
+  it('should present first login password change view when mustChangePassword is true', async () => {
+    const tempUser = {
+      id: 'usr-temp-1',
+      name: 'Novo Colaborador',
+      email: 'novo@erpgrafica.com',
+      role: Role.COMMERCIAL,
+      mustChangePassword: true,
+    };
+
+    vi.mocked(api.post).mockResolvedValueOnce({
+      data: {
+        accessToken: 'temp-jwt-token',
+        refreshToken: 'temp-refresh-token',
+        mustChangePassword: true,
+        user: tempUser,
+      },
+    });
+
+    renderWithProviders(<LoginPage />);
+
+    await userEvent.type(screen.getByLabelText(/e-mail de acesso/i), 'novo@erpgrafica.com');
+    await userEvent.type(screen.getByLabelText(/senha/i), 'Temp@123');
+    await userEvent.click(screen.getByRole('button', { name: /entrar no sistema/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeiro Acesso ao Sistema')).toBeInTheDocument();
+      expect(screen.getByText(/cadastre agora sua/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/nova senha definitiva/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/confirmar nova senha/i)).toBeInTheDocument();
+    });
+
+    // Definir senha definitiva
+    await userEvent.type(screen.getByLabelText(/nova senha definitiva/i), 'Definitiva@2026');
+    await userEvent.type(screen.getByLabelText(/confirmar nova senha/i), 'Definitiva@2026');
+
+    vi.mocked(api.post).mockResolvedValueOnce({
+      data: {
+        accessToken: 'permanent-jwt-token',
+        refreshToken: 'permanent-refresh-token',
+        mustChangePassword: false,
+        user: { ...tempUser, mustChangePassword: false },
+      },
+    });
+
+    const saveBtn = screen.getByRole('button', { name: /salvar senha e entrar no erp/i });
+    await userEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith(
+        '/auth/first-login-change-password',
+        { newPassword: 'Definitiva@2026' },
+        { headers: { Authorization: 'Bearer temp-jwt-token' } }
+      );
+      expect(useAuthStore.getState().isAuthenticated).toBe(true);
+      expect(useAuthStore.getState().user?.mustChangePassword).toBe(false);
+    });
+  });
 });

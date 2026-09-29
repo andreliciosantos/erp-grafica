@@ -9,6 +9,7 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ActivateAccountDto } from './dto/activate-account.dto';
+import { FirstLoginChangePasswordDto } from './dto/first-login-change-password.dto';
 import { AuthResponseDto, Role, VerifyTokenResponseDto } from '@erp/shared-types';
 
 @Injectable()
@@ -31,16 +32,7 @@ export class AuthService {
 
     if (!user.passwordHash) {
       throw new UnauthorizedException(
-        'Esta conta ainda não possui senha cadastrada. Verifique o e-mail de ativação enviado para definir sua senha de acesso.'
-      );
-    }
-
-    const isRoot = Boolean(user.isRoot || user.email === 'admin@erpgrafica.com');
-
-    // Usuário comum exige confirmação prévia de e-mail; o Administrador Principal (Root) é isento
-    if (!isRoot && !user.emailVerified) {
-      throw new UnauthorizedException(
-        'E-mail ainda não confirmado. Acesse o link enviado para o seu e-mail para ativar sua conta.'
+        'Esta conta ainda não possui senha cadastrada. Entre em contato com o administrador do sistema.'
       );
     }
 
@@ -205,7 +197,64 @@ export class AuthService {
     };
   }
 
-  private generateAuthResponse(user: { id: string; email: string; name: string; role: any }): AuthResponseDto {
+  async firstLoginChangePassword(
+    dto: FirstLoginChangePasswordDto,
+    tokenOrUserId?: string,
+  ): Promise<AuthResponseDto> {
+    let userId: string | undefined;
+
+    if (tokenOrUserId) {
+      try {
+        const payload = this.jwtService.verify(tokenOrUserId);
+        userId = payload.sub;
+      } catch (_) {
+        userId = tokenOrUserId;
+      }
+    }
+
+    let user = null;
+
+    if (userId) {
+      user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+    } else if (dto.email && dto.temporaryPassword) {
+      const found = await this.prisma.user.findUnique({
+        where: { email: dto.email.trim().toLowerCase() },
+      });
+      if (found && found.passwordHash) {
+        const isValid = await bcrypt.compare(dto.temporaryPassword, found.passwordHash);
+        if (isValid) {
+          user = found;
+        }
+      }
+    }
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Credenciais inválidas ou usuário não autenticado.');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        mustChangePassword: false,
+        emailVerified: true,
+      },
+    });
+
+    return this.generateAuthResponse(updatedUser);
+  }
+
+  private generateAuthResponse(user: {
+    id: string;
+    email: string;
+    name: string;
+    role: any;
+    mustChangePassword?: boolean;
+  }): AuthResponseDto {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -221,14 +270,18 @@ export class AuthService {
       expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d') as `${number}d` | `${number}h` | `${number}m` | `${number}s`,
     });
 
+    const mustChange = Boolean(user.mustChangePassword);
+
     return {
       accessToken,
       refreshToken,
+      mustChangePassword: mustChange,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role as Role,
+        mustChangePassword: mustChange,
       },
     };
   }

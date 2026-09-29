@@ -15,6 +15,7 @@ export interface UserSummary {
   isActive: boolean;
   isRoot: boolean;
   emailVerified: boolean;
+  mustChangePassword?: boolean;
   hasPassword?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -39,35 +40,23 @@ export class UsersService {
 
   async create(dto: CreateUserDto): Promise<UserSummary> {
     const existing = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { email: dto.email.trim().toLowerCase() },
     });
     if (existing) {
       throw new ConflictException('Já existe um usuário com este e-mail.');
     }
 
-    let passwordHash: string | null = null;
-    let activationToken: string | null = null;
-    let activationTokenExpires: Date | null = null;
-    let emailVerified = false;
-
-    if (dto.password) {
-      passwordHash = await bcrypt.hash(dto.password, 10);
-      emailVerified = true;
-    } else {
-      activationToken = crypto.randomBytes(32).toString('hex');
-      activationTokenExpires = new Date(Date.now() + 48 * 3600 * 1000); // 48h
-    }
+    const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const created = await this.prisma.user.create({
       data: {
         name: dto.name,
-        email: dto.email,
+        email: dto.email.trim().toLowerCase(),
         passwordHash,
         role: (dto.role as Role) || Role.OPERATOR,
         isActive: dto.isActive !== undefined ? dto.isActive : true,
-        emailVerified,
-        activationToken,
-        activationTokenExpires,
+        emailVerified: true,
+        mustChangePassword: true,
       },
       select: {
         id: true,
@@ -76,23 +65,17 @@ export class UsersService {
         role: true,
         isActive: true,
         emailVerified: true,
+        mustChangePassword: true,
         createdAt: true,
       },
     });
-
-    if (activationToken) {
-      await this.mailService.sendUserInvitation({
-        to: created.email,
-        name: created.name,
-        token: activationToken,
-      });
-    }
 
     return {
       ...created,
       role: created.role as Role,
       isRoot: false,
-      hasPassword: Boolean(passwordHash),
+      hasPassword: true,
+      mustChangePassword: true,
     };
   }
 
@@ -147,6 +130,7 @@ export class UsersService {
           isActive: true,
           isRoot: true,
           emailVerified: true,
+          mustChangePassword: true,
           passwordHash: true,
           createdAt: true,
         },
@@ -164,6 +148,7 @@ export class UsersService {
           isActive: u.isActive,
           isRoot,
           emailVerified: isRoot ? true : u.emailVerified,
+          mustChangePassword: Boolean(u.mustChangePassword),
           hasPassword: Boolean(u.passwordHash),
           createdAt: u.createdAt,
         };
@@ -188,6 +173,7 @@ export class UsersService {
         isActive: true,
         isRoot: true,
         emailVerified: true,
+        mustChangePassword: true,
         passwordHash: true,
         createdAt: true,
       },
@@ -207,6 +193,7 @@ export class UsersService {
       isActive: user.isActive,
       isRoot,
       emailVerified: isRoot ? true : user.emailVerified,
+      mustChangePassword: Boolean(user.mustChangePassword),
       hasPassword: Boolean(user.passwordHash),
       createdAt: user.createdAt,
     };
@@ -233,6 +220,7 @@ export class UsersService {
     if (dto.password) {
       dataToUpdate['passwordHash'] = await bcrypt.hash(dto.password, 10);
       dataToUpdate['emailVerified'] = true;
+      dataToUpdate['mustChangePassword'] = true;
     }
 
     const updated = await this.prisma.user.update({
@@ -246,6 +234,7 @@ export class UsersService {
         isActive: true,
         isRoot: true,
         emailVerified: true,
+        mustChangePassword: true,
         passwordHash: true,
         updatedAt: true,
       },
@@ -261,6 +250,7 @@ export class UsersService {
       isActive: updated.isActive,
       isRoot: isRootUpdated,
       emailVerified: isRootUpdated ? true : updated.emailVerified,
+      mustChangePassword: Boolean(updated.mustChangePassword),
       hasPassword: Boolean(updated.passwordHash),
       updatedAt: updated.updatedAt,
     };

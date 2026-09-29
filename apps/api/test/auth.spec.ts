@@ -46,12 +46,58 @@ describe('Módulo de Autenticação e Segurança (Auth / Guards)', () => {
 
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
+      expect(result.mustChangePassword).toBe(false);
       expect(result.user).toEqual({
         id: 'u-admin-1',
         name: 'Admin Test',
         email: 'admin@test.com',
         role: Role.ADMIN,
+        mustChangePassword: false,
       });
+    });
+
+    it('deve retornar mustChangePassword true quando o usuário estiver com senha temporária', async () => {
+      const validHash = await bcrypt.hash('temp123', 10);
+      (prismaMock.user.findUnique as any).mockResolvedValueOnce({
+        id: 'u-temp-1',
+        name: 'Usuário Temporário',
+        email: 'temp@test.com',
+        role: Role.OPERATOR,
+        isActive: true,
+        emailVerified: true,
+        mustChangePassword: true,
+        passwordHash: validHash,
+      });
+
+      const result = await authService.login({
+        email: 'temp@test.com',
+        password: 'temp123',
+      });
+
+      expect(result.mustChangePassword).toBe(true);
+      expect(result.user.mustChangePassword).toBe(true);
+    });
+
+    it('não deve exigir confirmação de e-mail para nenhum usuário no login', async () => {
+      const validHash = await bcrypt.hash('qualquer123', 10);
+      (prismaMock.user.findUnique as any).mockResolvedValueOnce({
+        id: 'u-operator-unverified',
+        name: 'Operador Não Verificado',
+        email: 'op@test.com',
+        role: Role.OPERATOR,
+        isActive: true,
+        emailVerified: false,
+        mustChangePassword: false,
+        passwordHash: validHash,
+      });
+
+      const response = await authService.login({
+        email: 'op@test.com',
+        password: 'qualquer123',
+      });
+
+      expect(response).toHaveProperty('accessToken');
+      expect(response.user.email).toBe('op@test.com');
     });
 
     it('deve lançar UnauthorizedException quando a senha estiver incorreta', async () => {
@@ -98,7 +144,7 @@ describe('Módulo de Autenticação e Segurança (Auth / Guards)', () => {
         role: Role.ADMIN,
         isActive: true,
         isRoot: true,
-        emailVerified: false, // Mesmo que estivesse false, root é isento
+        emailVerified: false,
         passwordHash: validHash,
       });
 
@@ -109,6 +155,44 @@ describe('Módulo de Autenticação e Segurança (Auth / Guards)', () => {
 
       expect(response).toHaveProperty('accessToken');
       expect(response.user.email).toBe('admin@erpgrafica.com');
+    });
+
+    it('deve alterar a senha no primeiro login com sucesso (firstLoginChangePassword)', async () => {
+      (prismaMock.user.findUnique as any).mockResolvedValueOnce({
+        id: 'u-first-1',
+        name: 'Primeiro Acesso',
+        email: 'primeiro@test.com',
+        role: Role.COMMERCIAL,
+        isActive: true,
+        mustChangePassword: true,
+        passwordHash: 'oldHash',
+      });
+      (prismaMock.user.update as any).mockResolvedValueOnce({
+        id: 'u-first-1',
+        name: 'Primeiro Acesso',
+        email: 'primeiro@test.com',
+        role: Role.COMMERCIAL,
+        isActive: true,
+        mustChangePassword: false,
+        passwordHash: 'newHash',
+      });
+
+      const result = await authService.firstLoginChangePassword(
+        { newPassword: 'NovaSenhaSegura123' },
+        'u-first-1',
+      );
+
+      expect(result.mustChangePassword).toBe(false);
+      expect(result.user.mustChangePassword).toBe(false);
+      expect(prismaMock.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'u-first-1' },
+          data: expect.objectContaining({
+            mustChangePassword: false,
+            emailVerified: true,
+          }),
+        }),
+      );
     });
   });
 

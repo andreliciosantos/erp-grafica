@@ -18,6 +18,7 @@ export interface UserItem {
   isActive: boolean;
   isRoot?: boolean;
   emailVerified: boolean;
+  mustChangePassword?: boolean;
   createdAt: string;
 }
 

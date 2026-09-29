@@ -85,6 +85,7 @@ model User {
   isActive               Boolean   @default(true)
   isRoot                 Boolean   @default(false)
   emailVerified          Boolean   @default(false)
+  mustChangePassword     Boolean   @default(false)
   activationToken        String?   @unique
   activationTokenExpires DateTime?
   resetPasswordToken     String?   @unique

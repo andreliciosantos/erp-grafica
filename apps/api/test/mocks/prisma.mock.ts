@@ -372,8 +372,14 @@ export function createMockPrismaService() {
         if (where?.OR) {
           list = list.filter((r) => {
             return where.OR.some((subCond: any) => {
-              if (subCond.status === PaymentStatus.PAID && subCond.paidAt) {
-                return r.status === PaymentStatus.PAID && r.paidAt && new Date(r.paidAt) >= subCond.paidAt.gte && new Date(r.paidAt) <= subCond.paidAt.lte;
+              if (subCond.status === PaymentStatus.PAID) {
+                if (subCond.paidAt) {
+                  return r.status === PaymentStatus.PAID && r.paidAt && new Date(r.paidAt) >= subCond.paidAt.gte && new Date(r.paidAt) <= subCond.paidAt.lte;
+                }
+                if (subCond.OR) {
+                  return r.status === PaymentStatus.PAID;
+                }
+                return r.status === PaymentStatus.PAID;
               }
               if (subCond.status?.in && subCond.dueDate) {
                 return subCond.status.in.includes(r.status) && new Date(r.dueDate) >= subCond.dueDate.gte && new Date(r.dueDate) <= subCond.dueDate.lte;
@@ -462,8 +468,14 @@ export function createMockPrismaService() {
         if (where?.OR) {
           list = list.filter((e) => {
             return where.OR.some((subCond: any) => {
-              if (subCond.status === PaymentStatus.PAID && subCond.paidAt) {
-                return e.status === PaymentStatus.PAID && e.paidAt && new Date(e.paidAt) >= subCond.paidAt.gte && new Date(e.paidAt) <= subCond.paidAt.lte;
+              if (subCond.status === PaymentStatus.PAID) {
+                if (subCond.paidAt) {
+                  return e.status === PaymentStatus.PAID && e.paidAt && new Date(e.paidAt) >= subCond.paidAt.gte && new Date(e.paidAt) <= subCond.paidAt.lte;
+                }
+                if (subCond.OR) {
+                  return e.status === PaymentStatus.PAID;
+                }
+                return e.status === PaymentStatus.PAID;
               }
               if (subCond.status?.in && subCond.dueDate) {
                 return subCond.status.in.includes(e.status) && new Date(e.dueDate) >= subCond.dueDate.gte && new Date(e.dueDate) <= subCond.dueDate.lte;

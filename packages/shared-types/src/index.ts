@@ -87,12 +87,20 @@ export interface LoginRequestDto {
 export interface AuthResponseDto {
   accessToken: string;
   refreshToken: string;
+  mustChangePassword?: boolean;
   user: {
     id: string;
     name: string;
     email: string;
     role: Role;
+    mustChangePassword?: boolean;
   };
+}
+
+export interface FirstLoginChangePasswordDto {
+  newPassword: string;
+  email?: string;
+  temporaryPassword?: string;
 }
 
 export interface JwtPayload {
@@ -126,6 +134,7 @@ export interface VerifyTokenResponseDto {
 export interface CreateUserRequestDto {
   name: string;
   email: string;
+  password?: string;
   role?: Role;
   isActive?: boolean;
 }
@@ -713,6 +722,7 @@ export interface UserItem {
   isActive: boolean;
   isRoot?: boolean;
   emailVerified: boolean;
+  mustChangePassword?: boolean;
   createdAt: string;
 }
 

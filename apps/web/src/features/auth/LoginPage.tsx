@@ -5,7 +5,7 @@ import { api } from '../../lib/api';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
-import { Printer, Lock, Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Printer, Lock, Mail, AlertCircle, CheckCircle2, KeyRound } from 'lucide-react';
 import { Role } from '../../types';
 
 export const LoginPage: React.FC = () => {
@@ -16,6 +16,17 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Estados para troca obrigatória de senha no 1º login
+  const [firstLoginSession, setFirstLoginSession] = useState<{
+    accessToken: string;
+    refreshToken: string;
+    user: any;
+  } | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [isChangingFirstPassword, setIsChangingFirstPassword] = useState(false);
+  const [firstPasswordError, setFirstPasswordError] = useState<string | null>(null);
 
   // Estados para o fluxo "Esqueci minha senha"
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
@@ -30,7 +41,16 @@ export const LoginPage: React.FC = () => {
 
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { accessToken, refreshToken, user } = response.data;
+      const { accessToken, refreshToken, user, mustChangePassword } = response.data;
+
+      if (mustChangePassword || user?.mustChangePassword) {
+        setFirstLoginSession({ accessToken, refreshToken, user });
+        setNewPassword('');
+        setConfirmNewPassword('');
+        setFirstPasswordError(null);
+        return;
+      }
+
       login(accessToken, refreshToken, user);
 
       if (user.role === Role.OPERATOR) {
@@ -53,6 +73,53 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  const handleFirstPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFirstPasswordError(null);
+
+    if (!firstLoginSession) return;
+
+    if (newPassword.length < 6) {
+      setFirstPasswordError('A nova senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setFirstPasswordError('As senhas digitadas não coincidem. Verifique e digite novamente.');
+      return;
+    }
+
+    setIsChangingFirstPassword(true);
+
+    try {
+      const res = await api.post(
+        '/auth/first-login-change-password',
+        { newPassword },
+        { headers: { Authorization: `Bearer ${firstLoginSession.accessToken}` } }
+      );
+
+      const updatedUser = res.data.user || { ...firstLoginSession.user, mustChangePassword: false };
+      login(res.data.accessToken || firstLoginSession.accessToken, res.data.refreshToken || firstLoginSession.refreshToken, updatedUser);
+
+      if (updatedUser.role === Role.OPERATOR) {
+        navigate('/work-orders');
+      } else {
+        navigate('/');
+      }
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string | string[] } } };
+      const message = error.response?.data?.message;
+      if (Array.isArray(message)) {
+        setFirstPasswordError(message.join(' '));
+      } else if (typeof message === 'string') {
+        setFirstPasswordError(message);
+      } else {
+        setFirstPasswordError('Erro ao definir nova senha. Verifique os dados ou tente novamente.');
+      }
+    } finally {
+      setIsChangingFirstPassword(false);
+    }
+  };
 
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
@@ -73,55 +140,116 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Card */}
-        <div className="bg-slate-900/90 border border-slate-800 p-7 rounded-2xl shadow-xl backdrop-blur-xl">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {errorMessage && (
-              <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{errorMessage}</span>
+        {firstLoginSession ? (
+          <div className="bg-slate-900/90 border border-slate-800 p-7 rounded-2xl shadow-xl backdrop-blur-xl space-y-5">
+            <div className="text-center space-y-1.5 pb-2 border-b border-slate-800/80">
+              <div className="inline-flex p-2.5 rounded-xl bg-amber-500/10 text-amber-400 mb-1 border border-amber-500/20">
+                <KeyRound className="w-6 h-6" />
               </div>
-            )}
-
-            <Input
-              label="E-mail de acesso"
-              type="email"
-              required
-              placeholder="seu-email@erpgrafica.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              leftIcon={<Mail className="w-4 h-4" />}
-            />
-
-            <Input
-              label="Senha"
-              type="password"
-              required
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              leftIcon={<Lock className="w-4 h-4" />}
-            />
-
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  setForgotEmail(email || '');
-                  setForgotFeedback(null);
-                  setIsForgotModalOpen(true);
-                }}
-                className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
-              >
-                Esqueci minha senha
-              </button>
+              <h3 className="text-lg font-bold text-slate-100">Primeiro Acesso ao Sistema</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Olá, <strong className="text-slate-200">{firstLoginSession.user.name}</strong>! Como sua conta foi criada com senha temporária, cadastre agora sua <strong>senha definitiva</strong> para concluir o acesso.
+              </p>
             </div>
 
-            <Button type="submit" className="w-full mt-2" size="lg" isLoading={isLoading}>
-              Entrar no Sistema
-            </Button>
-          </form>
+            <form onSubmit={handleFirstPasswordSubmit} className="space-y-4">
+              {firstPasswordError && (
+                <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{firstPasswordError}</span>
+                </div>
+              )}
 
-        </div>
+              <Input
+                label="Nova Senha Definitiva"
+                type="password"
+                required
+                placeholder="Mínimo 6 caracteres"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                leftIcon={<Lock className="w-4 h-4" />}
+                helperText="Escolha uma senha pessoal segura que lembrará nos próximos acessos."
+              />
+
+              <Input
+                label="Confirmar Nova Senha"
+                type="password"
+                required
+                placeholder="Repita a nova senha"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                leftIcon={<Lock className="w-4 h-4" />}
+              />
+
+              <div className="pt-2 space-y-2">
+                <Button type="submit" className="w-full" size="lg" isLoading={isChangingFirstPassword}>
+                  Salvar Senha e Entrar no ERP
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full text-slate-400 hover:text-slate-200 text-xs"
+                  onClick={() => {
+                    setFirstLoginSession(null);
+                    setPassword('');
+                  }}
+                >
+                  Voltar para login com outra conta
+                </Button>
+              </div>
+            </form>
+          </div>
+        ) : (
+          <div className="bg-slate-900/90 border border-slate-800 p-7 rounded-2xl shadow-xl backdrop-blur-xl">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {errorMessage && (
+                <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              <Input
+                label="E-mail de acesso"
+                type="email"
+                required
+                placeholder="seu-email@erpgrafica.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                leftIcon={<Mail className="w-4 h-4" />}
+              />
+
+              <Input
+                label="Senha"
+                type="password"
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                leftIcon={<Lock className="w-4 h-4" />}
+              />
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotEmail(email || '');
+                    setForgotFeedback(null);
+                    setIsForgotModalOpen(true);
+                  }}
+                  className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
+
+              <Button type="submit" className="w-full mt-2" size="lg" isLoading={isLoading}>
+                Entrar no Sistema
+              </Button>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Modal Esqueci Minha Senha */}

@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   const { isAuthenticated, user } = useAuthStore();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || user?.mustChangePassword) {
     return <Navigate to="/login" replace />;
   }
 
