@@ -50,6 +50,40 @@
       "resetPasswordExpires": null,
       "createdAt": "2026-09-28T15:32:15.721Z",
       "updatedAt": "2026-09-28T15:33:12.576Z"
+    },
+    {
+      "id": "abb1faf4-2f9c-474e-9276-744281011b0a",
+      "name": "Ronaldo Costa",
+      "email": "ronaldo@gmail.com",
+      "passwordHash": "$2b$10$WmGfk4dMSSoMp4zSTXy6q.1ZGYq47Eu5nEEbTiVqUVacRq2CqA73W",
+      "role": "ADMIN",
+      "isActive": true,
+      "isRoot": false,
+      "emailVerified": true,
+      "mustChangePassword": true,
+      "activationToken": null,
+      "activationTokenExpires": null,
+      "resetPasswordToken": null,
+      "resetPasswordExpires": null,
+      "createdAt": "2026-09-29T21:43:46.457Z",
+      "updatedAt": "2026-09-29T21:43:46.457Z"
+    },
+    {
+      "id": "88199c02-d85a-43c8-bc17-4c72d1270455",
+      "name": "Mateus Helcias",
+      "email": "mateus@gmail.com",
+      "passwordHash": "$2b$10$w2ZLAawNBCJPflGwsfr8Te12jxK3K7gLMBTUkz16VaGayjYVkUyle",
+      "role": "ADMIN",
+      "isActive": true,
+      "isRoot": false,
+      "emailVerified": true,
+      "mustChangePassword": true,
+      "activationToken": null,
+      "activationTokenExpires": null,
+      "resetPasswordToken": null,
+      "resetPasswordExpires": null,
+      "createdAt": "2026-09-29T21:44:10.732Z",
+      "updatedAt": "2026-09-29T21:44:10.732Z"
     }
   ],
   "parties": [
@@ -816,6 +850,42 @@
           "machineCostTotal": "0",
           "unitPrice": "1",
           "itemTotalAmount": "5"
+        }
+      ]
+    },
+    {
+      "id": "dc3386cb-3ddf-430d-8c34-5574beff2eb0",
+      "code": 47,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "10",
+      "markupApplied": "0.3",
+      "totalAmount": "10",
+      "validUntil": "2026-09-29T21:39:30.009Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-09-29T21:39:30.029Z",
+      "updatedAt": "2026-09-29T21:39:30.029Z",
+      "items": [
+        {
+          "id": "353f028f-fb50-410e-9ccc-45c4e342b873",
+          "quoteId": "dc3386cb-3ddf-430d-8c34-5574beff2eb0",
+          "rawMaterialId": null,
+          "productName": "Impressão A4 Sulfite 75g",
+          "quantity": 10,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "1",
+          "itemTotalAmount": "10"
         }
       ]
     }
@@ -1801,6 +1871,75 @@
           "logs": []
         }
       ]
+    },
+    {
+      "id": "a5dd87ee-8782-4009-adc5-41388cde2ff6",
+      "orderNumber": "OS-2026-00047",
+      "quoteId": "dc3386cb-3ddf-430d-8c34-5574beff2eb0",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-09-29T21:39:30.009Z",
+      "fileUrl": null,
+      "barcode": "OS202600047",
+      "totalAmount": "10",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-09-29T21:39:30.086Z",
+      "updatedAt": "2026-09-29T21:39:30.086Z",
+      "stages": [
+        {
+          "id": "992dd42b-4e8e-4b4d-807d-7caf4ba3ed0a",
+          "workOrderId": "a5dd87ee-8782-4009-adc5-41388cde2ff6",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-29T21:39:30.086Z",
+          "updatedAt": "2026-09-29T21:39:30.086Z",
+          "logs": []
+        },
+        {
+          "id": "4484eff2-a839-4d20-b7f5-5d97fe2d2923",
+          "workOrderId": "a5dd87ee-8782-4009-adc5-41388cde2ff6",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-29T21:39:30.086Z",
+          "updatedAt": "2026-09-29T21:39:30.086Z",
+          "logs": []
+        },
+        {
+          "id": "76f9c336-5413-49d5-aba8-60460f95e3d1",
+          "workOrderId": "a5dd87ee-8782-4009-adc5-41388cde2ff6",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-29T21:39:30.086Z",
+          "updatedAt": "2026-09-29T21:39:30.086Z",
+          "logs": []
+        },
+        {
+          "id": "0ed584df-51da-4796-9c45-4dfb170ebca2",
+          "workOrderId": "a5dd87ee-8782-4009-adc5-41388cde2ff6",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-29T21:39:30.086Z",
+          "updatedAt": "2026-09-29T21:39:30.086Z",
+          "logs": []
+        },
+        {
+          "id": "beaf925c-7989-4495-99cd-ab7931796efa",
+          "workOrderId": "a5dd87ee-8782-4009-adc5-41388cde2ff6",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-09-29T21:39:30.086Z",
+          "updatedAt": "2026-09-29T21:39:30.086Z",
+          "logs": []
+        }
+      ]
     }
   ],
   "employees": [
@@ -2027,6 +2166,24 @@
       "notes": null,
       "createdAt": "2026-09-29T16:41:33.286Z",
       "updatedAt": "2026-09-29T16:41:33.286Z"
+    },
+    {
+      "id": "e94dbe06-f777-433c-a14d-4fcb7d8e01d4",
+      "workOrderId": "a5dd87ee-8782-4009-adc5-41388cde2ff6",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00047",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "10",
+      "dueDate": "2026-09-29T21:39:30.009Z",
+      "paidAt": "2026-09-29T21:39:30.098Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-09-29T21:39:30.100Z",
+      "updatedAt": "2026-09-29T21:39:30.100Z"
     },
     {
       "id": "db503455-de46-4e6b-b38e-5f1eefdba066",
