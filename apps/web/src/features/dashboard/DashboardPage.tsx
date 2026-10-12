@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
@@ -18,10 +18,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { WorkOrderItem, QuoteResponseDto, RawMaterialItem, PaginatedResult } from '../../types';
-import { QuickProductionModal } from './QuickProductionModal';
 
 export const DashboardPage: React.FC = () => {
-  const [isQuickProductionOpen, setIsQuickProductionOpen] = useState(false);
 
   // Fetch Quotes
   const { data: quotesData } = useQuery<PaginatedResult<QuoteResponseDto>>({
@@ -80,14 +78,15 @@ export const DashboardPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2.5">
-          <Button
-            size="sm"
-            onClick={() => setIsQuickProductionOpen(true)}
-            className="bg-amber-600 hover:bg-amber-500 text-white font-medium shadow-xs"
-          >
-            <Zap className="w-4 h-4 mr-1.5" />
-            Produção Rápida
-          </Button>
+          <Link to="/quick-production">
+            <Button
+              size="sm"
+              className="bg-amber-600 hover:bg-amber-500 text-white font-medium shadow-xs"
+            >
+              <Zap className="w-4 h-4 mr-1.5" />
+              Produção Rápida
+            </Button>
+          </Link>
           <Link to="/quotes/new">
             <Button size="sm">
               <Plus className="w-4 h-4" />
@@ -223,12 +222,6 @@ export const DashboardPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Pop-up de Produção Rápida de Balcão */}
-      <QuickProductionModal
-        isOpen={isQuickProductionOpen}
-        onClose={() => setIsQuickProductionOpen(false)}
-      />
     </div>
   );
 };

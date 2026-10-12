@@ -13,6 +13,7 @@ import {
   Coins,
   PieChart,
   PrinterIcon,
+  Zap,
   X,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -45,6 +46,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Visão Geral',
       icon: <LayoutDashboard className="w-4 h-4" />,
       roles: [Role.ADMIN, Role.COMMERCIAL, Role.FINANCIAL],
+    },
+    {
+      to: '/quick-production',
+      label: 'Produção Rápida',
+      icon: <Zap className="w-4 h-4" />,
+      roles: [Role.ADMIN, Role.COMMERCIAL, Role.FINANCIAL, Role.OPERATOR],
     },
     {
       to: '/quotes',

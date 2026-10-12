@@ -18,6 +18,7 @@ import { EmployeesPage } from './features/employees/EmployeesPage';
 import { OperatingExpensesPage } from './features/operating-expenses/OperatingExpensesPage';
 import { ReceivablesPage } from './features/receivables/ReceivablesPage';
 import { DrePage } from './features/financial/DrePage';
+import { QuickProductionPage } from './features/quick-production/QuickProductionPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +44,7 @@ export const App: React.FC = () => {
           <Route element={<ProtectedRoute />}>
             <Route element={<MainLayout />}>
               <Route path="/" element={<DashboardPage />} />
+              <Route path="/quick-production" element={<QuickProductionPage />} />
               <Route path="/quotes" element={<QuotesListPage />} />
               <Route path="/quotes/new" element={<NewQuotePage />} />
               <Route path="/work-orders" element={<WorkOrdersPage />} />

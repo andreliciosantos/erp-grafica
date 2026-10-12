@@ -89,8 +89,8 @@ describe('ExpenseDateFilter', () => {
     fireEvent.click(screen.getByLabelText(/mês de competência/i));
     fireEvent.click(screen.getByText('Entre Datas'));
 
-    const todayButton = screen.getByText('Hoje');
-    fireEvent.click(todayButton);
+    const todayButtons = screen.getAllByRole('button', { name: /^hoje$/i });
+    fireEvent.click(todayButtons[todayButtons.length - 1]);
 
     expect(handleChange).toHaveBeenCalledWith(
       expect.objectContaining({

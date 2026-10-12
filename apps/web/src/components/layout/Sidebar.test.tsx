@@ -23,6 +23,7 @@ describe('Sidebar component', () => {
     expect(screen.getByText('ERP Gráfica')).toBeInTheDocument();
     expect(screen.getByText('Menu Principal')).toBeInTheDocument();
     expect(screen.getByText('Visão Geral')).toBeInTheDocument();
+    expect(screen.getByText('Produção Rápida')).toBeInTheDocument();
     expect(screen.getByText('Chão de Fábrica (PCP)')).toBeInTheDocument();
     expect(screen.getByText('Equipe & RH')).toBeInTheDocument();
     expect(screen.getByText('Contas a Receber')).toBeInTheDocument();

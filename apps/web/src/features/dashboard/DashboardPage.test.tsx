@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderWithProviders, screen, userEvent } from '../../test/test-utils';
+import { renderWithProviders, screen } from '../../test/test-utils';
 import { DashboardPage } from './DashboardPage';
 
 vi.mock('../../lib/api', () => ({
@@ -69,13 +69,11 @@ describe('DashboardPage', () => {
     ).toBeTruthy();
   });
 
-  it('opens QuickProductionModal when clicking Produção Rápida button', async () => {
+  it('links to /quick-production when clicking Produção Rápida button', () => {
     renderWithProviders(<DashboardPage />);
 
     const quickProdBtn = screen.getByRole('button', { name: /produção rápida/i });
-    await userEvent.click(quickProdBtn);
-
-    expect(screen.getByText('Produção Rápida de Balcão')).toBeInTheDocument();
-    expect(screen.getByText('Modelos Prontos de Serviços')).toBeInTheDocument();
+    const link = quickProdBtn.closest('a');
+    expect(link).toHaveAttribute('href', '/quick-production');
   });
 });
