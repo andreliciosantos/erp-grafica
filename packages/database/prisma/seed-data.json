@@ -888,6 +888,78 @@
           "itemTotalAmount": "10"
         }
       ]
+    },
+    {
+      "id": "f616b4ac-412b-4b88-9b50-442f3dc2db1a",
+      "code": 48,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "1",
+      "markupApplied": "0.3",
+      "totalAmount": "1",
+      "validUntil": "2026-10-19T20:57:40.012Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-10-19T20:57:40.033Z",
+      "updatedAt": "2026-10-19T20:57:40.033Z",
+      "items": [
+        {
+          "id": "8cff0ed0-6371-4b40-82c6-80b2b3dfa45e",
+          "quoteId": "f616b4ac-412b-4b88-9b50-442f3dc2db1a",
+          "rawMaterialId": null,
+          "productName": "Impressão A4 Sulfite 75g",
+          "quantity": 1,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "1",
+          "itemTotalAmount": "1"
+        }
+      ]
+    },
+    {
+      "id": "674ad024-ba0f-498b-a5e1-b9735e09c4e9",
+      "code": 49,
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "status": "APPROVED",
+      "origin": "WEB",
+      "totalCost": "5",
+      "markupApplied": "0.3",
+      "totalAmount": "5",
+      "validUntil": "2026-10-19T20:57:55.856Z",
+      "notes": "[Produção Rápida de Balcão]",
+      "createdAt": "2026-10-19T20:57:55.859Z",
+      "updatedAt": "2026-10-19T20:57:55.859Z",
+      "items": [
+        {
+          "id": "8de70e71-be89-48dd-b5c6-592a5ecd1521",
+          "quoteId": "674ad024-ba0f-498b-a5e1-b9735e09c4e9",
+          "rawMaterialId": null,
+          "productName": "Xerox P&B A4",
+          "quantity": 10,
+          "widthMm": 0,
+          "heightMm": 0,
+          "colorsFront": 4,
+          "colorsBack": 0,
+          "finishingOptions": [],
+          "sheetsRequired": 0,
+          "itemsPerSheet": 1,
+          "paperCostCalculated": "0",
+          "finishingCostTotal": "0",
+          "machineCostTotal": "0",
+          "unitPrice": "0.5",
+          "itemTotalAmount": "5"
+        }
+      ]
     }
   ],
   "workOrders": [
@@ -1940,6 +2012,144 @@
           "logs": []
         }
       ]
+    },
+    {
+      "id": "9d9660bb-3af5-49d3-bf42-56a94ed47a43",
+      "orderNumber": "OS-2026-00048",
+      "quoteId": "f616b4ac-412b-4b88-9b50-442f3dc2db1a",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-10-19T20:57:40.012Z",
+      "fileUrl": null,
+      "barcode": "OS202600048",
+      "totalAmount": "1",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-10-19T20:57:40.107Z",
+      "updatedAt": "2026-10-19T20:57:40.107Z",
+      "stages": [
+        {
+          "id": "a7c13317-2b0a-406a-b928-4153e9017709",
+          "workOrderId": "9d9660bb-3af5-49d3-bf42-56a94ed47a43",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-10-19T20:57:40.107Z",
+          "updatedAt": "2026-10-19T20:57:40.107Z",
+          "logs": []
+        },
+        {
+          "id": "10626b06-e60b-40f6-bb2f-b19964c176b8",
+          "workOrderId": "9d9660bb-3af5-49d3-bf42-56a94ed47a43",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-10-19T20:57:40.107Z",
+          "updatedAt": "2026-10-19T20:57:40.107Z",
+          "logs": []
+        },
+        {
+          "id": "2556420b-4e05-4e75-afe7-37cf9e62fbea",
+          "workOrderId": "9d9660bb-3af5-49d3-bf42-56a94ed47a43",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-10-19T20:57:40.107Z",
+          "updatedAt": "2026-10-19T20:57:40.107Z",
+          "logs": []
+        },
+        {
+          "id": "5c87c23c-2a32-4ab6-87b8-2b3ececb8e51",
+          "workOrderId": "9d9660bb-3af5-49d3-bf42-56a94ed47a43",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-10-19T20:57:40.107Z",
+          "updatedAt": "2026-10-19T20:57:40.107Z",
+          "logs": []
+        },
+        {
+          "id": "5c962eb4-d9b5-4631-a3f6-d04d66489b55",
+          "workOrderId": "9d9660bb-3af5-49d3-bf42-56a94ed47a43",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-10-19T20:57:40.107Z",
+          "updatedAt": "2026-10-19T20:57:40.107Z",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "id": "aff2722a-de3d-4f0a-bd5b-9fac2d810fc5",
+      "orderNumber": "OS-2026-00049",
+      "quoteId": "674ad024-ba0f-498b-a5e1-b9735e09c4e9",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "userId": "cb500b04-7ab9-4593-91a7-380291a170f6",
+      "origin": "WEB",
+      "status": "DELIVERED",
+      "priority": 2,
+      "deliveryDate": "2026-10-19T20:57:55.856Z",
+      "fileUrl": null,
+      "barcode": "OS202600049",
+      "totalAmount": "5",
+      "paymentStatus": "PAID",
+      "createdAt": "2026-10-19T20:57:55.861Z",
+      "updatedAt": "2026-10-19T20:57:55.861Z",
+      "stages": [
+        {
+          "id": "1c5cb736-39d6-4e78-bf71-04043ef14a2b",
+          "workOrderId": "aff2722a-de3d-4f0a-bd5b-9fac2d810fc5",
+          "stepOrder": 1,
+          "name": "Pré-impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-10-19T20:57:55.861Z",
+          "updatedAt": "2026-10-19T20:57:55.861Z",
+          "logs": []
+        },
+        {
+          "id": "5307c8cb-c548-4921-bdac-fce957a8839b",
+          "workOrderId": "aff2722a-de3d-4f0a-bd5b-9fac2d810fc5",
+          "stepOrder": 2,
+          "name": "Impressão",
+          "status": "COMPLETED",
+          "createdAt": "2026-10-19T20:57:55.861Z",
+          "updatedAt": "2026-10-19T20:57:55.861Z",
+          "logs": []
+        },
+        {
+          "id": "89027cf7-4175-4097-b00b-f43cab9f7b37",
+          "workOrderId": "aff2722a-de3d-4f0a-bd5b-9fac2d810fc5",
+          "stepOrder": 3,
+          "name": "Acabamento",
+          "status": "COMPLETED",
+          "createdAt": "2026-10-19T20:57:55.861Z",
+          "updatedAt": "2026-10-19T20:57:55.861Z",
+          "logs": []
+        },
+        {
+          "id": "326dd07f-2fb7-4082-a6bc-fd1d29fd894b",
+          "workOrderId": "aff2722a-de3d-4f0a-bd5b-9fac2d810fc5",
+          "stepOrder": 4,
+          "name": "Controle de Qualidade",
+          "status": "COMPLETED",
+          "createdAt": "2026-10-19T20:57:55.861Z",
+          "updatedAt": "2026-10-19T20:57:55.861Z",
+          "logs": []
+        },
+        {
+          "id": "843da350-b051-4600-9c2a-a40ff62154f6",
+          "workOrderId": "aff2722a-de3d-4f0a-bd5b-9fac2d810fc5",
+          "stepOrder": 5,
+          "name": "Expedição / Retirada",
+          "status": "COMPLETED",
+          "createdAt": "2026-10-19T20:57:55.861Z",
+          "updatedAt": "2026-10-19T20:57:55.861Z",
+          "logs": []
+        }
+      ]
     }
   ],
   "employees": [
@@ -2184,6 +2394,42 @@
       "notes": null,
       "createdAt": "2026-09-29T21:39:30.100Z",
       "updatedAt": "2026-09-29T21:39:30.100Z"
+    },
+    {
+      "id": "c9438d8c-3d85-445f-81da-09a5ea8610db",
+      "workOrderId": "9d9660bb-3af5-49d3-bf42-56a94ed47a43",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00048",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "1",
+      "dueDate": "2026-10-19T20:57:40.012Z",
+      "paidAt": "2026-10-19T20:57:40.125Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-10-19T20:57:40.127Z",
+      "updatedAt": "2026-10-19T20:57:40.127Z"
+    },
+    {
+      "id": "24daac74-2cde-450d-ba14-c092339d7ee6",
+      "workOrderId": "aff2722a-de3d-4f0a-bd5b-9fac2d810fc5",
+      "partyId": "378f55fa-c94a-4de8-bc67-ce069df4246c",
+      "description": "Venda Rápida / Balcão - OS-2026-00049",
+      "installmentNumber": 1,
+      "totalInstallments": 1,
+      "amount": "5",
+      "dueDate": "2026-10-19T20:57:55.856Z",
+      "paidAt": "2026-10-19T20:57:55.863Z",
+      "status": "PAID",
+      "paymentMethod": "PIX",
+      "barcode": null,
+      "documentNumber": null,
+      "notes": null,
+      "createdAt": "2026-10-19T20:57:55.866Z",
+      "updatedAt": "2026-10-19T20:57:55.866Z"
     },
     {
       "id": "db503455-de46-4e6b-b38e-5f1eefdba066",
